@@ -93,6 +93,9 @@ export class MockExpect {
     }
 
     const lastCall = this.mock.calls[this.mock.calls.length - 1];
+    if (!lastCall) {
+      throw new Error("无法获取最后一次调用");
+    }
     if (!this.deepEqual(lastCall.args, args)) {
       throw new Error(
         `期望最后一次调用使用参数 ${JSON.stringify(args)}，实际参数: ${
@@ -113,6 +116,9 @@ export class MockExpect {
     }
 
     const nthCall = this.mock.calls[n - 1];
+    if (!nthCall) {
+      throw new Error(`无法获取第 ${n} 次调用`);
+    }
     if (!this.deepEqual(nthCall.args, args)) {
       throw new Error(
         `期望第 ${n} 次调用使用参数 ${JSON.stringify(args)}，实际参数: ${

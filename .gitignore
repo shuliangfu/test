@@ -25,3 +25,8 @@ out/
 # 测试数据
 tests/data/
 .snapshots/
+
+# Bun 相关
+bun.lock
+bun.lockb
+package.json

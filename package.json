@@ -1,5 +1,0 @@
-{
-  "scripts": {
-    "test": "bun test --test-concurrency 1 tests/*"
-  }
-}

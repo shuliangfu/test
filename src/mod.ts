@@ -22,8 +22,17 @@
  * ```
  */
 
-// 重新导出 Deno 内置测试 API
-import { describe, test } from "jsr:@std/testing@1.0.16/bdd";
+// 重新导出测试 API
+// 注意：@std/testing 没有默认导出，需要使用子路径 ./bdd
+//
+// 兼容性说明：
+// - Deno: 直接支持 jsr: 协议，使用 `deno add jsr:@std/testing@1.0.16/bdd`
+// - Bun: 使用 `bunx jsr add @std/testing@1.0.16/bdd` 安装后即可使用
+//
+// 安装方法：
+// - Deno: `deno add jsr:@std/testing@1.0.16/bdd`
+// - Bun: `bunx jsr add @std/testing@1.0.16/bdd`
+import { describe, test } from "@std/testing/bdd";
 export { describe, test };
 
 /**

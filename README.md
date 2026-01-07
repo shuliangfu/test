@@ -133,10 +133,24 @@ deno add jsr:@dreamer/test
 
 ## 环境兼容性
 
-- **Deno 版本**：要求 Deno 2.5 或更高版本
-- **服务端**：✅ 支持（Deno 运行时，基于 Deno 测试框架，完整功能支持，在控制台运行）
+- **Deno 版本**：要求 Deno 2.5 或更高版本 ✅
+- **Bun 版本**：Bun 1.0+ ✅（通过 `bunx jsr add` 安装 JSR 依赖）
+- **服务端**：✅ 支持（Deno/Bun 运行时，基于 Deno 测试框架，完整功能支持，在控制台运行）
 - **客户端**：❌ 不支持（测试工具库仅在服务端运行，在控制台执行测试，客户端测试需要使用浏览器测试框架如 Playwright、Puppeteer）
 - **依赖**：基于 Deno 内置测试框架，无额外依赖
+
+### Bun 安装方法
+
+在 Bun 环境中，使用 `bunx jsr add` 安装 JSR 依赖：
+
+```bash
+bunx jsr add @std/testing@1.0.16/bdd
+```
+
+这会自动：
+- 在 `package.json` 中添加依赖
+- 配置 `.npmrc` 使用 JSR npm 镜像
+- 允许在代码中使用 `@std/testing/bdd` 导入
 
 ## 示例用法
 

@@ -24,3 +24,4 @@ out/
 
 # 测试数据
 tests/data/
+.snapshots/

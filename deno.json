@@ -15,7 +15,8 @@
       "**/*.test.ts",
       "**/*.spec.ts",
       "**/test/**",
-      "**/tests/**"
+      "**/tests/**",
+      "package.json"
     ]
   },
   "lint": {

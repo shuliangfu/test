@@ -1,0 +1,573 @@
+/**
+ * @fileoverview Test 库自测试
+ *
+ * 使用 @dreamer/test 库自己来测试自己的功能
+ */
+
+import {
+  afterAll,
+  afterEach,
+  assertDeepEqual,
+  assertInstanceOf,
+  assertMatch,
+  assertRejects,
+  assertResolves,
+  assertSnapshot,
+  beforeAll,
+  beforeEach,
+  bench,
+  describe,
+  expect,
+  expectMock,
+  it,
+  mockFetch,
+  mockFn,
+  testEach,
+} from "../src/mod.ts";
+
+describe("@dreamer/test 自测试", () => {
+  describe("基础测试 API", () => {
+    it("describe 和 it 应该正常工作", () => {
+      expect(true).toBeTruthy();
+    });
+  });
+
+  describe("Expect 断言", () => {
+    describe("toBe", () => {
+      it("应该通过相等比较", () => {
+        expect(1).toBe(1);
+        expect("hello").toBe("hello");
+        expect(null).toBe(null);
+        expect(undefined).toBe(undefined);
+      });
+
+      it("应该抛出错误当值不相等", async () => {
+        await assertRejects(
+          () => Promise.resolve(expect(1).toBe(2)),
+          Error,
+          "期望值: 2, 实际值: 1",
+        );
+      });
+    });
+
+    describe("toEqual", () => {
+      it("应该通过深度相等比较", () => {
+        expect({ a: 1, b: 2 }).toEqual({ a: 1, b: 2 });
+        expect([1, 2, 3]).toEqual([1, 2, 3]);
+        expect({ a: { b: { c: 1 } } }).toEqual({ a: { b: { c: 1 } } });
+      });
+
+      it("应该抛出错误当值不相等", async () => {
+        await assertRejects(
+          () => Promise.resolve(expect({ a: 1 }).toEqual({ a: 2 })),
+          Error,
+          "期望值",
+        );
+      });
+    });
+
+    describe("toBeTruthy", () => {
+      it("应该通过真值检查", () => {
+        expect(1).toBeTruthy();
+        expect("hello").toBeTruthy();
+        expect(true).toBeTruthy();
+        expect({}).toBeTruthy();
+        expect([]).toBeTruthy();
+      });
+
+      it("应该抛出错误当值为假", async () => {
+        await assertRejects(
+          () => Promise.resolve(expect(false).toBeTruthy()),
+          Error,
+          "期望值为真",
+        );
+      });
+    });
+
+    describe("toBeFalsy", () => {
+      it("应该通过假值检查", () => {
+        expect(false).toBeFalsy();
+        expect(0).toBeFalsy();
+        expect("").toBeFalsy();
+        expect(null).toBeFalsy();
+        expect(undefined).toBeFalsy();
+      });
+
+      it("应该抛出错误当值为真", async () => {
+        await assertRejects(
+          () => Promise.resolve(expect(true).toBeFalsy()),
+          Error,
+          "期望值为假",
+        );
+      });
+    });
+
+    describe("toBeNull", () => {
+      it("应该通过 null 检查", () => {
+        expect(null).toBeNull();
+      });
+
+      it("应该抛出错误当值不是 null", async () => {
+        await assertRejects(
+          () => Promise.resolve(expect(undefined).toBeNull()),
+          Error,
+          "期望值为 null",
+        );
+      });
+    });
+
+    describe("toBeUndefined", () => {
+      it("应该通过 undefined 检查", () => {
+        expect(undefined).toBeUndefined();
+      });
+
+      it("应该抛出错误当值不是 undefined", async () => {
+        await assertRejects(
+          () => Promise.resolve(expect(null).toBeUndefined()),
+          Error,
+          "期望值为 undefined",
+        );
+      });
+    });
+
+    describe("toBeDefined", () => {
+      it("应该通过已定义检查", () => {
+        expect(1).toBeDefined();
+        expect("hello").toBeDefined();
+        expect(null).toBeDefined();
+      });
+
+      it("应该抛出错误当值为 undefined", async () => {
+        await assertRejects(
+          () => Promise.resolve(expect(undefined).toBeDefined()),
+          Error,
+          "期望值已定义",
+        );
+      });
+    });
+
+    describe("toMatch", () => {
+      it("应该通过正则匹配", () => {
+        expect("hello world").toMatch(/world/);
+        expect("hello world").toMatch("world");
+        expect("123").toMatch(/^\d+$/);
+      });
+
+      it("应该抛出错误当不匹配", async () => {
+        await assertRejects(
+          () => Promise.resolve(expect("hello").toMatch(/world/)),
+          Error,
+          "期望值匹配",
+        );
+      });
+    });
+
+    describe("toContain", () => {
+      it("应该通过数组包含检查", () => {
+        expect([1, 2, 3]).toContain(2);
+        expect(["a", "b", "c"]).toContain("b");
+      });
+
+      it("应该通过字符串包含检查", () => {
+        expect("hello world").toContain("world");
+      });
+
+      it("应该抛出错误当不包含", async () => {
+        await assertRejects(
+          () => Promise.resolve(expect([1, 2, 3]).toContain(4)),
+          Error,
+          "期望数组包含",
+        );
+      });
+    });
+
+    describe("toBeGreaterThan", () => {
+      it("应该通过大于比较", () => {
+        expect(5).toBeGreaterThan(3);
+        expect(10).toBeGreaterThan(5);
+      });
+
+      it("应该抛出错误当不大于", async () => {
+        await assertRejects(
+          () => Promise.resolve(expect(3).toBeGreaterThan(5)),
+          Error,
+          "期望值大于",
+        );
+      });
+    });
+
+    describe("toBeGreaterThanOrEqual", () => {
+      it("应该通过大于等于比较", () => {
+        expect(5).toBeGreaterThanOrEqual(5);
+        expect(10).toBeGreaterThanOrEqual(5);
+      });
+
+      it("应该抛出错误当小于", async () => {
+        await assertRejects(
+          () => Promise.resolve(expect(3).toBeGreaterThanOrEqual(5)),
+          Error,
+          "期望值大于等于",
+        );
+      });
+    });
+
+    describe("toBeLessThan", () => {
+      it("应该通过小于比较", () => {
+        expect(3).toBeLessThan(5);
+        expect(5).toBeLessThan(10);
+      });
+
+      it("应该抛出错误当不小于", async () => {
+        await assertRejects(
+          () => Promise.resolve(expect(5).toBeLessThan(3)),
+          Error,
+          "期望值小于",
+        );
+      });
+    });
+
+    describe("toBeLessThanOrEqual", () => {
+      it("应该通过小于等于比较", () => {
+        expect(5).toBeLessThanOrEqual(5);
+        expect(3).toBeLessThanOrEqual(5);
+      });
+
+      it("应该抛出错误当大于", async () => {
+        await assertRejects(
+          () => Promise.resolve(expect(5).toBeLessThanOrEqual(3)),
+          Error,
+          "期望值小于等于",
+        );
+      });
+    });
+
+    describe("toBeInstanceOf", () => {
+      it("应该通过实例类型检查", () => {
+        expect(new Date()).toBeInstanceOf(Date);
+        expect([]).toBeInstanceOf(Array);
+        expect({}).toBeInstanceOf(Object);
+      });
+
+      it("应该抛出错误当不是实例", async () => {
+        await assertRejects(
+          () => Promise.resolve(expect({}).toBeInstanceOf(Date)),
+          Error,
+          "期望值为 Date 的实例",
+        );
+      });
+    });
+  });
+
+  describe("Mock 函数", () => {
+    it("应该创建 Mock 函数", () => {
+      const mock = mockFn();
+      expect(mock.calls).toEqual([]);
+      expect(mock.implementation).toBeUndefined();
+    });
+
+    it("应该记录函数调用", () => {
+      const mock = mockFn();
+      mock(1, 2, 3);
+      expect(mock.calls.length).toBe(1);
+      expect(mock.calls[0].args).toEqual([1, 2, 3]);
+    });
+
+    it("应该执行实现函数", () => {
+      const mock = mockFn((a: number, b: number) => a + b);
+      const result = mock(1, 2);
+      expect(result).toBe(3);
+      expect(mock.calls.length).toBe(1);
+      expect(mock.calls[0].result).toBe(3);
+    });
+
+    it("应该记录多次调用", () => {
+      const mock = mockFn();
+      mock(1);
+      mock(2);
+      mock(3);
+      expect(mock.calls.length).toBe(3);
+      expect(mock.calls[0].args).toEqual([1]);
+      expect(mock.calls[1].args).toEqual([2]);
+      expect(mock.calls[2].args).toEqual([3]);
+    });
+  });
+
+  describe("MockExpect", () => {
+    it("应该检查函数是否被调用", () => {
+      const mock = mockFn();
+      mock();
+      expectMock(mock).toHaveBeenCalled();
+    });
+
+    it("应该检查调用次数", () => {
+      const mock = mockFn();
+      mock();
+      mock();
+      mock();
+      expectMock(mock).toHaveBeenCalledTimes(3);
+    });
+
+    it("应该检查调用参数", () => {
+      const mock = mockFn();
+      mock(1, 2, 3);
+      expectMock(mock).toHaveBeenCalledWith(1, 2, 3);
+    });
+
+    it("应该检查最后一次调用参数", () => {
+      const mock = mockFn();
+      mock(1, 2);
+      mock(3, 4);
+      expectMock(mock).toHaveBeenLastCalledWith(3, 4);
+    });
+
+    it("应该检查第 N 次调用参数", () => {
+      const mock = mockFn();
+      mock(1);
+      mock(2);
+      mock(3);
+      expectMock(mock).toHaveBeenNthCalledWith(2, 2);
+    });
+  });
+
+  describe("assertRejects", () => {
+    it("应该通过错误断言", async () => {
+      await assertRejects(async () => {
+        throw new Error("test error");
+      });
+    });
+
+    it("应该检查错误类型", async () => {
+      await assertRejects(
+        async () => {
+          throw new TypeError("test error");
+        },
+        TypeError,
+      );
+    });
+
+    it("应该检查错误消息", async () => {
+      await assertRejects(
+        async () => {
+          throw new Error("test error message");
+        },
+        Error,
+        "test error",
+      );
+    });
+
+    it("应该抛出错误当函数不抛出", async () => {
+      await assertRejects(
+        async () => {
+          await assertRejects(async () => {
+            // 不抛出错误
+          }),
+            Error,
+            "期望函数抛出错误";
+        },
+      );
+    });
+  });
+
+  describe("assertResolves", () => {
+    it("应该通过成功断言", async () => {
+      await assertResolves(async () => {
+        return 42;
+      });
+    });
+
+    it("应该检查返回值", async () => {
+      await assertResolves(
+        async () => {
+          return 42;
+        },
+        42,
+      );
+    });
+
+    it("应该抛出错误当函数失败", async () => {
+      await assertRejects(
+        async () => {
+          await assertResolves(async () => {
+            throw new Error("test error");
+          });
+        },
+        Error,
+        "期望函数成功执行",
+      );
+    });
+  });
+
+  describe("assertDeepEqual", () => {
+    it("应该通过深度相等断言", () => {
+      assertDeepEqual({ a: 1, b: 2 }, { a: 1, b: 2 });
+      assertDeepEqual([1, 2, 3], [1, 2, 3]);
+    });
+
+    it("应该抛出错误当不相等", async () => {
+      await assertRejects(
+        () => Promise.resolve(assertDeepEqual({ a: 1 }, { a: 2 })),
+        Error,
+        "期望值",
+      );
+    });
+  });
+
+  describe("assertInstanceOf", () => {
+    it("应该通过实例类型断言", () => {
+      assertInstanceOf(new Date(), Date);
+      assertInstanceOf([], Array);
+    });
+
+    it("应该抛出错误当不是实例", async () => {
+      await assertRejects(
+        () => Promise.resolve(assertInstanceOf({}, Date)),
+        Error,
+        "期望值为 Date 的实例",
+      );
+    });
+  });
+
+  describe("assertMatch", () => {
+    it("应该通过正则匹配断言", () => {
+      assertMatch("hello world", /world/);
+      assertMatch("123", /^\d+$/);
+    });
+
+    it("应该抛出错误当不匹配", async () => {
+      await assertRejects(
+        () => Promise.resolve(assertMatch("hello", /world/)),
+        Error,
+        "期望值匹配",
+      );
+    });
+  });
+
+  describe("assertSnapshot", () => {
+    it("应该创建和验证快照", async (t) => {
+      // 注意：此测试需要 --allow-write 权限
+      // 运行: deno test --allow-write tests/mod.test.ts
+      const value = { a: 1, b: 2, c: [3, 4, 5] };
+      try {
+        await assertSnapshot(t, value, "test-snapshot");
+        // 第二次运行应该通过
+        await assertSnapshot(t, value, "test-snapshot");
+      } catch (error) {
+        if (error instanceof Error && error.message.includes("write access")) {
+          // 如果没有写入权限，跳过此测试
+          console.log("跳过快照测试：需要 --allow-write 权限");
+          return;
+        }
+        throw error;
+      }
+    });
+  });
+
+  describe("测试钩子", () => {
+    it("应该可以设置 beforeAll 钩子", () => {
+      let called = false;
+      beforeAll(() => {
+        called = true;
+      });
+      // 注意：当前实现中，钩子需要手动调用
+      // 这里只测试钩子函数可以被设置
+      expect(typeof beforeAll).toBe("function");
+    });
+
+    it("应该可以设置 afterAll 钩子", () => {
+      expect(typeof afterAll).toBe("function");
+    });
+
+    it("应该可以设置 beforeEach 钩子", () => {
+      expect(typeof beforeEach).toBe("function");
+    });
+
+    it("应该可以设置 afterEach 钩子", () => {
+      expect(typeof afterEach).toBe("function");
+    });
+  });
+
+  describe("参数化测试", () => {
+    const cases = [
+      [1, 2, 3],
+      [2, 3, 5],
+      [3, 4, 7],
+    ] as [number, number, number][];
+
+    testEach(cases)("应该计算 %0 + %1 = %2", (a, b, expected) => {
+      expect(a + b).toBe(expected);
+    });
+  });
+
+  describe("基准测试", () => {
+    bench("简单计算", () => {
+      let sum = 0;
+      for (let i = 0; i < 1000; i++) {
+        sum += i;
+      }
+    }, { n: 10, warmup: 2 });
+  });
+
+  describe("HTTP Mock", () => {
+    it("应该 Mock fetch 请求", async () => {
+      const mock = mockFetch("https://api.example.com/users", {
+        response: {
+          status: 200,
+          body: { id: 1, name: "Alice" },
+        },
+      });
+
+      try {
+        const response = await fetch("https://api.example.com/users");
+        const data = await response.json();
+
+        expect(response.status).toBe(200);
+        expect(data).toEqual({ id: 1, name: "Alice" });
+        expect(mock.calls.length).toBe(1);
+        expect(mock.calls[0].url).toBe("https://api.example.com/users");
+      } finally {
+        mock.restore();
+      }
+    });
+
+    it("应该支持正则表达式 URL 匹配", async () => {
+      const mock = mockFetch(/\/users\/\d+$/, {
+        response: {
+          status: 200,
+          body: { id: 123 },
+        },
+      });
+
+      try {
+        const response = await fetch("https://api.example.com/users/123");
+        const data = await response.json();
+
+        expect(response.status).toBe(200);
+        expect(data).toEqual({ id: 123 });
+      } finally {
+        mock.restore();
+      }
+    });
+
+    it("应该支持方法匹配", async () => {
+      const mock = mockFetch("https://api.example.com/users", {
+        method: "POST",
+        response: {
+          status: 201,
+          body: { id: 1 },
+        },
+      });
+
+      try {
+        const response = await fetch("https://api.example.com/users", {
+          method: "POST",
+        });
+        const data = await response.json();
+
+        expect(response.status).toBe(201);
+        expect(data).toEqual({ id: 1 });
+      } finally {
+        mock.restore();
+      }
+    });
+  });
+});

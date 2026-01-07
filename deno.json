@@ -1,6 +1,6 @@
 {
   "name": "@dreamer/test",
-  "version": "1.0.0-beta.3",
+  "version": "1.0.0-beta.4",
   "license": "MIT",
   "exports": {
     ".": "./src/mod.ts"
@@ -27,7 +27,8 @@
         "recommended"
       ],
       "exclude": [
-        "no-explicit-any"
+        "no-explicit-any",
+        "no-unresolved"
       ]
     }
   }

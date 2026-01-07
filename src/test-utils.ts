@@ -121,8 +121,43 @@ export function bench(
     const end = performance.now();
 
     const avgTime = (end - start) / n;
-    console.log(
-      `基准测试 "${name}": 平均 ${avgTime.toFixed(3)}ms (${n} 次运行)`,
-    );
+    // 美化基准测试输出
+    const IS_DENO = typeof (globalThis as any).Deno !== "undefined";
+    const IS_BUN = typeof (globalThis as any).Bun !== "undefined";
+
+    if (IS_DENO) {
+      // Deno 环境：Deno 会自动添加分隔线，我们直接使用 console.log
+      const yellow = "\x1b[33m";
+      const cyan = "\x1b[36m";
+      const gray = "\x1b[90m";
+      const bold = "\x1b[1m";
+      const reset = "\x1b[0m";
+      console.log(
+        `${yellow}⚡${reset} ${gray}基准测试 "${name}": 平均 ${bold}${cyan}${
+          avgTime.toFixed(3)
+        }ms${reset}${gray} (${n} 次运行)${reset}`,
+      );
+    } else if (IS_BUN) {
+      // Bun 环境：使用 ANSI 颜色代码，添加分隔线以统一格式
+      const yellow = "\x1b[33m";
+      const cyan = "\x1b[36m";
+      const gray = "\x1b[90m";
+      const bold = "\x1b[1m";
+      const reset = "\x1b[0m";
+      const dim = "\x1b[2m";
+      // 添加分隔线，模仿 Deno 的输出格式
+      console.log(`${dim}------- output -------${reset}`);
+      console.log(
+        `${yellow}⚡${reset} ${gray}基准测试 "${name}": 平均 ${bold}${cyan}${
+          avgTime.toFixed(3)
+        }ms${reset}${gray} (${n} 次运行)${reset}`,
+      );
+      console.log(`${dim}----- output end -----${reset}`);
+    } else {
+      // 其他环境：普通输出
+      console.log(
+        `⚡ 基准测试 "${name}": 平均 ${avgTime.toFixed(3)}ms (${n} 次运行)`,
+      );
+    }
   });
 }

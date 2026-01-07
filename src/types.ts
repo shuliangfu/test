@@ -15,6 +15,8 @@ export interface TestSuite {
   tests: TestCase[];
   suites: TestSuite[];
   parent?: TestSuite;
+  /** 标记 beforeAll 是否已执行（仅用于 Deno 环境） */
+  _beforeAllExecuted?: boolean;
 }
 
 /**

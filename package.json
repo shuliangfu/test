@@ -1,5 +1,1 @@
-{
-  "dependencies": {
-    "@std/testing": "npm:@jsr/std__testing@1.0.16/bdd"
-  }
-}
+{}

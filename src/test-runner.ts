@@ -175,10 +175,12 @@ export function describe(
 export function test(
   name: string,
   fn: (t?: TestContext) => void | Promise<void>,
+  options?: { timeout?: number },
 ): void {
   const testCase: TestCase = {
     name,
     fn,
+    timeout: options?.timeout,
   };
   currentSuite.tests.push(testCase);
 
@@ -186,18 +188,26 @@ export function test(
   if (IS_DENO) {
     // Deno 环境：使用 Deno.test 注册
     const fullName = getFullTestName(name);
-    (globalThis as any).Deno.test(fullName, async (t: any) => {
-      const testContext = createTestContext(fullName);
-      // 将 Deno.TestContext 的属性复制到我们的 TestContext
-      Object.assign(testContext, {
-        origin: t.origin,
-        sanitizeExit: t.sanitizeExit,
-        sanitizeOps: t.sanitizeOps,
-        sanitizeResources: t.sanitizeResources,
-        step: t.step.bind(t),
-      });
-      await fn(testContext);
-    });
+    const testOptions: any = {
+      name: fullName,
+      fn: async (t: any) => {
+        const testContext = createTestContext(fullName);
+        // 将 Deno.TestContext 的属性复制到我们的 TestContext
+        Object.assign(testContext, {
+          origin: t.origin,
+          sanitizeExit: t.sanitizeExit,
+          sanitizeOps: t.sanitizeOps,
+          sanitizeResources: t.sanitizeResources,
+          step: t.step.bind(t),
+        });
+        await fn(testContext);
+      },
+    };
+    // 如果设置了超时，添加到选项
+    if (options?.timeout) {
+      testOptions.timeout = options.timeout;
+    }
+    (globalThis as any).Deno.test(testOptions);
   } else if (IS_BUN) {
     // Bun 环境：尝试使用全局 test 函数注册测试
     // 在 Bun 测试环境中，test 函数在测试文件的顶层作用域中可用
@@ -214,10 +224,18 @@ export function test(
           const testModule = await import("bun:test" as string);
           const bunTest = testModule.test || testModule.default?.test;
           if (typeof bunTest === "function") {
-            bunTest(fullName, async () => {
-              const testContext = createTestContext(fullName);
-              await fn(testContext);
-            });
+            // Bun 的 test 函数支持超时选项
+            if (options?.timeout) {
+              bunTest(fullName, async () => {
+                const testContext = createTestContext(fullName);
+                await fn(testContext);
+              }, { timeout: options.timeout });
+            } else {
+              bunTest(fullName, async () => {
+                const testContext = createTestContext(fullName);
+                await fn(testContext);
+              });
+            }
           }
         } catch {
           // 导入失败，忽略

@@ -18,7 +18,6 @@ const rootSuite: TestSuite = {
 };
 
 let currentSuite = rootSuite;
-let hasOnly = false;
 
 /**
  * 测试统计信息
@@ -30,7 +29,7 @@ interface TestStats {
   total: number;
 }
 
-let testStats: TestStats = {
+const testStats: TestStats = {
   passed: 0,
   failed: 0,
   skipped: 0,
@@ -62,7 +61,8 @@ async function getBunTest(): Promise<any> {
     return null;
   }
   try {
-    const bunTest = await import("bun:test" as any);
+    // @ts-ignore: bun:test 是 Bun 特有的模块，Deno 类型检查器不识别
+    const bunTest = await import("bun:test" as string);
     return bunTest.test;
   } catch {
     // 如果导入失败，尝试使用全局 test
@@ -87,126 +87,6 @@ function createTestContext(name: string): TestContext {
       return await fn(createTestContext(`${name} > ${stepName}`));
     },
   };
-}
-
-/**
- * 执行测试套件（支持 Deno TestContext 的 step API）
- */
-async function runSuite(
-  suite: TestSuite,
-  prefix = "",
-  denoTestContext?: any,
-): Promise<void> {
-  const fullName = prefix ? `${prefix} > ${suite.name}` : suite.name;
-
-  // 执行 beforeAll
-  if (suite.beforeAll) {
-    await suite.beforeAll();
-  }
-
-  // 执行测试用例
-  for (const testCase of suite.tests) {
-    // 检查 only 标志
-    if (hasOnly && !testCase.only) {
-      continue;
-    }
-
-    // 跳过测试
-    if (testCase.skip) {
-      testStats.skipped++;
-      testStats.total++;
-      if (IS_DENO) {
-        console.log(
-          `%cSKIP %c${fullName} > ${testCase.name}`,
-          "color: yellow",
-          "color: gray",
-        );
-      } else {
-        console.log(`SKIP ${fullName} > ${testCase.name}`);
-      }
-      continue;
-    }
-
-    testStats.total++;
-
-    // 执行 beforeEach
-    if (suite.beforeEach) {
-      await suite.beforeEach();
-    }
-
-    const testName = `${fullName} > ${testCase.name}`;
-    const testContext = createTestContext(testName);
-
-    // 在 Deno 环境下，使用 t.step() 来确保测试被正确统计
-    const executeTest = async () => {
-      // 处理超时
-      const timeout = testCase.timeout;
-      let timeoutId: ReturnType<typeof setTimeout> | undefined;
-      const timeoutPromise = timeout
-        ? new Promise<never>((_, reject) => {
-          timeoutId = setTimeout(() => {
-            reject(new Error(`测试超时: ${testName} (${timeout}ms)`));
-          }, timeout);
-        })
-        : null;
-
-      try {
-        // 执行测试（支持超时）
-        if (timeoutPromise) {
-          await Promise.race([testCase.fn(testContext), timeoutPromise]);
-        } else {
-          await testCase.fn(testContext);
-        }
-
-        // 测试通过
-        testStats.passed++;
-        if (IS_DENO) {
-          console.log(`%c✓ %c${testName}`, "color: green", "color: gray");
-        } else {
-          console.log(`✓ ${testName}`);
-        }
-      } catch (error) {
-        // 测试失败
-        testStats.failed++;
-        if (IS_DENO) {
-          console.error(`%c✗ %c${testName}`, "color: red", "color: gray");
-        } else {
-          console.error(`✗ ${testName}`);
-        }
-        console.error(error);
-        // 不抛出错误，继续执行其他测试
-        // throw error;
-      } finally {
-        // 清除超时定时器
-        if (timeoutId !== undefined) {
-          clearTimeout(timeoutId);
-        }
-        // 执行 afterEach
-        if (suite.afterEach) {
-          await suite.afterEach();
-        }
-      }
-    };
-
-    // 在 Deno 环境下，使用 t.step() 来确保测试被正确统计
-    if (
-      IS_DENO && denoTestContext && typeof denoTestContext.step === "function"
-    ) {
-      await denoTestContext.step(testName, executeTest);
-    } else {
-      await executeTest();
-    }
-  }
-
-  // 执行子套件
-  for (const subSuite of suite.suites) {
-    await runSuite(subSuite, fullName);
-  }
-
-  // 执行 afterAll
-  if (suite.afterAll) {
-    await suite.afterAll();
-  }
 }
 
 /**
@@ -432,7 +312,6 @@ test.only = function (
   fn: (t?: TestContext) => void | Promise<void>,
   options?: { timeout?: number },
 ): void {
-  hasOnly = true;
   const testCase: TestCase = {
     name,
     fn,
@@ -515,80 +394,3 @@ test.only = function (
  * it 作为 test 的别名
  */
 export const it = test;
-
-/**
- * 运行所有测试
- * 在模块加载完成后自动执行
- */
-async function runAllTests(): Promise<void> {
-  // 重置统计信息
-  testStats = {
-    passed: 0,
-    failed: 0,
-    skipped: 0,
-    total: 0,
-  };
-
-  // 检查是否有 only 测试
-  function checkOnly(suite: TestSuite): boolean {
-    if (suite.tests.some((t) => t.only)) {
-      return true;
-    }
-    return suite.suites.some(checkOnly);
-  }
-
-  hasOnly = checkOnly(rootSuite);
-
-  // 运行所有测试套件
-  // 注意：在 Deno 环境下，测试已经通过 Deno.test 注册，Deno 会自动执行
-  // 这里只用于 Bun 和其他环境
-  for (const suite of rootSuite.suites) {
-    await runSuite(suite);
-  }
-
-  // 输出测试统计信息（只在有测试的情况下输出）
-  // 注意：在 Deno 环境下，测试已经通过 Deno.test 注册，Deno 会自动输出统计
-  // 所以我们不在这里输出，避免重复输出统计信息
-  if (testStats.total > 0 && !IS_DENO) {
-    // Bun 格式：24 pass, 0 fail
-    console.log(
-      `\n${testStats.passed} pass${
-        testStats.failed > 0 ? `, ${testStats.failed} fail` : ""
-      }${testStats.skipped > 0 ? `, ${testStats.skipped} skip` : ""}`,
-    );
-  }
-
-  // 如果有失败的测试，以非零退出码退出
-  if (testStats.failed > 0) {
-    if (IS_DENO) {
-      (globalThis as any).Deno.exit(1);
-    } else if (IS_BUN) {
-      // Bun 环境下使用全局 process
-      (globalThis as any).process.exit(1);
-    }
-  }
-}
-
-if (IS_DENO) {
-  // Deno 环境：测试已通过 Deno.test 注册，Deno 会自动执行
-  // 不需要手动调用 runAllTests()
-} else if (IS_BUN) {
-  // 输出统计信息（Deno 格式：ok | X passed | Y failed）
-  // 注意：只在有统计信息时输出
-  if (testStats.total > 0) {
-    const status = testStats.failed > 0 ? "fail" : "ok";
-    const colorCode = testStats.failed > 0 ? "\x1b[31m" : "\x1b[32m";
-    const resetCode = "\x1b[0m";
-    // 在 Bun 的输出后添加我们的统计信息
-    console.log(
-      `${colorCode}${status}${resetCode} | ${testStats.passed} passed | ${testStats.failed} failed`,
-    );
-  }
-} else {
-  // 其他环境：手动执行测试
-  (async () => {
-    // 等待所有测试注册完成
-    await new Promise((resolve) => setTimeout(resolve, 0));
-    await runAllTests();
-  })();
-}

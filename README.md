@@ -1,26 +1,9 @@
 # @dreamer/test
 
-> 一个用于 Deno 和 Bun 的测试工具库，提供 Mock 工具、断言增强、测试工具函数等高级功能
+> 一个兼容 Deno 和 Bun 的测试工具库，提供 Mock 工具、断言增强、测试工具函数等高级功能
 
 [![JSR](https://jsr.io/badges/@dreamer/test)](https://jsr.io/@dreamer/test)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
----
-
-## 📋 目录
-
-- [功能](#-功能)
-- [特性](#-特性)
-- [为什么需要测试工具库？](#-为什么需要测试工具库)
-- [使用场景](#-使用场景)
-- [安装](#-安装)
-- [环境兼容性](#-环境兼容性)
-- [快速开始](#-快速开始)
-- [API 文档](#-api-文档)
-- [与 Deno 内置测试框架的关系](#-与-deno-内置测试框架的关系)
-- [备注](#-备注)
-- [贡献](#-贡献)
-- [许可证](#-许可证)
 
 ---
 

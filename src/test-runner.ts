@@ -155,9 +155,13 @@ export function test(
       name: fullName,
       parallel: false, // 确保顺序执行
       sanitizeOutput: false, // 禁用输出分隔线
+      // 如果选项中有设置，在测试选项级别设置 sanitizeOps 和 sanitizeResources
+      ...(options?.sanitizeOps !== undefined &&
+        { sanitizeOps: options.sanitizeOps }),
+      ...(options?.sanitizeResources !== undefined &&
+        { sanitizeResources: options.sanitizeResources }),
       fn: async (t: any) => {
-        // 如果选项中有设置 sanitizeOps 或 sanitizeResources，在测试开始时设置
-        // 注意：这些选项需要在测试函数内部通过 t 参数设置
+        // 如果选项中有设置 sanitizeOps 或 sanitizeResources，也在测试函数内部设置（双重保险）
         if (options?.sanitizeOps !== undefined) {
           t.sanitizeOps = options.sanitizeOps;
         }

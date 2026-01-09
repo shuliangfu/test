@@ -130,12 +130,20 @@ export function describe(
 export function test(
   name: string,
   fn: (t?: TestContext) => void | Promise<void>,
-  options?: { timeout?: number },
+  options?: {
+    timeout?: number;
+    sanitizeOps?: boolean;
+    sanitizeResources?: boolean;
+  },
 ): void {
   const testCase: TestCase = {
     name,
     fn,
     timeout: options?.timeout,
+    ...(options?.sanitizeOps !== undefined &&
+      { sanitizeOps: options.sanitizeOps }),
+    ...(options?.sanitizeResources !== undefined &&
+      { sanitizeResources: options.sanitizeResources }),
   };
   currentSuite.tests.push(testCase);
 
@@ -148,6 +156,15 @@ export function test(
       parallel: false, // 确保顺序执行
       sanitizeOutput: false, // 禁用输出分隔线
       fn: async (t: any) => {
+        // 如果选项中有设置 sanitizeOps 或 sanitizeResources，在测试开始时设置
+        // 注意：这些选项需要在测试函数内部通过 t 参数设置
+        if (options?.sanitizeOps !== undefined) {
+          t.sanitizeOps = options.sanitizeOps;
+        }
+        if (options?.sanitizeResources !== undefined) {
+          t.sanitizeResources = options.sanitizeResources;
+        }
+
         // 执行 beforeAll（只执行一次，通过检查标志）
         if (suite.beforeAll && !(suite as any)._beforeAllExecuted) {
           await suite.beforeAll();
@@ -170,7 +187,16 @@ export function test(
         });
 
         try {
+          // 执行测试函数，如果函数内部修改了 sanitizeOps 或 sanitizeResources，
+          // 需要同步到 Deno.TestContext
           await fn(testContext);
+          // 同步测试上下文中的 sanitize 选项到 Deno.TestContext
+          if (testContext.sanitizeOps !== undefined) {
+            t.sanitizeOps = testContext.sanitizeOps;
+          }
+          if (testContext.sanitizeResources !== undefined) {
+            t.sanitizeResources = testContext.sanitizeResources;
+          }
         } finally {
           // 执行 afterEach
           if (suite.afterEach) {

@@ -40,6 +40,10 @@ export interface TestCase {
   skip?: boolean;
   only?: boolean;
   timeout?: number;
+  /** 是否禁用操作清理检查（用于第三方库的内部定时器） */
+  sanitizeOps?: boolean;
+  /** 是否禁用资源清理检查（用于第三方库的内部资源） */
+  sanitizeResources?: boolean;
 }
 
 /**

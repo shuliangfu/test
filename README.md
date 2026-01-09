@@ -1,12 +1,51 @@
 # @dreamer/test
 
-一个用于 Deno 的测试工具库，基于 Deno 内置测试框架，提供 Mock 工具、断言增强、测试工具函数等高级功能。
+> 一个用于 Deno 和 Bun 的测试工具库，提供 Mock 工具、断言增强、测试工具函数等高级功能
 
-## 功能
+[![JSR](https://jsr.io/badges/@dreamer/test)](https://jsr.io/@dreamer/test)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+---
+
+## 📋 目录
+
+- [功能](#-功能)
+- [特性](#-特性)
+- [为什么需要测试工具库？](#-为什么需要测试工具库)
+- [使用场景](#-使用场景)
+- [安装](#-安装)
+- [环境兼容性](#-环境兼容性)
+- [快速开始](#-快速开始)
+- [API 文档](#-api-文档)
+- [与 Deno 内置测试框架的关系](#-与-deno-内置测试框架的关系)
+- [备注](#-备注)
+- [贡献](#-贡献)
+- [许可证](#-许可证)
+
+---
+
+## 🎯 功能
 
 测试工具库，基于 Deno 内置测试框架，提供 Mock、断言增强、测试工具函数等高级功能，让测试更简单、更强大。
 
-## 为什么需要测试工具库？
+---
+
+## ✨ 特性
+
+| 特性 | 说明 |
+|------|------|
+| 🎭 **Mock 工具** | 函数 Mock、模块 Mock、HTTP Mock、时间 Mock |
+| ✅ **断言增强** | 丰富的断言方法（`assertSnapshot`、`assertRejects` 等） |
+| 🛠️ **测试工具函数** | Setup/Teardown、Fixtures、参数化测试 |
+| 📊 **测试覆盖率工具封装** | 简化覆盖率收集和报告生成 |
+| ⚡ **性能测试工具** | 性能测试和基准测试工具 |
+| 📸 **快照测试** | 支持快照测试（类似 Jest 的 snapshot） |
+| 🌐 **HTTP Mock** | 提供 HTTP 请求 Mock 工具 |
+| 📝 **测试报告** | 生成更详细的测试报告 |
+
+---
+
+## 🤔 为什么需要测试工具库？
 
 虽然 Deno 内置了测试框架，但 `@dreamer/test` 提供了以下增强功能：
 
@@ -19,7 +58,9 @@
 - ✅ **HTTP Mock**：提供 HTTP 请求 Mock 工具
 - ✅ **测试报告**：生成更详细的测试报告
 
-## 特性
+---
+
+## 🎨 详细特性
 
 ### Mock 工具
 
@@ -73,7 +114,7 @@
   - 测试环境 Fixtures
   - 共享测试资源
 - **参数化测试**：
-  - 参数化测试（`test.each`）
+  - 参数化测试（`testEach`）
   - 表格驱动测试
   - 测试用例生成
 - **异步测试工具**：
@@ -112,7 +153,9 @@
 - **测试报告**：详细的测试报告生成
 - **测试并行化**：测试并行执行控制
 
-## 使用场景
+---
+
+## 🎯 使用场景
 
 - 单元测试（函数、类、模块测试）
 - 集成测试（API、数据库、服务测试）
@@ -121,43 +164,42 @@
 - 性能测试（基准测试、性能对比）
 - 测试覆盖率收集和分析
 
-## 优先级
+---
 
-⭐⭐⭐
+## 📦 安装
 
-## 安装
+### Deno
 
 ```bash
 deno add jsr:@dreamer/test
 ```
 
-## 环境兼容性
-
-- **Deno 版本**：要求 Deno 2.5 或更高版本 ✅
-- **Bun 版本**：Bun 1.0+ ✅（通过 `bunx jsr add` 安装 JSR 依赖）
-- **服务端**：✅ 支持（Deno/Bun 运行时，基于 Deno 测试框架，完整功能支持，在控制台运行）
-- **客户端**：❌ 不支持（测试工具库仅在服务端运行，在控制台执行测试，客户端测试需要使用浏览器测试框架如 Playwright、Puppeteer）
-- **依赖**：基于 Deno 内置测试框架，无额外依赖
-
-### Bun 安装方法
-
-在 Bun 环境中，使用 `bunx jsr add` 安装 JSR 依赖：
+### Bun
 
 ```bash
-bunx jsr add @std/testing@1.0.16/bdd
+bunx jsr add @dreamer/test
 ```
 
-这会自动：
-- 在 `package.json` 中添加依赖
-- 配置 `.npmrc` 使用 JSR npm 镜像
-- 允许在代码中使用 `@std/testing/bdd` 导入
+---
 
-## 示例用法
+## 🌍 环境兼容性
+
+| 环境 | 版本要求 | 状态 |
+|------|---------|------|
+| **Deno** | 2.5+ | ✅ 完全支持 |
+| **Bun** | 1.0+ | ✅ 完全支持 |
+| **服务端** | - | ✅ 支持（Deno/Bun 运行时，基于 Deno 测试框架，完整功能支持，在控制台运行） |
+| **客户端** | - | ❌ 不支持（测试工具库仅在服务端运行，在控制台执行测试，客户端测试需要使用浏览器测试框架如 Playwright、Puppeteer） |
+| **依赖** | - | 📦 基于 Deno 内置测试框架，无额外依赖 |
+
+---
+
+## 🚀 快速开始
 
 ### 基础测试
 
 ```typescript
-import { describe, it, expect } from "jsr:@dreamer/test";
+import { describe, it, expect } from "@dreamer/test";
 
 describe("Math", () => {
   it("should add two numbers", () => {
@@ -173,7 +215,7 @@ describe("Math", () => {
 ### Mock 函数
 
 ```typescript
-import { describe, it, expect, mockFn } from "jsr:@dreamer/test";
+import { describe, it, expect, mockFn } from "@dreamer/test";
 
 describe("Mock 函数", () => {
   it("should mock function calls", () => {
@@ -207,30 +249,10 @@ describe("Mock 函数", () => {
 });
 ```
 
-### Mock 模块
-
-```typescript
-import { describe, it, expect, mockModule } from "jsr:@dreamer/test";
-
-// Mock 模块
-const mockModule = await mockModule("./database.ts", {
-  getUser: () => ({ id: 1, name: "Mock User" }),
-  createUser: () => ({ id: 2, name: "New User" }),
-});
-
-describe("User Service", () => {
-  it("should get user", async () => {
-    const { getUser } = await import("./database.ts");
-    const user = await getUser(1);
-    expect(user).toEqual({ id: 1, name: "Mock User" });
-  });
-});
-```
-
 ### HTTP Mock
 
 ```typescript
-import { describe, it, expect, mockFetch } from "jsr:@dreamer/test";
+import { describe, it, expect, mockFetch } from "@dreamer/test";
 
 describe("HTTP Mock", () => {
   it("should mock fetch request", async () => {
@@ -248,38 +270,13 @@ describe("HTTP Mock", () => {
     expect(data).toEqual({ id: 1, name: "Alice" });
     expect(mock).toHaveBeenCalledTimes(1);
   });
-
-  it("should verify request", async () => {
-    const mock = mockFetch("https://api.example.com/users", {
-      method: "POST",
-      requestBody: { name: "Bob" },
-      response: {
-        status: 201,
-        body: JSON.stringify({ id: 2, name: "Bob" }),
-      },
-    });
-
-    await fetch("https://api.example.com/users", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: "Bob" }),
-    });
-
-    // 验证请求
-    expect(mock).toHaveBeenCalledWith(
-      expect.objectContaining({
-        method: "POST",
-        body: JSON.stringify({ name: "Bob" }),
-      })
-    );
-  });
 });
 ```
 
 ### 快照测试
 
 ```typescript
-import { describe, it, expect, assertSnapshot } from "jsr:@dreamer/test";
+import { describe, it, assertSnapshot } from "@dreamer/test";
 
 describe("快照测试", () => {
   it("should match snapshot", async (t) => {
@@ -309,7 +306,7 @@ import {
   afterAll,
   beforeEach,
   afterEach,
-} from "jsr:@dreamer/test";
+} from "@dreamer/test";
 
 describe("Database Tests", () => {
   let db: Database;
@@ -344,7 +341,7 @@ describe("Database Tests", () => {
 ### 参数化测试
 
 ```typescript
-import { describe, it, expect, testEach } from "jsr:@dreamer/test";
+import { describe, testEach } from "@dreamer/test";
 
 describe("参数化测试", () => {
   testEach([
@@ -354,48 +351,13 @@ describe("参数化测试", () => {
   ])("should add %d and %d to equal %d", (a, b, expected) => {
     expect(a + b).toBe(expected);
   });
-
-  // 或使用对象形式
-  testEach([
-    { input: "hello", expected: "HELLO" },
-    { input: "world", expected: "WORLD" },
-  ])("should uppercase %input to %expected", ({ input, expected }) => {
-    expect(input.toUpperCase()).toBe(expected);
-  });
-});
-```
-
-### 异步断言
-
-```typescript
-import { describe, it, expect, assertRejects, assertResolves } from "jsr:@dreamer/test";
-
-describe("异步断言", () => {
-  it("should reject with error", async () => {
-    await assertRejects(
-      async () => {
-        throw new Error("Test error");
-      },
-      Error,
-      "Test error"
-    );
-  });
-
-  it("should resolve with value", async () => {
-    await assertResolves(
-      async () => {
-        return "success";
-      },
-      "success"
-    );
-  });
 });
 ```
 
 ### 性能测试
 
 ```typescript
-import { describe, bench } from "jsr:@dreamer/test";
+import { describe, bench } from "@dreamer/test";
 
 describe("性能测试", () => {
   bench("array push", () => {
@@ -414,58 +376,70 @@ describe("性能测试", () => {
 });
 ```
 
-### 测试覆盖率
+---
 
-```typescript
-// deno.json
-{
-  "tasks": {
-    "test:coverage": "deno test --coverage=./coverage",
-    "test:coverage:report": "deno coverage ./coverage --html"
-  }
-}
-```
+## 📚 API 文档
 
-```typescript
-import { describe, it, expect, collectCoverage } from "jsr:@dreamer/test";
+### 测试函数
 
-// 收集覆盖率
-await collectCoverage({
-  include: ["./src/**/*.ts"],
-  exclude: ["./src/**/*.test.ts"],
-  outputDir: "./coverage",
-  threshold: {
-    statements: 80,
-    branches: 75,
-    functions: 80,
-    lines: 80,
-  },
-});
-```
+- `describe(name: string, fn: () => void | Promise<void>)`: 创建测试套件
+- `it(name: string, fn: () => void | Promise<void>)`: 创建测试用例
+- `test(name: string, fn: () => void | Promise<void>)`: 创建测试用例（`it` 的别名）
+- `test.skip(name: string, fn: () => void | Promise<void>)`: 跳过测试
+- `test.only(name: string, fn: () => void | Promise<void>)`: 只运行此测试
 
-### 测试分组和跳过
+### Mock 函数
 
-```typescript
-import { describe, it, expect, test } from "jsr:@dreamer/test";
+- `mockFn(implementation?: Function)`: 创建 Mock 函数
+- `mockFetch(url: string, options?)`: Mock HTTP 请求
 
-describe("测试分组", () => {
-  it("should run this test", () => {
-    expect(1 + 1).toBe(2);
-  });
+### 断言
 
-  it.skip("should skip this test", () => {
-    // 这个测试会被跳过
-    expect(1 + 1).toBe(3);
-  });
+- `expect(actual: unknown)`: 创建断言对象
+  - `.toBe(expected)`: 严格相等
+  - `.toEqual(expected)`: 深度相等
+  - `.toBeTruthy()`: 真值
+  - `.toBeFalsy()`: 假值
+  - `.toBeNull()`: null
+  - `.toBeUndefined()`: undefined
+  - `.toContain(item)`: 包含
+  - `.toMatch(regexp)`: 正则匹配
+  - `.toThrow(error?)`: 抛出错误
+  - `.not`: 反向断言
 
-  test.only("should only run this test", () => {
-    // 只运行这个测试
-    expect(1 + 1).toBe(2);
-  });
-});
-```
+### 异步断言
 
-## 与 Deno 内置测试框架的关系
+- `assertRejects(fn: () => Promise<any>, ErrorClass?, message?)`: 断言异步函数抛出错误
+- `assertResolves(fn: () => Promise<any>, expected?)`: 断言异步函数成功
+
+### 对象断言
+
+- `assertDeepEqual(actual, expected)`: 深度相等断言
+- `assertInstanceOf(actual, ExpectedClass)`: 实例类型断言
+- `assertMatch(actual, regexp)`: 正则匹配断言
+
+### 快照测试
+
+- `assertSnapshot(t: TestContext, data: any)`: 快照测试
+
+### Setup/Teardown
+
+- `beforeAll(fn: () => void | Promise<void>)`: 所有测试前执行
+- `afterAll(fn: () => void | Promise<void>)`: 所有测试后执行
+- `beforeEach(fn: () => void | Promise<void>)`: 每个测试前执行
+- `afterEach(fn: () => void | Promise<void>)`: 每个测试后执行
+
+### 参数化测试
+
+- `testEach(cases: any[])`: 参数化测试
+
+### 性能测试
+
+- `bench(name: string, fn: () => void)`: 性能基准测试
+
+---
+
+## 🔗 与 Deno 内置测试框架的关系
 
 `@dreamer/test` **基于 Deno 内置测试框架**，提供以下增强：
 
@@ -487,13 +461,31 @@ describe("测试分组", () => {
 - 需要 Mock、快照、参数化等高级功能：使用 `@dreamer/test`
 - 可以混合使用：`@dreamer/test` 与 Deno 内置测试框架完全兼容
 
-## 状态
+---
 
-🚧 **开发中**
-
-## 备注
+## 📝 备注
 
 - 基于 Deno 内置测试框架，提供增强功能，不替代 Deno 测试框架
 - 提供 Mock、快照、参数化等 Deno 内置测试框架没有的功能
 - 完全兼容 Deno 内置测试框架，可以混合使用
 - 适合需要高级测试功能的项目
+
+---
+
+## 🤝 贡献
+
+欢迎提交 Issue 和 Pull Request！
+
+---
+
+## 📄 许可证
+
+MIT License - 详见 [LICENSE.md](./LICENSE.md)
+
+---
+
+<div align="center">
+
+**Made with ❤️ by Dreamer Team**
+
+</div>

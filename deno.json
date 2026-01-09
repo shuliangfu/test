@@ -1,6 +1,6 @@
 {
   "name": "@dreamer/test",
-  "version": "1.0.0-beta.4",
+  "version": "1.0.0-beta.5",
   "license": "MIT",
   "exports": {
     ".": "./src/mod.ts"
@@ -32,5 +32,8 @@
         "no-unresolved"
       ]
     }
+  },
+  "imports": {
+    "@dreamer/test": "jsr:@dreamer/test@^1.0.0-beta.4"
   }
 }

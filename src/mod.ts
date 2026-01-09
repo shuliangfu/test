@@ -12,7 +12,7 @@
  *
  * @example
  * ```typescript
- * import { describe, it, expect, mockFn } from "jsr:@dreamer/test";
+ * import { describe, it, expect, mockFn } from "@dreamer/test";
  *
  * describe("测试套件", () => {
  *   it("应该通过", () => {

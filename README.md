@@ -150,6 +150,7 @@
 - **测试分组**：测试套件组织（`describe`、`it`）
 - **测试跳过**：条件跳过测试（`test.skip`、`test.only`）
 - **测试超时**：测试超时控制
+- **资源清理控制**：支持禁用定时器和资源泄漏检查（`sanitizeOps`、`sanitizeResources`），适用于第三方库可能产生内部定时器或资源的情况
 - **测试报告**：详细的测试报告生成
 - **测试并行化**：测试并行执行控制
 
@@ -376,6 +377,43 @@ describe("性能测试", () => {
 });
 ```
 
+### 禁用资源清理检查
+
+当使用第三方库（如 Redis、MongoDB 客户端）时，这些库可能会产生内部定时器或资源，导致 Deno 的泄漏检查报错。可以使用 `sanitizeOps` 和 `sanitizeResources` 选项来禁用这些检查：
+
+```typescript
+import { describe, it, expect } from "@dreamer/test";
+
+describe("Redis 测试", () => {
+  it("应该创建 Redis 连接", async () => {
+    // Redis 客户端库可能有内部定时器（Socket 的 _unrefTimer），
+    // 这是第三方库的内部实现，我们无法直接控制
+    const client = await createRedisClient();
+    expect(client).toBeDefined();
+    await client.disconnect();
+  }, {
+    // 禁用定时器检查（sanitizeOps）和资源检查（sanitizeResources）
+    sanitizeOps: false,        // 禁用定时器泄漏检查
+    sanitizeResources: false,  // 禁用资源句柄泄漏检查
+  });
+});
+```
+
+**选项说明**：
+- **`sanitizeOps: false`**：禁用**定时器和异步操作**泄漏检查
+  - 适用于：第三方库可能产生内部定时器（如 `setTimeout`、`setInterval`）的情况
+  - 例如：Redis 客户端的 Socket 定时器、HTTP 客户端的重连定时器等
+
+- **`sanitizeResources: false`**：禁用**资源句柄**泄漏检查
+  - 适用于：第三方库可能产生内部资源（如文件句柄、网络连接、子进程）的情况
+  - 例如：数据库连接池、文件系统监听器等
+
+**注意事项**：
+- 只有在确实需要时才禁用这些检查（例如第三方库的内部实现）
+- 禁用检查可能会隐藏真正的资源泄漏问题
+- 建议优先尝试正确清理资源，只有在无法控制第三方库行为时才禁用检查
+- 可以根据实际情况只禁用其中一个选项，不必同时禁用两个
+
 ---
 
 ## 📚 API 文档
@@ -383,10 +421,20 @@ describe("性能测试", () => {
 ### 测试函数
 
 - `describe(name: string, fn: () => void | Promise<void>)`: 创建测试套件
-- `it(name: string, fn: () => void | Promise<void>)`: 创建测试用例
-- `test(name: string, fn: () => void | Promise<void>)`: 创建测试用例（`it` 的别名）
+- `it(name: string, fn: () => void | Promise<void>, options?)`: 创建测试用例
+- `test(name: string, fn: () => void | Promise<void>, options?)`: 创建测试用例（`it` 的别名）
 - `test.skip(name: string, fn: () => void | Promise<void>)`: 跳过测试
-- `test.only(name: string, fn: () => void | Promise<void>)`: 只运行此测试
+- `test.only(name: string, fn: () => void | Promise<void>, options?)`: 只运行此测试
+
+**测试选项（options）**：
+- `timeout?: number`: 测试超时时间（毫秒）
+- `sanitizeOps?: boolean`: 是否启用操作清理检查（默认：`true`）。设置为 `false` 可禁用**定时器和异步操作**泄漏检查，适用于第三方库可能产生内部定时器（如 `setTimeout`、`setInterval`）的情况
+- `sanitizeResources?: boolean`: 是否启用资源清理检查（默认：`true`）。设置为 `false` 可禁用**资源句柄**泄漏检查，适用于第三方库可能产生内部资源（如文件句柄、网络连接、子进程等）的情况
+
+**区别说明**：
+- `sanitizeOps` 检查的是**操作泄漏**（定时器、异步操作等）
+- `sanitizeResources` 检查的是**资源泄漏**（文件句柄、网络连接、子进程等）
+- 两者检查不同类型的泄漏，可以根据需要分别禁用
 
 ### Mock 函数
 

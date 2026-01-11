@@ -334,6 +334,40 @@ describe("Database Tests", () => {
 });
 ```
 
+**支持选项参数**：
+
+`beforeEach` 和 `afterEach` 支持可选的 `options` 参数，用于控制资源清理检查：
+
+```typescript
+import { describe, it, beforeEach, afterEach } from "@dreamer/test";
+
+describe("使用第三方库的测试", () => {
+  beforeEach((t) => {
+    // beforeEach 可以接收 TestContext 参数
+    // 可以访问 t.name、t.sanitizeOps 等属性
+    console.log(`测试: ${t.name}`);
+  }, {
+    sanitizeOps: false,        // 禁用定时器泄漏检查
+    sanitizeResources: false,  // 禁用资源句柄泄漏检查
+  });
+
+  afterEach((t) => {
+    // afterEach 也可以接收 TestContext 参数
+    console.log(`测试完成: ${t.name}`);
+  }, {
+    sanitizeOps: false,
+  });
+
+  it("测试用例", () => {
+    // 测试代码
+  });
+});
+```
+
+**选项说明**：
+- **`sanitizeOps?: boolean`**：是否启用操作清理检查（默认：`true`）。设置为 `false` 可禁用定时器和异步操作泄漏检查
+- **`sanitizeResources?: boolean`**：是否启用资源清理检查（默认：`true`）。设置为 `false` 可禁用资源句柄泄漏检查
+
 ### 参数化测试
 
 ```typescript
@@ -380,6 +414,47 @@ describe("性能测试", () => {
 - `bench()` 应该在 `describe()` 执行期间调用，而不是在 `it()` 回调中
 - 在 Bun 环境中，`test()` 必须在 `describe()` 执行期间调用，不能在测试执行期间调用
 
+### 测试套件选项
+
+`describe()` 支持 `options` 参数，用于为整个测试套件设置默认选项：
+
+```typescript
+import { describe, it } from "@dreamer/test";
+
+describe("使用定时器的测试套件", {
+  sanitizeOps: false,        // 禁用定时器泄漏检查
+  sanitizeResources: false,  // 禁用资源句柄泄漏检查
+}, () => {
+  it("测试用例 1", () => {
+    // 这个测试用例会继承套件的选项
+  });
+
+  it("测试用例 2", () => {
+    // 这个测试用例也会继承套件的选项
+  });
+});
+```
+
+**嵌套套件的选项继承**：
+
+```typescript
+describe("父套件", {
+  sanitizeOps: false,
+}, () => {
+  describe("子套件", {
+    sanitizeResources: false,  // 子套件可以覆盖或添加选项
+  }, () => {
+    it("测试用例", () => {
+      // 这个测试用例会继承 sanitizeOps: false 和 sanitizeResources: false
+    });
+  });
+});
+```
+
+**选项说明**：
+- **`sanitizeOps?: boolean`**：是否启用操作清理检查（默认：`true`）。设置为 `false` 可禁用定时器和异步操作泄漏检查
+- **`sanitizeResources?: boolean`**：是否启用资源清理检查（默认：`true`）。设置为 `false` 可禁用资源句柄泄漏检查
+
 ### 禁用资源清理检查
 
 当使用第三方库（如 Redis、MongoDB 客户端）时，这些库可能会产生内部定时器或资源，导致 Deno 的泄漏检查报错。可以使用 `sanitizeOps` 和 `sanitizeResources` 选项来禁用这些检查：
@@ -424,15 +499,24 @@ describe("Redis 测试", () => {
 ### 测试函数
 
 - `describe(name: string, fn: () => void | Promise<void>)`: 创建测试套件
+- `describe(name: string, options: DescribeOptions, fn: () => void | Promise<void>)`: 创建测试套件（带选项）
 - `it(name: string, fn: () => void | Promise<void>, options?)`: 创建测试用例
 - `test(name: string, fn: () => void | Promise<void>, options?)`: 创建测试用例（`it` 的别名）
 - `test.skip(name: string, fn: () => void | Promise<void>)`: 跳过测试
 - `test.only(name: string, fn: () => void | Promise<void>, options?)`: 只运行此测试
 
-**测试选项（options）**：
+**测试套件选项（DescribeOptions）**：
+- `sanitizeOps?: boolean`: 是否启用操作清理检查（默认：`true`）。设置为 `false` 可禁用**定时器和异步操作**泄漏检查
+- `sanitizeResources?: boolean`: 是否启用资源清理检查（默认：`true`）。设置为 `false` 可禁用**资源句柄**泄漏检查
+
+**测试选项（TestOptions）**：
 - `timeout?: number`: 测试超时时间（毫秒）
 - `sanitizeOps?: boolean`: 是否启用操作清理检查（默认：`true`）。设置为 `false` 可禁用**定时器和异步操作**泄漏检查，适用于第三方库可能产生内部定时器（如 `setTimeout`、`setInterval`）的情况
 - `sanitizeResources?: boolean`: 是否启用资源清理检查（默认：`true`）。设置为 `false` 可禁用**资源句柄**泄漏检查，适用于第三方库可能产生内部资源（如文件句柄、网络连接、子进程等）的情况
+
+**选项优先级**：
+- 测试用例选项 > 套件选项 > 默认值
+- 子套件选项 > 父套件选项
 
 **区别说明**：
 - `sanitizeOps` 检查的是**操作泄漏**（定时器、异步操作等）
@@ -511,8 +595,16 @@ describe("Redis 测试", () => {
 
 - `beforeAll(fn: () => void | Promise<void>)`: 所有测试前执行
 - `afterAll(fn: () => void | Promise<void>)`: 所有测试后执行
-- `beforeEach(fn: () => void | Promise<void>)`: 每个测试前执行
-- `afterEach(fn: () => void | Promise<void>)`: 每个测试后执行
+- `beforeEach(fn: (t?: TestContext) => void | Promise<void>, options?: TestOptions)`: 每个测试前执行
+  - `fn`: 钩子函数，可以接收可选的 `TestContext` 参数
+  - `options`: 可选的钩子选项（`sanitizeOps`、`sanitizeResources`）
+- `afterEach(fn: (t?: TestContext) => void | Promise<void>, options?: TestOptions)`: 每个测试后执行
+  - `fn`: 钩子函数，可以接收可选的 `TestContext` 参数
+  - `options`: 可选的钩子选项（`sanitizeOps`、`sanitizeResources`）
+
+**钩子选项（TestOptions）**：
+- `sanitizeOps?: boolean`: 是否启用操作清理检查（默认：`true`）
+- `sanitizeResources?: boolean`: 是否启用资源清理检查（默认：`true`）
 
 ### 参数化测试
 

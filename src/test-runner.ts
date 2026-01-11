@@ -9,6 +9,7 @@ import type {
   TestCase,
   TestContext,
   TestHooks,
+  TestOptions,
   TestSuite,
 } from "./types.ts";
 
@@ -209,23 +210,48 @@ export function test(
   if (IS_DENO) {
     const fullName = getFullTestName(name);
     const suite = currentSuite;
+
+    // 查找所有父套件的选项，合并它们（子套件优先级更高）
+    let finalSanitizeOps = options?.sanitizeOps;
+    let finalSanitizeResources = options?.sanitizeResources;
+
+    if (
+      finalSanitizeOps === undefined || finalSanitizeResources === undefined
+    ) {
+      let current: TestSuite | null = suite;
+      while (current) {
+        if (
+          finalSanitizeOps === undefined &&
+          current.options?.sanitizeOps !== undefined
+        ) {
+          finalSanitizeOps = current.options.sanitizeOps;
+        }
+        if (
+          finalSanitizeResources === undefined &&
+          current.options?.sanitizeResources !== undefined
+        ) {
+          finalSanitizeResources = current.options.sanitizeResources;
+        }
+        current = current.parent || null;
+      }
+    }
+
     const testOptions: any = {
       name: fullName,
       parallel: false, // 确保顺序执行
       sanitizeOutput: false, // 禁用输出分隔线
-      // 如果选项中有设置，在测试选项级别设置 sanitizeOps 和 sanitizeResources
-      ...(options?.sanitizeOps !== undefined &&
-        { sanitizeOps: options.sanitizeOps }),
-      ...(options?.sanitizeResources !== undefined &&
-        { sanitizeResources: options.sanitizeResources }),
+      // 在测试选项级别设置 sanitizeOps 和 sanitizeResources
+      ...(finalSanitizeOps !== undefined && { sanitizeOps: finalSanitizeOps }),
+      ...(finalSanitizeResources !== undefined &&
+        { sanitizeResources: finalSanitizeResources }),
       fn: async (t: any) => {
-        // 如果选项中有设置 sanitizeOps 或 sanitizeResources，立即在测试函数开始时设置
-        // 这必须在任何可能创建定时器的代码执行之前设置
-        if (options?.sanitizeOps !== undefined) {
-          t.sanitizeOps = options.sanitizeOps;
+        // 立即应用最终的 sanitizeOps 和 sanitizeResources（必须在任何代码执行之前）
+        // 这些值已经在 testOptions 级别设置了，但为了确保，也在函数内部设置
+        if (finalSanitizeOps !== undefined) {
+          t.sanitizeOps = finalSanitizeOps;
         }
-        if (options?.sanitizeResources !== undefined) {
-          t.sanitizeResources = options.sanitizeResources;
+        if (finalSanitizeResources !== undefined) {
+          t.sanitizeResources = finalSanitizeResources;
         }
 
         // 执行 beforeAll（只执行一次，通过检查标志）
@@ -235,34 +261,47 @@ export function test(
         }
 
         // 执行 beforeEach，传递 TestContext
+        // 如果 beforeEach 有选项，应用 sanitizeOps 和 sanitizeResources
         if (suite.beforeEach) {
-          await suite.beforeEach(t);
-        }
-
-        // 如果套件有选项，应用默认的 sanitizeOps 和 sanitizeResources
-        // 但测试用例的选项优先级更高
-        if (suite.options) {
-          if (
-            suite.options.sanitizeOps !== undefined &&
-            options?.sanitizeOps === undefined
-          ) {
-            t.sanitizeOps = suite.options.sanitizeOps;
+          // 检查是否有钩子选项（通过检查 TestHooks 的 options）
+          const hooksOptions = (suite as any).hooksOptions as
+            | TestOptions
+            | undefined;
+          if (hooksOptions) {
+            if (hooksOptions.sanitizeOps !== undefined) {
+              t.sanitizeOps = hooksOptions.sanitizeOps;
+            }
+            if (hooksOptions.sanitizeResources !== undefined) {
+              t.sanitizeResources = hooksOptions.sanitizeResources;
+            }
           }
-          if (
-            suite.options.sanitizeResources !== undefined &&
-            options?.sanitizeResources === undefined
-          ) {
-            t.sanitizeResources = suite.options.sanitizeResources;
-          }
+          // 创建 TestContext 传递给 beforeEach（使用当前的 t 值）
+          // 确保 sanitizeOps 和 sanitizeResources 有默认值（boolean）
+          const beforeEachContext = createTestContext(fullName);
+          Object.assign(beforeEachContext, {
+            origin: t.origin,
+            sanitizeExit: t.sanitizeExit,
+            sanitizeOps: t.sanitizeOps !== undefined ? t.sanitizeOps : true,
+            sanitizeResources: t.sanitizeResources !== undefined
+              ? t.sanitizeResources
+              : true,
+            step: t.step.bind(t),
+          });
+          await suite.beforeEach(beforeEachContext);
         }
 
         const testContext = createTestContext(fullName);
         // 将 Deno.TestContext 的属性复制到我们的 TestContext
+        // 注意：sanitizeOps 和 sanitizeResources 可能已经在之前被设置（通过套件选项或钩子选项）
         Object.assign(testContext, {
           origin: t.origin,
           sanitizeExit: t.sanitizeExit,
-          sanitizeOps: t.sanitizeOps,
-          sanitizeResources: t.sanitizeResources,
+          sanitizeOps: t.sanitizeOps !== undefined
+            ? t.sanitizeOps
+            : testContext.sanitizeOps,
+          sanitizeResources: t.sanitizeResources !== undefined
+            ? t.sanitizeResources
+            : testContext.sanitizeResources,
           step: t.step.bind(t),
         });
 
@@ -279,8 +318,33 @@ export function test(
           }
         } finally {
           // 执行 afterEach，传递 TestContext
+          // 如果 afterEach 有选项，应用 sanitizeOps 和 sanitizeResources
           if (suite.afterEach) {
-            await suite.afterEach(t);
+            // 检查是否有钩子选项（通过检查 TestHooks 的 options）
+            const hooksOptions = (suite as any).hooksOptions as
+              | TestOptions
+              | undefined;
+            if (hooksOptions) {
+              if (hooksOptions.sanitizeOps !== undefined) {
+                t.sanitizeOps = hooksOptions.sanitizeOps;
+              }
+              if (hooksOptions.sanitizeResources !== undefined) {
+                t.sanitizeResources = hooksOptions.sanitizeResources;
+              }
+            }
+            // 创建 TestContext 传递给 afterEach（使用当前的 t 值）
+            // 确保 sanitizeOps 和 sanitizeResources 有默认值（boolean）
+            const afterEachContext = createTestContext(fullName);
+            Object.assign(afterEachContext, {
+              origin: t.origin,
+              sanitizeExit: t.sanitizeExit,
+              sanitizeOps: t.sanitizeOps !== undefined ? t.sanitizeOps : true,
+              sanitizeResources: t.sanitizeResources !== undefined
+                ? t.sanitizeResources
+                : true,
+              step: t.step.bind(t),
+            });
+            await suite.afterEach(afterEachContext);
           }
         }
       },
@@ -309,9 +373,25 @@ export function test(
               (suite as any)._beforeAllExecuted = true;
             }
 
-            // 执行 beforeEach
+            // 执行 beforeEach，传递 TestContext（Bun 环境下需要创建模拟的 TestContext）
             if (suite.beforeEach) {
-              await suite.beforeEach();
+              // 检查是否有钩子选项
+              const hooksOptions = (suite as any).hooksOptions as
+                | TestOptions
+                | undefined;
+              // 创建模拟的 TestContext（Bun 环境下没有真实的 TestContext）
+              const mockContext = createTestContext(fullName);
+              // 应用钩子选项
+              if (hooksOptions) {
+                if (hooksOptions.sanitizeOps !== undefined) {
+                  mockContext.sanitizeOps = hooksOptions.sanitizeOps;
+                }
+                if (hooksOptions.sanitizeResources !== undefined) {
+                  mockContext.sanitizeResources =
+                    hooksOptions.sanitizeResources;
+                }
+              }
+              await suite.beforeEach(mockContext);
             }
 
             const testContext = createTestContext(fullName);
@@ -327,9 +407,25 @@ export function test(
               testStats.total++;
               throw error; // 重新抛出错误，让 Bun 捕获
             } finally {
-              // 执行 afterEach
+              // 执行 afterEach，传递 TestContext
               if (suite.afterEach) {
-                await suite.afterEach();
+                // 检查是否有钩子选项
+                const hooksOptions = (suite as any).hooksOptions as
+                  | TestOptions
+                  | undefined;
+                // 创建模拟的 TestContext
+                const mockContext = createTestContext(fullName);
+                // 应用钩子选项
+                if (hooksOptions) {
+                  if (hooksOptions.sanitizeOps !== undefined) {
+                    mockContext.sanitizeOps = hooksOptions.sanitizeOps;
+                  }
+                  if (hooksOptions.sanitizeResources !== undefined) {
+                    mockContext.sanitizeResources =
+                      hooksOptions.sanitizeResources;
+                  }
+                }
+                await suite.afterEach(mockContext);
               }
             }
           };

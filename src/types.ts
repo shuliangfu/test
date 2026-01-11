@@ -75,6 +75,18 @@ export interface MockFunction<T extends (...args: any[]) => any = any> {
 }
 
 /**
+ * 测试选项
+ */
+export interface TestOptions {
+  /** 超时时间（毫秒） */
+  timeout?: number;
+  /** 是否启用操作清理检查（默认：true） */
+  sanitizeOps?: boolean;
+  /** 是否启用资源清理检查（默认：true） */
+  sanitizeResources?: boolean;
+}
+
+/**
  * Setup/Teardown 钩子
  */
 export interface TestHooks {
@@ -82,6 +94,8 @@ export interface TestHooks {
   afterAll?: () => void | Promise<void>;
   beforeEach?: (t?: TestContext) => void | Promise<void>;
   afterEach?: (t?: TestContext) => void | Promise<void>;
+  /** 钩子选项 */
+  options?: TestOptions;
 }
 
 /**

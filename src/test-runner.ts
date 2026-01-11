@@ -131,13 +131,26 @@ export function describe(
     actualFn = fnOrOptions;
     // 第三个参数可能是选项
     options = typeof fnOrOptions2 === "object" && fnOrOptions2 !== null &&
-        !("call" in fnOrOptions2)
+        !("call" in fnOrOptions2) && typeof fnOrOptions2 !== "function"
       ? (fnOrOptions2 as DescribeOptions)
       : undefined;
   } else {
     // 第二个参数是选项，第三个参数必须是函数
-    options = fnOrOptions;
+    options = fnOrOptions as DescribeOptions;
+    // 确保第三个参数是函数
+    if (typeof fnOrOptions2 !== "function") {
+      throw new Error(
+        `describe: 当第二个参数是选项对象时，第三个参数必须是函数，但得到: ${typeof fnOrOptions2}。请使用 describe(name, options, fn) 或 describe(name, fn, options) 形式。`,
+      );
+    }
     actualFn = fnOrOptions2 as () => void | Promise<void>;
+  }
+
+  // 确保 actualFn 已正确设置
+  if (!actualFn || typeof actualFn !== "function") {
+    throw new Error(
+      `describe: 无法确定测试函数。请检查参数：第二个参数是 ${typeof fnOrOptions}，第三个参数是 ${typeof fnOrOptions2}`,
+    );
   }
 
   const suite: TestSuite = {

@@ -108,54 +108,26 @@ export function describe(
   options?: DescribeOptions,
 ): void;
 /**
- * 创建测试套件（带选项）
+ * 定义测试套件
  * @param name 套件名称
- * @param options 套件选项
  * @param fn 套件函数
+ * @param options 可选配置项
  */
 export function describe(
   name: string,
-  options: DescribeOptions,
   fn: () => void | Promise<void>,
-): void;
-export function describe(
-  name: string,
-  fnOrOptions: (() => void | Promise<void>) | DescribeOptions,
-  fnOrOptions2?: (() => void | Promise<void>) | DescribeOptions,
+  options?: DescribeOptions,
 ): void {
-  // 处理重载：检查第二个参数是函数还是选项
-  let actualFn: () => void | Promise<void>;
-  let options: DescribeOptions | undefined;
-
-  if (typeof fnOrOptions === "function") {
-    actualFn = fnOrOptions;
-    // 第三个参数可能是选项
-    options = typeof fnOrOptions2 === "object" && fnOrOptions2 !== null &&
-        !("call" in fnOrOptions2) && typeof fnOrOptions2 !== "function"
-      ? (fnOrOptions2 as DescribeOptions)
-      : undefined;
-  } else {
-    // 第二个参数是选项，第三个参数必须是函数
-    options = fnOrOptions as DescribeOptions;
-    // 确保第三个参数是函数
-    if (typeof fnOrOptions2 !== "function") {
-      throw new Error(
-        `describe: 当第二个参数是选项对象时，第三个参数必须是函数，但得到: ${typeof fnOrOptions2}。请使用 describe(name, options, fn) 或 describe(name, fn, options) 形式。`,
-      );
-    }
-    actualFn = fnOrOptions2 as () => void | Promise<void>;
-  }
-
-  // 确保 actualFn 已正确设置
-  if (!actualFn || typeof actualFn !== "function") {
+  // 确保 fn 是函数
+  if (typeof fn !== "function") {
     throw new Error(
-      `describe: 无法确定测试函数。请检查参数：第二个参数是 ${typeof fnOrOptions}，第三个参数是 ${typeof fnOrOptions2}`,
+      `describe: 第二个参数必须是函数，但得到: ${typeof fn}。请使用 describe(name, fn, options?) 形式。`,
     );
   }
 
   const suite: TestSuite = {
     name,
-    fn: actualFn,
+    fn: fn,
     tests: [],
     suites: [],
     parent: currentSuite,
@@ -178,7 +150,7 @@ export function describe(
   }
 
   try {
-    actualFn();
+    fn();
   } finally {
     // 标记退出 describe 块
     if (IS_BUN) {

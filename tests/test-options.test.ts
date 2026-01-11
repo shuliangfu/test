@@ -15,13 +15,13 @@ describe("测试套件选项 (DescribeOptions)", () => {
       // 不实际执行嵌套测试，避免在 Bun 环境下出错
       expect(typeof describe).toBe("function");
 
-      // 验证 describe 可以接受三个参数（name, options, fn）
+      // 验证 describe 可以接受三个参数（name, fn, options）
       let called = false;
       try {
-        describe("测试套件", {
-          sanitizeOps: false,
-        }, () => {
+        describe("测试套件", () => {
           called = true;
+        }, {
+          sanitizeOps: false,
         });
       } catch {
         // Bun 环境下可能会报错，这是预期的
@@ -38,10 +38,10 @@ describe("测试套件选项 (DescribeOptions)", () => {
 
       let called = false;
       try {
-        describe("测试套件", {
-          sanitizeResources: false,
-        }, () => {
+        describe("测试套件", () => {
           called = true;
+        }, {
+          sanitizeResources: false,
         });
       } catch {
         // Bun 环境下可能会报错，这是预期的
@@ -55,11 +55,11 @@ describe("测试套件选项 (DescribeOptions)", () => {
 
       let called = false;
       try {
-        describe("测试套件", {
+        describe("测试套件", () => {
+          called = true;
+        }, {
           sanitizeOps: false,
           sanitizeResources: false,
-        }, () => {
-          called = true;
         });
       } catch {
         // Bun 环境下可能会报错，这是预期的
@@ -70,37 +70,37 @@ describe("测试套件选项 (DescribeOptions)", () => {
   });
 
   // 嵌套套件的测试需要在顶层定义，不能在测试用例内部定义
-  describe("嵌套套件的选项继承", {
-    sanitizeOps: false,
-  }, () => {
+  describe("嵌套套件的选项继承", () => {
     it("子套件应该继承父套件的选项", () => {
       expect(true).toBeTruthy();
     });
 
-    describe("更深层的嵌套", {
-      sanitizeResources: false,
-    }, () => {
+    describe("更深层的嵌套", () => {
       it("应该继承所有父套件的选项", () => {
         expect(true).toBeTruthy();
       });
+    }, {
+      sanitizeResources: false,
     });
+  }, {
+    sanitizeOps: false,
   });
 
-  describe("子套件覆盖父套件选项", {
-    sanitizeOps: false,
-    sanitizeResources: false,
-  }, () => {
+  describe("子套件覆盖父套件选项", () => {
     it("父套件设置了两个选项", () => {
       expect(true).toBeTruthy();
     });
 
-    describe("子套件覆盖选项", {
-      sanitizeOps: true, // 覆盖父套件的 sanitizeOps
-    }, () => {
+    describe("子套件覆盖选项", () => {
       it("应该使用子套件的 sanitizeOps 和父套件的 sanitizeResources", () => {
         expect(true).toBeTruthy();
       });
+    }, {
+      sanitizeOps: true, // 覆盖父套件的 sanitizeOps
     });
+  }, {
+    sanitizeOps: false,
+    sanitizeResources: false,
   });
 
   // beforeEach 的测试需要在顶层定义
@@ -232,28 +232,28 @@ describe("测试套件选项 (DescribeOptions)", () => {
   });
 
   // 选项的优先级测试需要在顶层定义
-  describe("测试用例选项覆盖套件选项", {
-    sanitizeOps: false,
-  }, () => {
+  describe("测试用例选项覆盖套件选项", () => {
     it("测试用例", () => {
       expect(true).toBeTruthy();
     }, {
       sanitizeOps: true, // 测试用例选项应该覆盖套件选项
     });
+  }, {
+    sanitizeOps: false,
   });
 
-  describe("子套件选项覆盖父套件选项", {
-    sanitizeOps: false,
-    sanitizeResources: false,
-  }, () => {
-    describe("子套件", {
-      sanitizeOps: true, // 覆盖父套件的 sanitizeOps
-    }, () => {
+  describe("子套件选项覆盖父套件选项", () => {
+    describe("子套件", () => {
       it("测试用例", () => {
         // 应该使用子套件的 sanitizeOps: true
         // 和父套件的 sanitizeResources: false
         expect(true).toBeTruthy();
       });
+    }, {
+      sanitizeOps: true, // 覆盖父套件的 sanitizeOps
     });
+  }, {
+    sanitizeOps: false,
+    sanitizeResources: false,
   });
 });

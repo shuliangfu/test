@@ -24,6 +24,8 @@ const rootSuite: TestSuite = {
   suites: [],
 };
 
+import { IS_BUN, IS_DENO } from "@dreamer/runtime-adapter";
+
 let currentSuite = rootSuite;
 
 /**
@@ -57,13 +59,6 @@ export function _setCurrentSuiteHooks(hooks: TestHooks): void {
   currentSuite.beforeEach = hooks.beforeEach;
   currentSuite.afterEach = hooks.afterEach;
 }
-
-/**
- * 检测运行环境
- */
-const IS_DENO = typeof (globalThis as any).Deno !== "undefined" &&
-  typeof (globalThis as any).Deno.test !== "undefined";
-const IS_BUN = typeof (globalThis as any).Bun !== "undefined";
 
 /**
  * 获取 Bun 的 test 函数
@@ -246,7 +241,8 @@ export function test(
         { sanitizeResources: finalSanitizeResources }),
       fn: async (t: any) => {
         // 立即应用最终的 sanitizeOps 和 sanitizeResources（必须在任何代码执行之前）
-        // 这些值已经在 testOptions 级别设置了，但为了确保，也在函数内部设置
+        // 这些值已经在 testOptions 级别设置了，但为了确保，也在函数内部立即设置
+        // 注意：必须在任何可能创建定时器或资源的代码之前设置
         if (finalSanitizeOps !== undefined) {
           t.sanitizeOps = finalSanitizeOps;
         }

@@ -256,6 +256,83 @@ describe("@dreamer/test 自测试", () => {
         );
       });
     });
+
+    describe("toHaveProperty", () => {
+      it("应该检查对象属性", () => {
+        const obj = { name: "John", age: 30 };
+        expect(obj).toHaveProperty("name");
+        expect(obj).toHaveProperty("age", 30);
+      });
+
+      it("应该检查嵌套属性", () => {
+        const obj = { user: { name: "John" } };
+        expect(obj).toHaveProperty("user.name", "John");
+      });
+    });
+
+    describe("toBeCloseTo", () => {
+      it("应该通过浮点数近似相等检查", () => {
+        expect(0.1 + 0.2).toBeCloseTo(0.3);
+      });
+    });
+
+    describe("toBeNaN", () => {
+      it("应该通过 NaN 检查", () => {
+        expect(NaN).toBeNaN();
+      });
+    });
+
+    describe("toHaveLength", () => {
+      it("应该检查数组长度", () => {
+        expect([1, 2, 3]).toHaveLength(3);
+      });
+
+      it("应该检查字符串长度", () => {
+        expect("hello").toHaveLength(5);
+      });
+    });
+
+    describe("类型检查", () => {
+      it("应该检查数组", () => {
+        expect([]).toBeArray();
+      });
+
+      it("应该检查字符串", () => {
+        expect("hello").toBeString();
+      });
+
+      it("应该检查数字", () => {
+        expect(123).toBeNumber();
+      });
+
+      it("应该检查布尔值", () => {
+        expect(true).toBeBoolean();
+      });
+
+      it("应该检查函数", () => {
+        expect(() => {}).toBeFunction();
+      });
+    });
+
+    describe("toBeEmpty", () => {
+      it("应该检查空数组", () => {
+        expect([]).toBeEmpty();
+      });
+
+      it("应该检查空字符串", () => {
+        expect("").toBeEmpty();
+      });
+
+      it("应该检查空对象", () => {
+        expect({}).toBeEmpty();
+      });
+    });
+
+    describe("toStrictEqual", () => {
+      it("应该通过严格深度相等检查", () => {
+        expect({ a: 1, b: 2 }).toStrictEqual({ a: 1, b: 2 });
+      });
+    });
   });
 
   describe("Mock 函数", () => {

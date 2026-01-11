@@ -132,6 +132,17 @@ declare class Expect {
   toBeLessThan(expected: number): void;
   toBeLessThanOrEqual(expected: number): void;
   toBeInstanceOf(expected: new (...args: any[]) => any): void;
+  toHaveProperty(path: string, value?: unknown): void;
+  toBeCloseTo(expected: number, numDigits?: number): void;
+  toBeNaN(): void;
+  toHaveLength(expected: number): void;
+  toBeArray(): void;
+  toBeString(): void;
+  toBeNumber(): void;
+  toBeBoolean(): void;
+  toBeFunction(): void;
+  toBeEmpty(): void;
+  toStrictEqual(expected: unknown): void;
   toThrow(
     expectedError?: string | RegExp | (new (...args: any[]) => Error),
   ): void;

@@ -56,12 +56,12 @@ function deepEqual(a: unknown, b: unknown): boolean {
  * 断言异步函数抛出错误
  * @param fn 异步函数
  * @param ErrorClass 错误类型（可选）
- * @param msgIncludes 错误消息包含的字符串（可选）
+ * @param msgIncludes 错误消息包含的字符串或正则表达式（可选）
  */
 export async function assertRejects(
   fn: () => Promise<unknown>,
   ErrorClass?: new (...args: any[]) => Error,
-  msgIncludes?: string,
+  msgIncludes?: string | RegExp,
 ): Promise<void> {
   try {
     await fn();
@@ -77,10 +77,18 @@ export async function assertRejects(
 
     if (msgIncludes) {
       const errorMsg = error instanceof Error ? error.message : String(error);
-      if (!errorMsg.includes(msgIncludes)) {
-        throw new Error(
-          `期望错误消息包含 "${msgIncludes}"，实际消息: ${errorMsg}`,
-        );
+      if (typeof msgIncludes === "string") {
+        if (!errorMsg.includes(msgIncludes)) {
+          throw new Error(
+            `期望错误消息包含 "${msgIncludes}"，实际消息: ${errorMsg}`,
+          );
+        }
+      } else if (msgIncludes instanceof RegExp) {
+        if (!msgIncludes.test(errorMsg)) {
+          throw new Error(
+            `期望错误消息匹配 ${msgIncludes}，实际消息: ${errorMsg}`,
+          );
+        }
       }
     }
   }
@@ -98,7 +106,7 @@ export async function assertResolves(
   try {
     const result = await fn();
     if (expected !== undefined) {
-      if (result !== expected) {
+      if (!deepEqual(result, expected)) {
         throw new Error(
           `期望返回值: ${JSON.stringify(expected)}, 实际值: ${
             JSON.stringify(result)

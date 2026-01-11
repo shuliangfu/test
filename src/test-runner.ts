@@ -20,6 +20,11 @@ const rootSuite: TestSuite = {
 let currentSuite = rootSuite;
 
 /**
+ * Bun 环境下标记是否在 describe 块内（使用计数器支持嵌套）
+ */
+let describeDepth = 0;
+
+/**
  * 测试统计信息
  */
 interface TestStats {
@@ -115,9 +120,19 @@ export function describe(
   suiteStack.push(currentSuite);
   currentSuite = suite;
 
+  // 标记进入 describe 块
+  if (IS_BUN) {
+    describeDepth++;
+  }
+
   try {
     fn();
   } finally {
+    // 标记退出 describe 块
+    if (IS_BUN) {
+      describeDepth--;
+    }
+
     currentSuite = suiteStack.pop() || rootSuite;
   }
 }
@@ -215,56 +230,66 @@ export function test(
     }
     (globalThis as any).Deno.test(testOptions);
   } else if (IS_BUN) {
-    // Bun 环境下，直接注册测试
-    // 注意：Bun 默认并发执行，需要使用 --test-concurrency 1 来确保顺序执行
-    const fullName = getFullTestName(name);
-    const suite = currentSuite;
+    // Bun 环境下，检查是否在 describe 块内
+    if (describeDepth > 0) {
+      // 在 describe 块内，直接注册测试
+      const fullName = getFullTestName(name);
+      const suite = currentSuite;
 
-    // 直接获取 Bun.test 函数并注册测试
-    // Bun 的 test() API 使用函数参数形式：test(name, fn, options?)
-    (async () => {
-      const bunTest = await getBunTest();
-      if (bunTest) {
-        const testFn = async () => {
-          // 执行 beforeAll（只执行一次，通过检查标志）
-          if (suite.beforeAll && !(suite as any)._beforeAllExecuted) {
-            await suite.beforeAll();
-            (suite as any)._beforeAllExecuted = true;
-          }
-
-          // 执行 beforeEach
-          if (suite.beforeEach) {
-            await suite.beforeEach();
-          }
-
-          const testContext = createTestContext(fullName);
-
-          try {
-            await fn(testContext);
-            // 测试通过，统计数量
-            testStats.passed++;
-            testStats.total++;
-          } catch (error) {
-            // 测试失败，统计数量
-            testStats.failed++;
-            testStats.total++;
-            throw error; // 重新抛出错误，让 Bun 捕获
-          } finally {
-            // 执行 afterEach
-            if (suite.afterEach) {
-              await suite.afterEach();
+      // 直接获取 Bun.test 函数并注册测试
+      // Bun 的 test() API 使用函数参数形式：test(name, fn, options?)
+      (async () => {
+        const bunTest = await getBunTest();
+        if (bunTest) {
+          const testFn = async () => {
+            // 执行 beforeAll（只执行一次，通过检查标志）
+            if (suite.beforeAll && !(suite as any)._beforeAllExecuted) {
+              await suite.beforeAll();
+              (suite as any)._beforeAllExecuted = true;
             }
-          }
-        };
 
-        // Bun 的 test() 使用函数参数形式
-        if (options?.timeout) {
-          bunTest(fullName, testFn, { timeout: options.timeout });
-        } else {
-          bunTest(fullName, testFn);
+            // 执行 beforeEach
+            if (suite.beforeEach) {
+              await suite.beforeEach();
+            }
+
+            const testContext = createTestContext(fullName);
+
+            try {
+              await fn(testContext);
+              // 测试通过，统计数量
+              testStats.passed++;
+              testStats.total++;
+            } catch (error) {
+              // 测试失败，统计数量
+              testStats.failed++;
+              testStats.total++;
+              throw error; // 重新抛出错误，让 Bun 捕获
+            } finally {
+              // 执行 afterEach
+              if (suite.afterEach) {
+                await suite.afterEach();
+              }
+            }
+          };
+
+          // Bun 的 test() 使用函数参数形式
+          if (options?.timeout) {
+            bunTest(fullName, testFn, { timeout: options.timeout });
+          } else {
+            bunTest(fullName, testFn);
+          }
         }
-      }
-    })();
+      })();
+    } else {
+      // 不在 describe 块内（可能在测试执行期间），在 Bun 中这是不允许的
+      // 抛出友好的错误提示
+      throw new Error(
+        `在 Bun 环境中，test() 必须在 describe() 执行期间调用，不能在测试执行期间调用。` +
+          `请将 test("${name}", ...) 移到 describe() 块内，而不是在 it() 或 test() 回调中调用。` +
+          `\n提示：testEach() 和 bench() 应该在 describe() 执行期间调用，而不是在 it() 回调中。`,
+      );
+    }
   }
   // 其他环境：手动顺序执行
 }

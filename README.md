@@ -230,6 +230,18 @@ describe("Mock 函数", () => {
     const result = await mock();
     expect(result).toBe("async value");
   });
+
+  it("should verify mock return values", () => {
+    const mock = mockFn((x: number) => x * 2);
+    mock(2);
+    mock(3);
+
+    // 使用 expectMock 进行 Mock 断言
+    import { expectMock } from "@dreamer/test";
+    expectMock(mock).toHaveReturnedWith(4);
+    expectMock(mock).toHaveLastReturnedWith(6);
+    expectMock(mock).toHaveReturnedTimes(2);
+  });
 });
 ```
 
@@ -344,6 +356,7 @@ describe("参数化测试", () => {
 import { describe, bench } from "@dreamer/test";
 
 describe("性能测试", () => {
+  // 注意：bench 应该在 describe() 执行期间调用，而不是在 it() 回调中
   bench("array push", () => {
     const arr: number[] = [];
     for (let i = 0; i < 1000; i++) {
@@ -356,9 +369,16 @@ describe("性能测试", () => {
     for (let i = 0; i < 1000; i++) {
       arr = arr.concat([i]);
     }
+  }, {
+    n: 100,      // 运行次数（默认：100）
+    warmup: 10,  // 预热次数（默认：10）
   });
 });
 ```
+
+**注意事项**：
+- `bench()` 应该在 `describe()` 执行期间调用，而不是在 `it()` 回调中
+- 在 Bun 环境中，`test()` 必须在 `describe()` 执行期间调用，不能在测试执行期间调用
 
 ### 禁用资源清理检查
 
@@ -422,26 +442,60 @@ describe("Redis 测试", () => {
 ### Mock 函数
 
 - `mockFn(implementation?: Function)`: 创建 Mock 函数
+- `expectMock(mock: MockFunction)`: 创建 Mock 断言对象（`MockExpect`）
 - `mockFetch(url: string, options?)`: Mock HTTP 请求
+
+**Mock 断言方法（MockExpect）**：
+- `.toHaveBeenCalled()`: 检查是否被调用
+- `.toHaveBeenCalledTimes(n)`: 检查调用次数
+- `.toHaveBeenCalledWith(...args)`: 检查调用参数
+- `.toHaveBeenLastCalledWith(...args)`: 检查最后一次调用参数
+- `.toHaveBeenNthCalledWith(n, ...args)`: 检查第 N 次调用参数
+- `.toHaveReturned()`: 检查是否返回值
+- `.toHaveReturnedWith(value)`: 检查返回值
+- `.toHaveReturnedTimes(n)`: 检查返回次数
+- `.toHaveLastReturnedWith(value)`: 检查最后一次返回值
+- `.toHaveNthReturnedWith(n, value)`: 检查第 N 次返回值
+- `.not`: 反向断言
 
 ### 断言
 
 - `expect(actual: unknown)`: 创建断言对象
   - `.toBe(expected)`: 严格相等
   - `.toEqual(expected)`: 深度相等
+  - `.toStrictEqual(expected)`: 严格深度相等（考虑 undefined、symbol 等）
   - `.toBeTruthy()`: 真值
   - `.toBeFalsy()`: 假值
   - `.toBeNull()`: null
   - `.toBeUndefined()`: undefined
-  - `.toContain(item)`: 包含
+  - `.toBeDefined()`: 已定义（不为 undefined）
+  - `.toContain(item)`: 包含（数组或字符串）
   - `.toMatch(regexp)`: 正则匹配
+  - `.toHaveProperty(path, value?)`: 具有指定属性（支持嵌套路径，如 "user.name"）
+  - `.toHaveLength(expected)`: 具有指定长度（数组、字符串等）
+  - `.toBeCloseTo(expected, numDigits?)`: 浮点数近似相等（默认精度 2 位小数）
+  - `.toBeNaN()`: 是否为 NaN
+  - `.toBeArray()`: 是否为数组
+  - `.toBeString()`: 是否为字符串
+  - `.toBeNumber()`: 是否为数字
+  - `.toBeBoolean()`: 是否为布尔值
+  - `.toBeFunction()`: 是否为函数
+  - `.toBeEmpty()`: 是否为空（数组、对象、字符串）
+  - `.toBeInstanceOf(expected)`: 为指定类型的实例
+  - `.toBeGreaterThan(expected)`: 大于
+  - `.toBeGreaterThanOrEqual(expected)`: 大于等于
+  - `.toBeLessThan(expected)`: 小于
+  - `.toBeLessThanOrEqual(expected)`: 小于等于
   - `.toThrow(error?)`: 抛出错误
   - `.not`: 反向断言
 
 ### 异步断言
 
 - `assertRejects(fn: () => Promise<any>, ErrorClass?, message?)`: 断言异步函数抛出错误
+  - `ErrorClass`: 错误类型（可选）
+  - `message`: 错误消息匹配（可选，支持字符串或正则表达式）
 - `assertResolves(fn: () => Promise<any>, expected?)`: 断言异步函数成功
+  - `expected`: 期望返回值（可选，使用深度相等比较）
 
 ### 对象断言
 

@@ -10,13 +10,15 @@ export interface TestSuite {
   fn: () => void | Promise<void>;
   beforeAll?: () => void | Promise<void>;
   afterAll?: () => void | Promise<void>;
-  beforeEach?: () => void | Promise<void>;
-  afterEach?: () => void | Promise<void>;
+  beforeEach?: (t?: TestContext) => void | Promise<void>;
+  afterEach?: (t?: TestContext) => void | Promise<void>;
   tests: TestCase[];
   suites: TestSuite[];
   parent?: TestSuite;
   /** 标记 beforeAll 是否已执行（仅用于 Deno 环境） */
   _beforeAllExecuted?: boolean;
+  /** 套件选项 */
+  options?: DescribeOptions;
 }
 
 /**
@@ -78,8 +80,18 @@ export interface MockFunction<T extends (...args: any[]) => any = any> {
 export interface TestHooks {
   beforeAll?: () => void | Promise<void>;
   afterAll?: () => void | Promise<void>;
-  beforeEach?: () => void | Promise<void>;
-  afterEach?: () => void | Promise<void>;
+  beforeEach?: (t?: TestContext) => void | Promise<void>;
+  afterEach?: (t?: TestContext) => void | Promise<void>;
+}
+
+/**
+ * 测试套件选项
+ */
+export interface DescribeOptions {
+  /** 是否启用操作清理检查（默认：true） */
+  sanitizeOps?: boolean;
+  /** 是否启用资源清理检查（默认：true） */
+  sanitizeResources?: boolean;
 }
 
 /**

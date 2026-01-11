@@ -4,7 +4,7 @@
  */
 
 import { _setCurrentSuiteHooks, test } from "./test-runner.ts";
-import type { TestHooks } from "./types.ts";
+import type { TestContext, TestHooks } from "./types.ts";
 
 /**
  * 测试套件配置
@@ -30,16 +30,22 @@ export function afterAll(fn: () => void | Promise<void>): void {
 
 /**
  * 设置 beforeEach 钩子
+ * @param fn 钩子函数，可以接收可选的 TestContext 参数
  */
-export function beforeEach(fn: () => void | Promise<void>): void {
+export function beforeEach(
+  fn: (t?: TestContext) => void | Promise<void>,
+): void {
   currentHooks.beforeEach = fn;
   _setCurrentSuiteHooks(currentHooks);
 }
 
 /**
  * 设置 afterEach 钩子
+ * @param fn 钩子函数，可以接收可选的 TestContext 参数
  */
-export function afterEach(fn: () => void | Promise<void>): void {
+export function afterEach(
+  fn: (t?: TestContext) => void | Promise<void>,
+): void {
   currentHooks.afterEach = fn;
   _setCurrentSuiteHooks(currentHooks);
 }

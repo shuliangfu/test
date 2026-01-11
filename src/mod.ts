@@ -24,7 +24,7 @@
 
 // 导出测试运行器
 export { describe, it, test } from "./test-runner.ts";
-export type { TestContext } from "./types.ts";
+export type { DescribeOptions, TestContext } from "./types.ts";
 
 // 导出 Mock 功能
 export { expectMock, MockExpect, mockFn } from "./mock.ts";

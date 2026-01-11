@@ -4,7 +4,13 @@
  * 兼容 Deno 和 Bun 环境
  */
 
-import type { TestCase, TestContext, TestHooks, TestSuite } from "./types.ts";
+import type {
+  DescribeOptions,
+  TestCase,
+  TestContext,
+  TestHooks,
+  TestSuite,
+} from "./types.ts";
 
 /**
  * 当前测试套件栈
@@ -98,14 +104,49 @@ function createTestContext(name: string): TestContext {
  * 创建测试套件
  * @param name 套件名称
  * @param fn 套件函数
+ * @param options 套件选项（可选）
  */
 export function describe(
   name: string,
   fn: () => void | Promise<void>,
+  options?: DescribeOptions,
+): void;
+/**
+ * 创建测试套件（带选项）
+ * @param name 套件名称
+ * @param options 套件选项
+ * @param fn 套件函数
+ */
+export function describe(
+  name: string,
+  options: DescribeOptions,
+  fn: () => void | Promise<void>,
+): void;
+export function describe(
+  name: string,
+  fnOrOptions: (() => void | Promise<void>) | DescribeOptions,
+  fnOrOptions2?: (() => void | Promise<void>) | DescribeOptions,
 ): void {
+  // 处理重载：检查第二个参数是函数还是选项
+  let actualFn: () => void | Promise<void>;
+  let options: DescribeOptions | undefined;
+
+  if (typeof fnOrOptions === "function") {
+    actualFn = fnOrOptions;
+    // 第三个参数可能是选项
+    options = typeof fnOrOptions2 === "object" && fnOrOptions2 !== null &&
+        !("call" in fnOrOptions2)
+      ? (fnOrOptions2 as DescribeOptions)
+      : undefined;
+  } else {
+    // 第二个参数是选项，第三个参数必须是函数
+    options = fnOrOptions;
+    actualFn = fnOrOptions2 as () => void | Promise<void>;
+  }
+
   const suite: TestSuite = {
     name,
-    fn,
+    fn: actualFn,
     tests: [],
     suites: [],
     parent: currentSuite,
@@ -114,6 +155,8 @@ export function describe(
     afterAll: currentSuite.afterAll,
     beforeEach: currentSuite.beforeEach,
     afterEach: currentSuite.afterEach,
+    // 存储套件选项
+    options,
   };
 
   currentSuite.suites.push(suite);
@@ -126,7 +169,7 @@ export function describe(
   }
 
   try {
-    fn();
+    actualFn();
   } finally {
     // 标记退出 describe 块
     if (IS_BUN) {
@@ -176,7 +219,8 @@ export function test(
       ...(options?.sanitizeResources !== undefined &&
         { sanitizeResources: options.sanitizeResources }),
       fn: async (t: any) => {
-        // 如果选项中有设置 sanitizeOps 或 sanitizeResources，也在测试函数内部设置（双重保险）
+        // 如果选项中有设置 sanitizeOps 或 sanitizeResources，立即在测试函数开始时设置
+        // 这必须在任何可能创建定时器的代码执行之前设置
         if (options?.sanitizeOps !== undefined) {
           t.sanitizeOps = options.sanitizeOps;
         }
@@ -190,9 +234,26 @@ export function test(
           (suite as any)._beforeAllExecuted = true;
         }
 
-        // 执行 beforeEach
+        // 执行 beforeEach，传递 TestContext
         if (suite.beforeEach) {
-          await suite.beforeEach();
+          await suite.beforeEach(t);
+        }
+
+        // 如果套件有选项，应用默认的 sanitizeOps 和 sanitizeResources
+        // 但测试用例的选项优先级更高
+        if (suite.options) {
+          if (
+            suite.options.sanitizeOps !== undefined &&
+            options?.sanitizeOps === undefined
+          ) {
+            t.sanitizeOps = suite.options.sanitizeOps;
+          }
+          if (
+            suite.options.sanitizeResources !== undefined &&
+            options?.sanitizeResources === undefined
+          ) {
+            t.sanitizeResources = suite.options.sanitizeResources;
+          }
         }
 
         const testContext = createTestContext(fullName);
@@ -217,9 +278,9 @@ export function test(
             t.sanitizeResources = testContext.sanitizeResources;
           }
         } finally {
-          // 执行 afterEach
+          // 执行 afterEach，传递 TestContext
           if (suite.afterEach) {
-            await suite.afterEach();
+            await suite.afterEach(t);
           }
         }
       },

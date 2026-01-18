@@ -79,13 +79,14 @@ async function executeBuild(
 
   try {
     // 转换选项格式，适配 @dreamer/esbuild 的 BundleOptions
+    // 如果指定了 globalName，使用 IIFE 格式；否则使用 ESM 格式
     const bundleOptions: EsbuildBundleOptions = {
       entryPoint: options.entryPoint,
       globalName: options.globalName,
       platform: options.platform || "browser",
       target: options.target || "es2020",
       minify: options.minify || false,
-      format: "iife",
+      format: options.globalName ? "iife" : "esm",
       sourcemap: false,
     };
 

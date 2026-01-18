@@ -216,13 +216,13 @@
    - **使用示例**：
      ```typescript
      import { afterAll, cleanupAllBrowsers } from "@dreamer/test";
-     
+
      describe("浏览器测试套件", () => {
        afterAll(async () => {
          // 自动清理所有浏览器实例
          await cleanupAllBrowsers();
        });
-       
+
        // ... 测试用例
      });
      ```

@@ -4,12 +4,7 @@
  * 兼容 Deno 和 Bun 环境
  */
 
-import {
-  addSignalListener,
-  exit,
-  IS_BUN,
-  IS_DENO,
-} from "@dreamer/runtime-adapter";
+import { addSignalListener, IS_BUN, IS_DENO } from "@dreamer/runtime-adapter";
 import type { BrowserContext } from "./browser/browser-context.ts";
 import { createBrowserContext } from "./browser/browser-context.ts";
 import { buildClientBundle } from "./browser/bundle.ts";
@@ -95,6 +90,21 @@ async function getBunTest(): Promise<any> {
 }
 
 /**
+ * 收集所有父套件的钩子（从根到当前套件）
+ * @param suite 当前套件
+ * @returns 所有父套件的数组（从根到当前套件）
+ */
+function collectParentSuites(suite: TestSuite): TestSuite[] {
+  const suites: TestSuite[] = [];
+  let current: TestSuite | undefined = suite;
+  while (current && current !== rootSuite) {
+    suites.unshift(current); // 从根到当前套件的顺序
+    current = current.parent;
+  }
+  return suites;
+}
+
+/**
  * 创建测试上下文
  */
 function createTestContext(name: string): TestContext {
@@ -150,7 +160,7 @@ async function setupBrowserTest(
   let browserCtx: BrowserContext | undefined;
   const shouldReuse = config.reuseBrowser !== false && suitePath;
 
-  if (shouldReuse) {
+  if (shouldReuse && suitePath) {
     browserCtx = suiteBrowserCache.get(suitePath);
   }
 
@@ -159,8 +169,8 @@ async function setupBrowserTest(
     try {
       browserCtx = await createBrowserContext(config);
 
-      // 如果应该复用，保存到缓存
-      if (shouldReuse && suitePath) {
+      // 无论是否复用，都保存到缓存，以便在所有测试完成后统一清理
+      if (suitePath) {
         suiteBrowserCache.set(suitePath, browserCtx);
       }
     } catch (error) {
@@ -248,26 +258,21 @@ async function setupBrowserTest(
 
 /**
  * 在测试执行后清理浏览器上下文
+ * 注意：为了确保所有测试完成后才关闭浏览器，即使 reuseBrowser=false，
+ * 也只在测试完成后关闭页面，浏览器实例保留在缓存中，等待所有测试完成后统一清理
  */
 async function cleanupBrowserTest(testContext: TestContext): Promise<void> {
   const browserCtx = (testContext as any)._browserContext as
     | BrowserContext
     | undefined;
-  const shouldReuse = (testContext as any)._shouldReuseBrowser;
 
   if (browserCtx) {
-    if (shouldReuse) {
-      // 如果复用浏览器，只关闭页面，不关闭浏览器
-      try {
-        await browserCtx.page.close();
-      } catch {
-        // 忽略关闭错误
-      }
-      // 注意：复用模式下，浏览器实例保留在 suiteBrowserCache 中
-      // 需要在套件完成后调用 cleanupSuiteBrowser 或 cleanupAllBrowsers 来关闭
-    } else {
-      // 如果不复用，完全关闭浏览器
-      await browserCtx.close();
+    // 无论是否复用，都只关闭页面，不关闭浏览器
+    // 浏览器实例保留在缓存中，等待所有测试完成后统一清理
+    try {
+      await browserCtx.page.close();
+    } catch {
+      // 忽略关闭错误
     }
 
     (testContext as any).browser = undefined;
@@ -309,33 +314,13 @@ export async function cleanupAllBrowsers(): Promise<void> {
 // 使用 runtime-adapter 提供的 API 注册进程退出时的清理钩子
 // 确保在所有测试完成后清理浏览器
 try {
-  // 监听 SIGINT 和 SIGTERM 信号
-  addSignalListener("SIGINT", async () => {
+  const handleAsyncCleanup = async () => {
     await cleanupAllBrowsers();
-    exit(130);
-  });
-  addSignalListener("SIGTERM", async () => {
-    await cleanupAllBrowsers();
-    exit(143);
-  });
+  };
+  addSignalListener("SIGINT", handleAsyncCleanup);
+  addSignalListener("SIGTERM", handleAsyncCleanup);
 } catch {
   // 忽略信号监听错误（可能在某些环境下不支持）
-}
-
-// 注册全局 unload 事件来清理浏览器（作为后备）
-if (typeof globalThis.addEventListener === "function") {
-  globalThis.addEventListener("beforeunload", () => {
-    // 异步清理所有浏览器
-    cleanupAllBrowsers().catch(() => {});
-  });
-
-  globalThis.addEventListener("unload", () => {
-    // 同步清理所有浏览器（尽力而为）
-    for (const [suitePath, browserCtx] of suiteBrowserCache.entries()) {
-      suiteBrowserCache.delete(suitePath);
-      browserCtx.close().catch(() => {});
-    }
-  });
 }
 
 /**
@@ -386,20 +371,57 @@ export function describe(
   suiteStack.push(currentSuite);
   currentSuite = suite;
 
-  // 标记进入 describe 块
-  if (IS_BUN) {
-    describeDepth++;
-  }
+  if (IS_BUN) describeDepth++;
 
   try {
     fn();
   } finally {
-    // 标记退出 describe 块
-    if (IS_BUN) {
-      describeDepth--;
-    }
-
+    const savedAfterAll = suite.afterAll;
+    const parentAfterAll = suite.parent?.afterAll;
     currentSuite = suiteStack.pop() || rootSuite;
+    if (IS_BUN) describeDepth--;
+
+    // 如果有 afterAll 钩子，且这个套件定义了自己的 afterAll（不是从父套件继承的），
+    // 注册一个特殊的测试用例来执行它
+    // 这个测试用例会在所有其他测试完成后执行
+    if (savedAfterAll && savedAfterAll !== parentAfterAll) {
+      const suiteFullName = getFullSuiteName(suite);
+      const afterAllTestName = `${suiteFullName} (afterAll)`;
+
+      if (IS_DENO) {
+        // Deno 环境：注册一个特殊的测试用例来执行 afterAll
+        (globalThis as any).Deno.test({
+          name: afterAllTestName,
+          ignore: false,
+          parallel: false,
+          sanitizeOps: false, // 禁用操作清理检查，因为 afterAll 需要清理之前测试创建的资源
+          sanitizeResources: false, // 禁用资源清理检查，因为 afterAll 需要清理之前测试创建的资源
+          fn: async () => {
+            try {
+              await savedAfterAll();
+            } catch (error) {
+              logger.error(`执行 afterAll 钩子时出错: ${error}`);
+              throw error;
+            }
+          },
+        });
+      } else if (IS_BUN) {
+        // Bun 环境：注册一个特殊的测试用例来执行 afterAll
+        (async () => {
+          const bunTest = await getBunTest();
+          if (bunTest) {
+            bunTest(afterAllTestName, async () => {
+              try {
+                await savedAfterAll();
+              } catch (error) {
+                logger.error(`执行 afterAll 钩子时出错: ${error}`);
+                throw error;
+              }
+            });
+          }
+        })();
+      }
+    }
   }
 }
 
@@ -473,40 +495,47 @@ export function test(
           t.sanitizeResources = finalSanitizeResources;
         }
 
-        // 执行 beforeAll（只执行一次，通过检查标志）
-        if (suite.beforeAll && !(suite as any)._beforeAllExecuted) {
-          await suite.beforeAll();
-          (suite as any)._beforeAllExecuted = true;
+        // 收集所有父套件（从根到当前套件）
+        const allSuites = collectParentSuites(suite);
+
+        // 执行所有父套件的 beforeAll（只执行一次，通过检查标志）
+        for (const parentSuite of allSuites) {
+          if (parentSuite.beforeAll && !(parentSuite as any)._beforeAllExecuted) {
+            await parentSuite.beforeAll();
+            (parentSuite as any)._beforeAllExecuted = true;
+          }
         }
 
-        // 执行 beforeEach，传递 TestContext
+        // 执行所有父套件的 beforeEach（从根到当前套件）
         // 如果 beforeEach 有选项，应用 sanitizeOps 和 sanitizeResources
-        if (suite.beforeEach) {
-          // 检查是否有钩子选项（通过检查 TestHooks 的 options）
-          const hooksOptions = (suite as any).hooksOptions as
-            | TestOptions
-            | undefined;
-          if (hooksOptions) {
-            if (hooksOptions.sanitizeOps !== undefined) {
-              t.sanitizeOps = hooksOptions.sanitizeOps;
+        for (const parentSuite of allSuites) {
+          if (parentSuite.beforeEach) {
+            // 检查是否有钩子选项（通过检查 TestHooks 的 options）
+            const hooksOptions = (parentSuite as any).hooksOptions as
+              | TestOptions
+              | undefined;
+            if (hooksOptions) {
+              if (hooksOptions.sanitizeOps !== undefined) {
+                t.sanitizeOps = hooksOptions.sanitizeOps;
+              }
+              if (hooksOptions.sanitizeResources !== undefined) {
+                t.sanitizeResources = hooksOptions.sanitizeResources;
+              }
             }
-            if (hooksOptions.sanitizeResources !== undefined) {
-              t.sanitizeResources = hooksOptions.sanitizeResources;
-            }
+            // 创建 TestContext 传递给 beforeEach（使用当前的 t 值）
+            // 确保 sanitizeOps 和 sanitizeResources 有默认值（boolean）
+            const beforeEachContext = createTestContext(fullName);
+            Object.assign(beforeEachContext, {
+              origin: t.origin,
+              sanitizeExit: t.sanitizeExit,
+              sanitizeOps: t.sanitizeOps !== undefined ? t.sanitizeOps : true,
+              sanitizeResources: t.sanitizeResources !== undefined
+                ? t.sanitizeResources
+                : true,
+              step: t.step.bind(t),
+            });
+            await parentSuite.beforeEach(beforeEachContext);
           }
-          // 创建 TestContext 传递给 beforeEach（使用当前的 t 值）
-          // 确保 sanitizeOps 和 sanitizeResources 有默认值（boolean）
-          const beforeEachContext = createTestContext(fullName);
-          Object.assign(beforeEachContext, {
-            origin: t.origin,
-            sanitizeExit: t.sanitizeExit,
-            sanitizeOps: t.sanitizeOps !== undefined ? t.sanitizeOps : true,
-            sanitizeResources: t.sanitizeResources !== undefined
-              ? t.sanitizeResources
-              : true,
-            step: t.step.bind(t),
-          });
-          await suite.beforeEach(beforeEachContext);
         }
 
         const testContext = createTestContext(fullName);
@@ -566,34 +595,37 @@ export function test(
           if (browserCtx) {
             await cleanupBrowserTest(testContext);
           }
-          // 执行 afterEach，传递 TestContext
+          // 执行所有父套件的 afterEach（从当前套件到根套件，与 beforeEach 顺序相反）
           // 如果 afterEach 有选项，应用 sanitizeOps 和 sanitizeResources
-          if (suite.afterEach) {
-            // 检查是否有钩子选项（通过检查 TestHooks 的 options）
-            const hooksOptions = (suite as any).hooksOptions as
-              | TestOptions
-              | undefined;
-            if (hooksOptions) {
-              if (hooksOptions.sanitizeOps !== undefined) {
-                t.sanitizeOps = hooksOptions.sanitizeOps;
+          for (let i = allSuites.length - 1; i >= 0; i--) {
+            const parentSuite = allSuites[i];
+            if (parentSuite.afterEach) {
+              // 检查是否有钩子选项（通过检查 TestHooks 的 options）
+              const hooksOptions = (parentSuite as any).hooksOptions as
+                | TestOptions
+                | undefined;
+              if (hooksOptions) {
+                if (hooksOptions.sanitizeOps !== undefined) {
+                  t.sanitizeOps = hooksOptions.sanitizeOps;
+                }
+                if (hooksOptions.sanitizeResources !== undefined) {
+                  t.sanitizeResources = hooksOptions.sanitizeResources;
+                }
               }
-              if (hooksOptions.sanitizeResources !== undefined) {
-                t.sanitizeResources = hooksOptions.sanitizeResources;
-              }
+              // 创建 TestContext 传递给 afterEach（使用当前的 t 值）
+              // 确保 sanitizeOps 和 sanitizeResources 有默认值（boolean）
+              const afterEachContext = createTestContext(fullName);
+              Object.assign(afterEachContext, {
+                origin: t.origin,
+                sanitizeExit: t.sanitizeExit,
+                sanitizeOps: t.sanitizeOps !== undefined ? t.sanitizeOps : true,
+                sanitizeResources: t.sanitizeResources !== undefined
+                  ? t.sanitizeResources
+                  : true,
+                step: t.step.bind(t),
+              });
+              await parentSuite.afterEach(afterEachContext);
             }
-            // 创建 TestContext 传递给 afterEach（使用当前的 t 值）
-            // 确保 sanitizeOps 和 sanitizeResources 有默认值（boolean）
-            const afterEachContext = createTestContext(fullName);
-            Object.assign(afterEachContext, {
-              origin: t.origin,
-              sanitizeExit: t.sanitizeExit,
-              sanitizeOps: t.sanitizeOps !== undefined ? t.sanitizeOps : true,
-              sanitizeResources: t.sanitizeResources !== undefined
-                ? t.sanitizeResources
-                : true,
-              step: t.step.bind(t),
-            });
-            await suite.afterEach(afterEachContext);
           }
         }
       },
@@ -616,31 +648,39 @@ export function test(
         const bunTest = await getBunTest();
         if (bunTest) {
           const testFn = async () => {
-            // 执行 beforeAll（只执行一次，通过检查标志）
-            if (suite.beforeAll && !(suite as any)._beforeAllExecuted) {
-              await suite.beforeAll();
-              (suite as any)._beforeAllExecuted = true;
+            // 收集所有父套件（从根到当前套件）
+            const allSuites = collectParentSuites(suite);
+
+            // 执行所有父套件的 beforeAll（只执行一次，通过检查标志）
+            for (const parentSuite of allSuites) {
+              if (parentSuite.beforeAll && !(parentSuite as any)._beforeAllExecuted) {
+                await parentSuite.beforeAll();
+                (parentSuite as any)._beforeAllExecuted = true;
+              }
             }
 
-            // 执行 beforeEach，传递 TestContext（Bun 环境下需要创建模拟的 TestContext）
-            if (suite.beforeEach) {
-              // 检查是否有钩子选项
-              const hooksOptions = (suite as any).hooksOptions as
-                | TestOptions
-                | undefined;
-              // 创建模拟的 TestContext（Bun 环境下没有真实的 TestContext）
-              const mockContext = createTestContext(fullName);
-              // 应用钩子选项
-              if (hooksOptions) {
-                if (hooksOptions.sanitizeOps !== undefined) {
-                  mockContext.sanitizeOps = hooksOptions.sanitizeOps;
+            // 执行所有父套件的 beforeEach（从根到当前套件）
+            // Bun 环境下需要创建模拟的 TestContext
+            for (const parentSuite of allSuites) {
+              if (parentSuite.beforeEach) {
+                // 检查是否有钩子选项
+                const hooksOptions = (parentSuite as any).hooksOptions as
+                  | TestOptions
+                  | undefined;
+                // 创建模拟的 TestContext（Bun 环境下没有真实的 TestContext）
+                const mockContext = createTestContext(fullName);
+                // 应用钩子选项
+                if (hooksOptions) {
+                  if (hooksOptions.sanitizeOps !== undefined) {
+                    mockContext.sanitizeOps = hooksOptions.sanitizeOps;
+                  }
+                  if (hooksOptions.sanitizeResources !== undefined) {
+                    mockContext.sanitizeResources =
+                      hooksOptions.sanitizeResources;
+                  }
                 }
-                if (hooksOptions.sanitizeResources !== undefined) {
-                  mockContext.sanitizeResources =
-                    hooksOptions.sanitizeResources;
-                }
+                await parentSuite.beforeEach(mockContext);
               }
-              await suite.beforeEach(mockContext);
             }
 
             const testContext = createTestContext(fullName);
@@ -693,25 +733,28 @@ export function test(
               if (browserCtx) {
                 await cleanupBrowserTest(testContext);
               }
-              // 执行 afterEach，传递 TestContext
-              if (suite.afterEach) {
-                // 检查是否有钩子选项
-                const hooksOptions = (suite as any).hooksOptions as
-                  | TestOptions
-                  | undefined;
-                // 创建模拟的 TestContext
-                const mockContext = createTestContext(fullName);
-                // 应用钩子选项
-                if (hooksOptions) {
-                  if (hooksOptions.sanitizeOps !== undefined) {
-                    mockContext.sanitizeOps = hooksOptions.sanitizeOps;
+              // 执行所有父套件的 afterEach（从当前套件到根套件，与 beforeEach 顺序相反）
+              for (let i = allSuites.length - 1; i >= 0; i--) {
+                const parentSuite = allSuites[i];
+                if (parentSuite.afterEach) {
+                  // 检查是否有钩子选项
+                  const hooksOptions = (parentSuite as any).hooksOptions as
+                    | TestOptions
+                    | undefined;
+                  // 创建模拟的 TestContext
+                  const mockContext = createTestContext(fullName);
+                  // 应用钩子选项
+                  if (hooksOptions) {
+                    if (hooksOptions.sanitizeOps !== undefined) {
+                      mockContext.sanitizeOps = hooksOptions.sanitizeOps;
+                    }
+                    if (hooksOptions.sanitizeResources !== undefined) {
+                      mockContext.sanitizeResources =
+                        hooksOptions.sanitizeResources;
+                    }
                   }
-                  if (hooksOptions.sanitizeResources !== undefined) {
-                    mockContext.sanitizeResources =
-                      hooksOptions.sanitizeResources;
-                  }
+                  await parentSuite.afterEach(mockContext);
                 }
-                await suite.afterEach(mockContext);
               }
             }
           };

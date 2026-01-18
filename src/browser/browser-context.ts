@@ -81,6 +81,17 @@ export async function createBrowserContext(
 
     // 如果配置了 entryPoint，自动打包和创建页面
     if (config.entryPoint) {
+      // 在页面加载前设置错误监听器，以便捕获所有运行时错误
+      const consoleErrors: string[] = [];
+      page.on("console", (msg: any) => {
+        if (msg.type() === "error") {
+          consoleErrors.push(msg.text());
+        }
+      });
+      page.on("pageerror", (error: any) => {
+        consoleErrors.push(error.message);
+      });
+
       // 打包客户端代码
       const bundle = await buildClientBundle({
         entryPoint: config.entryPoint,
@@ -104,28 +115,51 @@ export async function createBrowserContext(
       const globalName = config.globalName;
       if (globalName) {
         // 等待全局变量存在且 testReady 标记已设置
-        await page.waitForFunction(
-          (name: string) => {
-            return typeof (globalThis as any).window[name] !== "undefined" &&
-              (globalThis as any).window.testReady === true;
-          },
-          { timeout: moduleLoadTimeout },
-          globalName,
-        ).catch(() => {
-          // 如果超时，尝试只检查全局变量（可能 testReady 设置失败）
-          return page!.waitForFunction(
-            (name: string) =>
-              typeof (globalThis as any).window[name] !== "undefined",
-            { timeout: 2000 },
+        try {
+          await page.waitForFunction(
+            (name: string) => {
+              return typeof (globalThis as any).window[name] !== "undefined" &&
+                (globalThis as any).window.testReady === true;
+            },
+            { timeout: moduleLoadTimeout },
             globalName,
           );
-        });
+        } catch (_error) {
+          // 如果超时，尝试只检查全局变量（可能 testReady 设置失败）
+          try {
+            await page.waitForFunction(
+              (name: string) =>
+                typeof (globalThis as any).window[name] !== "undefined",
+              { timeout: 2000 },
+              globalName,
+            );
+          } catch (_retryError) {
+            // 如果仍然失败，抛出更详细的错误信息
+            const errorDetails = consoleErrors.length > 0
+              ? `\n浏览器控制台错误: ${consoleErrors.join("\n")}`
+              : "";
+            throw new Error(
+              `模块加载超时：无法找到全局变量 "${globalName}" 或 testReady 标记未设置。` +
+                `入口文件: ${config.entryPoint}${errorDetails}`,
+            );
+          }
+        }
       } else {
         // 如果没有 globalName，只等待 testReady 标记
-        await page.waitForFunction(
-          () => (globalThis as any).window.testReady === true,
-          { timeout: moduleLoadTimeout },
-        );
+        try {
+          await page.waitForFunction(
+            () => (globalThis as any).window.testReady === true,
+            { timeout: moduleLoadTimeout },
+          );
+        } catch (_error) {
+          const errorDetails = consoleErrors.length > 0
+            ? `\n浏览器控制台错误: ${consoleErrors.join("\n")}`
+            : "";
+          throw new Error(
+            `模块加载超时：testReady 标记未设置。` +
+              `入口文件: ${config.entryPoint}${errorDetails}`,
+          );
+        }
       }
     }
   } catch (error) {

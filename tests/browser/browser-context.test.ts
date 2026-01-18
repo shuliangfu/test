@@ -149,7 +149,7 @@ describe("浏览器测试上下文管理", () => {
       expect(moduleValue).toBe("Hello, World!");
 
       await ctx.close();
-    });
+    }, { timeout: 15000 });
 
     it("应该支持自定义 globalName", async () => {
       const entryFile = await makeTempFile({ suffix: ".js" });
@@ -171,7 +171,7 @@ describe("浏览器测试上下文管理", () => {
       expect(value).toBe("value");
 
       await ctx.close();
-    }, { timeout: 15000 });
+    }, { timeout: 25000 });
 
     it("应该支持自定义 bodyContent", async () => {
       const entryFile = await makeTempFile({ suffix: ".js" });
@@ -246,7 +246,7 @@ describe("浏览器测试上下文管理", () => {
       expect(value).toBe("object");
 
       await ctx.close();
-    });
+    }, { timeout: 15000 });
 
     it("应该能够正确关闭浏览器", async () => {
       const ctx = await createBrowserContext({

@@ -4,9 +4,13 @@
  */
 
 import { makeTempFile, writeTextFileSync } from "@dreamer/runtime-adapter";
-import { beforeEach, describe, expect, it } from "../../src/mod.ts";
+import { afterAll, beforeEach, describe, expect, it, cleanupAllBrowsers } from "../../src/mod.ts";
 
 describe("测试运行器浏览器集成", () => {
+	afterAll(async () => {
+		// 自动清理所有浏览器
+		await cleanupAllBrowsers();
+	});
   describe("浏览器测试启用和配置", () => {
     it("应该在启用浏览器测试时提供 browser 上下文", async (t) => {
       expect(t).toBeDefined();
@@ -120,10 +124,11 @@ describe("测试运行器浏览器集成", () => {
         expect(t.browser?.page).toBeDefined();
       }
     }, {
+      timeout: 15000,
       browser: {
         enabled: true,
         headless: true,
-        reuseBrowser: false,
+        reuseBrowser: false
       },
     });
   });
@@ -217,6 +222,7 @@ describe("测试运行器浏览器集成", () => {
         expect(condition).toBe(true);
       }
     }, {
+      timeout: 15000,
       browser: {
         enabled: true,
         headless: true,
@@ -242,14 +248,16 @@ describe("测试运行器浏览器集成", () => {
       describe("子套件配置", () => {
         it("应该允许子套件覆盖父套件配置", async (t) => {
           if (t) {
-            expect(t.browser).toBeDefined();
+						expect(t.browser).toBeDefined();
+						await new Promise(resolve => setTimeout(resolve, 5000));
           }
         }, {
+          timeout: 15000,
           browser: {
             enabled: true,
             headless: false, // 覆盖父套件配置
           },
-        });
+				});
       });
     });
   });

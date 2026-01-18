@@ -19,7 +19,7 @@ const DEFAULT_TEMPLATE = `<!DOCTYPE html>
 <body>
   <div id="test-container"></div>
   {{BODY_CONTENT}}
-  <script>
+  <script type="module">
     {{BUNDLE_CODE}}
 
     // 标记模块已加载

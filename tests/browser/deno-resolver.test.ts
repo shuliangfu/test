@@ -6,6 +6,7 @@
 import { buildBundle } from "@dreamer/esbuild";
 import { join, mkdir, writeTextFile } from "@dreamer/runtime-adapter";
 import { describe, expect, it } from "@dreamer/test";
+import { logger } from "../../src/logger.ts";
 
 describe("Deno 解析器插件", () => {
   let testDir: string;
@@ -48,7 +49,7 @@ export { logger };
       expect(result.code).toContain("TestClient");
     } catch (error) {
       // 如果失败，输出详细错误信息
-      console.error("打包失败:", error);
+      logger.error("打包失败:", error);
       throw error;
     }
   });

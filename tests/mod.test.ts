@@ -4,6 +4,7 @@
  * 使用 @dreamer/test 库自己来测试自己的功能
  */
 
+import { logger } from "../src/logger.ts";
 import {
   afterAll,
   afterEach,
@@ -531,7 +532,7 @@ describe("@dreamer/test 自测试", () => {
       } catch (error) {
         if (error instanceof Error && error.message.includes("write access")) {
           // 如果没有写入权限，跳过此测试
-          console.log("跳过快照测试：需要 --allow-write 权限");
+          logger.info("跳过快照测试：需要 --allow-write 权限");
           return;
         }
         throw error;

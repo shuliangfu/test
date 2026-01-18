@@ -1,6 +1,6 @@
 {
   "name": "@dreamer/test",
-  "version": "1.0.0-beta.16",
+  "version": "1.0.0-beta.17",
   "license": "MIT",
   "exports": {
     ".": "./src/mod.ts"
@@ -35,7 +35,6 @@
     }
   },
   "imports": {
-    "@dreamer/test": "jsr:@dreamer/test@^1.0.0-beta.16",
     "@dreamer/runtime-adapter": "jsr:@dreamer/runtime-adapter@1.0.0-beta.17",
     "@dreamer/esbuild": "jsr:@dreamer/esbuild@^1.0.0-beta.6",
     "@dreamer/logger": "jsr:@dreamer/logger@^1.0.0-beta.4",
@@ -44,6 +43,9 @@
   "nodeModulesDir": "auto",
   "allowScripts": {
     "allow": [],
-    "deny": ["npm:esbuild@0.27.2", "npm:puppeteer@24.35.0"]
+    "deny": [
+      "npm:esbuild@0.27.2",
+      "npm:puppeteer@24.35.0"
+    ]
   }
 }

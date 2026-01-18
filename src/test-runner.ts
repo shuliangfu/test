@@ -9,11 +9,12 @@ import {
   exit,
   IS_BUN,
   IS_DENO,
-} from "@dreamer/runtime-adapter"
-import type { BrowserContext } from "./browser/browser-context.ts"
-import { createBrowserContext } from "./browser/browser-context.ts"
-import { buildClientBundle } from "./browser/bundle.ts"
-import { createTestPage } from "./browser/page.ts"
+} from "@dreamer/runtime-adapter";
+import type { BrowserContext } from "./browser/browser-context.ts";
+import { createBrowserContext } from "./browser/browser-context.ts";
+import { buildClientBundle } from "./browser/bundle.ts";
+import { createTestPage } from "./browser/page.ts";
+import { logger } from "./logger.ts";
 import type {
   BrowserTestConfig,
   DescribeOptions,
@@ -22,7 +23,7 @@ import type {
   TestHooks,
   TestOptions,
   TestSuite,
-} from "./types.ts"
+} from "./types.ts";
 
 /**
  * 当前测试套件栈
@@ -835,8 +836,8 @@ test.skip = function (
       const bunTest = await getBunTest();
       if (bunTest && bunTest.skip) {
         bunTest.skip(fullName, async () => {
-          // 跳过测试，使用 ANSI 颜色代码输出黄色提示
-          console.log(`\x1b[33m⊘\x1b[0m ${fullName}`);
+          // 跳过测试，使用 warn 级别（黄色）输出
+          logger.warn(`⊘ ${fullName}`);
           const testContext = createTestContext(fullName);
           await fn(testContext);
         }, options);

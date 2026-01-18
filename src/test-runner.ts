@@ -507,7 +507,8 @@ export function test(
           if (parentSuite.beforeAll) {
             // 检查标志，确保只执行一次
             // 使用严格相等检查，避免 undefined 或 false 被误判
-            const hasExecuted = (parentSuite as any)._beforeAllExecuted === true;
+            const hasExecuted =
+              (parentSuite as any)._beforeAllExecuted === true;
             // 添加调试：检查套件对象和标志
             if (!hasExecuted) {
               await parentSuite.beforeAll();
@@ -673,7 +674,8 @@ export function test(
               if (parentSuite.beforeAll) {
                 // 检查标志，确保只执行一次
                 // 使用严格相等检查，避免 undefined 或 false 被误判
-                const hasExecuted = (parentSuite as any)._beforeAllExecuted === true;
+                const hasExecuted =
+                  (parentSuite as any)._beforeAllExecuted === true;
                 if (!hasExecuted) {
                   await parentSuite.beforeAll();
                   // 直接设置属性，确保标志被正确设置

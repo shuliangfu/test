@@ -2,7 +2,10 @@
  * @fileoverview 浏览器测试依赖管理模块测试
  */
 
-import { getEsbuild, getPuppeteer } from "../../src/browser/dependencies.ts";
+import {
+  getBuildBundle,
+  getPuppeteer,
+} from "../../src/browser/dependencies.ts";
 import { describe, expect, it } from "../../src/mod.ts";
 
 describe("浏览器测试依赖管理", () => {
@@ -21,18 +24,17 @@ describe("浏览器测试依赖管理", () => {
     });
   });
 
-  describe("getEsbuild", () => {
-    it("应该返回 esbuild 模块", () => {
-      const esbuild = getEsbuild();
-      expect(esbuild).toBeDefined();
-      expect(typeof esbuild.build).toBe("function");
-      expect(typeof esbuild.transform).toBe("function");
+  describe("getBuildBundle", () => {
+    it("应该返回 buildBundle 函数", () => {
+      const buildBundle = getBuildBundle();
+      expect(buildBundle).toBeDefined();
+      expect(typeof buildBundle).toBe("function");
     });
 
-    it("应该返回相同的 esbuild 实例", () => {
-      const esbuild1 = getEsbuild();
-      const esbuild2 = getEsbuild();
-      expect(esbuild1).toBe(esbuild2);
+    it("应该返回相同的 buildBundle 函数", () => {
+      const buildBundle1 = getBuildBundle();
+      const buildBundle2 = getBuildBundle();
+      expect(buildBundle1).toBe(buildBundle2);
     });
   });
 });

@@ -59,7 +59,7 @@ bunx jsr add -D @dreamer/test
   - 基准测试（`bench`）
 - **浏览器测试集成**：
   - 自动创建浏览器上下文
-  - 客户端代码自动打包（esbuild）
+  - 客户端代码自动打包（@dreamer/esbuild）
   - 页面操作 API（`evaluate`、`goto`、`waitFor`）
   - 浏览器实例复用
 - **测试组织**：
@@ -628,14 +628,14 @@ describe("自定义模板测试", {
 - **资源清理**：使用第三方库时，如果遇到定时器或资源泄漏警告，可以使用 `sanitizeOps: false` 和 `sanitizeResources: false` 选项禁用检查
 - **浏览器测试依赖**：
   - 需要安装 Chrome/Chromium 浏览器
-  - 自动使用 Puppeteer 和 esbuild（通过 npm 依赖）
+  - 自动使用 Puppeteer 和 @dreamer/esbuild 进行打包
   - 支持自动检测系统 Chrome 路径（macOS、Linux、Windows）
 - **浏览器测试性能**：
   - 启用 `reuseBrowser: true`（默认）可显著提升性能
   - 每个测试会创建新页面，但共享浏览器实例
   - 测试结束后自动清理浏览器资源
 - **客户端代码打包**：
-  - 使用 esbuild 进行快速打包
+  - 使用 @dreamer/esbuild 进行快速打包
   - 支持 TypeScript 代码
   - 打包结果缓存在内存中
 

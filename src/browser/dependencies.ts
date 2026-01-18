@@ -2,7 +2,7 @@
  * @module @dreamer/test/browser/dependencies
  *
  * @fileoverview 浏览器测试依赖管理
- * 提供 Puppeteer 和 esbuild 的静态导入
+ * 提供 Puppeteer 和 @dreamer/esbuild 的静态导入
  */
 
 /**
@@ -11,9 +11,13 @@
 import puppeteer from "puppeteer";
 
 /**
- * 导入 esbuild（静态导入）
+ * 导入 @dreamer/esbuild 的 buildBundle 函数
  */
-import * as esbuild from "esbuild";
+import {
+  buildBundle,
+  type BundleOptions,
+  type BundleResult,
+} from "@dreamer/esbuild";
 
 /**
  * 获取 Puppeteer 模块
@@ -25,10 +29,13 @@ export function getPuppeteer(): typeof puppeteer {
 }
 
 /**
- * 获取 esbuild 模块
+ * 获取 buildBundle 函数
  *
- * @returns esbuild 模块
+ * @returns buildBundle 函数
  */
-export function getEsbuild(): typeof esbuild {
-  return esbuild;
+export function getBuildBundle(): typeof buildBundle {
+  return buildBundle;
 }
+
+// 重新导出类型
+export type { BundleOptions, BundleResult };

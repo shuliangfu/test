@@ -2,11 +2,14 @@
  * @module @dreamer/test/browser/bundle
  *
  * @fileoverview 客户端代码打包工具
- * 使用 esbuild 将客户端代码打包为浏览器兼容格式
+ * 使用 @dreamer/esbuild 将客户端代码打包为浏览器兼容格式
  */
 
-import { statSync } from "@dreamer/runtime-adapter"
-import { getEsbuild } from "./dependencies.ts"
+import { statSync } from "@dreamer/runtime-adapter";
+import {
+  type BundleOptions as EsbuildBundleOptions,
+  getBuildBundle,
+} from "./dependencies.ts";
 
 /**
  * 打包结果缓存
@@ -32,9 +35,85 @@ export interface BundleOptions {
 }
 
 /**
+ * 生成缓存键
+ *
+ * @param options - 打包选项
+ * @returns 缓存键字符串
+ */
+function getCacheKey(options: BundleOptions): string {
+  return `${options.entryPoint}:${options.globalName || ""}:${
+    options.platform || "browser"
+  }:${options.target || "es2020"}:${options.minify || false}`;
+}
+
+/**
+ * 检查文件是否已修改
+ *
+ * @param filePath - 文件路径
+ * @param cachedMtime - 缓存的修改时间
+ * @returns 是否已修改
+ */
+function isFileModified(filePath: string, cachedMtime: number): boolean {
+  try {
+    const stat = statSync(filePath);
+    return stat.mtime?.getTime() !== cachedMtime;
+  } catch {
+    return true; // 如果无法读取，认为已修改
+  }
+}
+
+/**
+ * 执行打包（带重试逻辑）
+ * 使用 @dreamer/esbuild 的 buildBundle 函数
+ * 当 esbuild 服务停止时，会尝试重新初始化
+ *
+ * @param options - 打包选项
+ * @param retryCount - 重试次数（内部使用）
+ * @returns 打包后的代码字符串
+ */
+async function executeBuild(
+  options: BundleOptions,
+  retryCount = 0,
+): Promise<string> {
+  const buildBundle = getBuildBundle();
+
+  try {
+    // 转换选项格式，适配 @dreamer/esbuild 的 BundleOptions
+    const bundleOptions: EsbuildBundleOptions = {
+      entryPoint: options.entryPoint,
+      globalName: options.globalName,
+      platform: options.platform || "browser",
+      target: options.target || "es2020",
+      minify: options.minify || false,
+      format: "iife",
+      sourcemap: false,
+    };
+
+    const result = await buildBundle(bundleOptions);
+    return result.code;
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+
+    // 检测 esbuild 服务停止的错误，尝试重试
+    if (
+      errorMessage.includes("service is no longer running") ||
+      errorMessage.includes("service was stopped")
+    ) {
+      if (retryCount < 2) {
+        // 等待一小段时间后重试，让 esbuild 重新初始化
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        return executeBuild(options, retryCount + 1);
+      }
+    }
+
+    throw error;
+  }
+}
+
+/**
  * 将客户端代码打包为浏览器兼容格式
  *
- * 使用 esbuild 将 TypeScript/JavaScript 代码打包为 IIFE 格式，
+ * 使用 @dreamer/esbuild 将 TypeScript/JavaScript 代码打包为 IIFE 格式，
  * 可以在浏览器中直接使用。
  *
  * @param options - 打包选项
@@ -50,88 +129,6 @@ export interface BundleOptions {
  * });
  * ```
  */
-/**
- * 生成缓存键
- */
-function getCacheKey(options: BundleOptions): string {
-  return `${options.entryPoint}:${options.globalName || ""}:${
-    options.platform || "browser"
-  }:${options.target || "es2020"}:${options.minify || false}`;
-}
-
-/**
- * 检查文件是否已修改
- */
-function isFileModified(filePath: string, cachedMtime: number): boolean {
-  try {
-    const stat = statSync(filePath);
-    return stat.mtime?.getTime() !== cachedMtime;
-  } catch {
-    return true; // 如果无法读取，认为已修改
-  }
-}
-
-/**
- * 执行 esbuild 打包（带重试逻辑）
- * 当 esbuild 服务停止时，会尝试重新初始化
- *
- * @param options - 打包选项
- * @param retryCount - 重试次数（内部使用）
- * @returns 打包结果
- */
-async function executeEsbuildBuild(
-  options: BundleOptions,
-  retryCount = 0,
-): Promise<string> {
-  const esbuild = getEsbuild();
-
-  try {
-    const buildResult = await esbuild.build({
-      entryPoints: [options.entryPoint],
-      bundle: true,
-      format: "iife",
-      platform: options.platform || "browser",
-      target: options.target || "es2020",
-      globalName: options.globalName,
-      minify: options.minify || false,
-      write: false,
-      sourcemap: false,
-    });
-
-    // 检查输出文件是否存在
-    if (!buildResult.outputFiles || buildResult.outputFiles.length === 0) {
-      throw new Error(
-        `esbuild 打包失败：没有生成输出文件。入口文件: ${options.entryPoint}`,
-      );
-    }
-
-    const outputFile = buildResult.outputFiles[0];
-    if (!outputFile) {
-      throw new Error(
-        `esbuild 打包失败：输出文件为空。入口文件: ${options.entryPoint}`,
-      );
-    }
-
-    return new TextDecoder().decode(outputFile.contents);
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-
-    // 检测 esbuild 服务停止的错误，尝试重试
-    if (
-      errorMessage.includes("service is no longer running") ||
-      errorMessage.includes("service was stopped")
-    ) {
-      if (retryCount < 2) {
-        // 等待一小段时间后重试，让 esbuild 重新初始化
-        await new Promise((resolve) => setTimeout(resolve, 100));
-        return executeEsbuildBuild(options, retryCount + 1);
-      }
-    }
-
-    throw error;
-  }
-}
-
 export async function buildClientBundle(
   options: BundleOptions,
 ): Promise<string> {
@@ -147,7 +144,7 @@ export async function buildClientBundle(
   }
 
   try {
-    const code = await executeEsbuildBuild(options);
+    const code = await executeBuild(options);
 
     // 更新缓存
     try {
@@ -164,7 +161,7 @@ export async function buildClientBundle(
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     throw new Error(
-      `esbuild 打包失败：${errorMessage}。入口文件: ${options.entryPoint}`,
+      `打包失败：${errorMessage}。入口文件: ${options.entryPoint}`,
     );
   }
 }

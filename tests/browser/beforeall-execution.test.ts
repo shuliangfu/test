@@ -13,7 +13,7 @@ let testPort = 30000;
 describe(`浏览器测试 - beforeAll 执行测试 (${RUNTIME})`, () => {
   // 在所有测试前执行
   beforeAll(async () => {
-    console.log(`[${RUNTIME}] beforeAll 启动服务器.......................`);
+    console.log(`[${RUNTIME}] beforeAll 启动服务器....................... beforeAll`);
     beforeAllCallCount++;
     // 模拟服务器启动
     await new Promise((resolve) => setTimeout(resolve, 10));
@@ -22,7 +22,7 @@ describe(`浏览器测试 - beforeAll 执行测试 (${RUNTIME})`, () => {
 
   // 在所有测试后执行
   afterAll(async () => {
-    console.log(`[${RUNTIME}] afterAll 关闭服务器.......................`);
+    console.log(`[${RUNTIME}] afterAll 关闭服务器....................... afterAll`);
     // 模拟服务器关闭
     await new Promise((resolve) => setTimeout(resolve, 10));
     console.log(`[${RUNTIME}] 服务器已关闭`);
@@ -76,4 +76,4 @@ describe(`浏览器测试 - beforeAll 执行测试 (${RUNTIME})`, () => {
       },
     });
   });
-});
+}, { sanitizeOps: false, sanitizeResources: false });

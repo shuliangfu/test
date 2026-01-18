@@ -42,6 +42,13 @@ let currentSuite = rootSuite;
 const suiteBrowserCache = new Map<string, BrowserContext>();
 
 /**
+ * 跟踪 beforeAll 钩子的执行状态
+ * key: 套件的完整路径（用于唯一标识套件）
+ * value: 是否已执行
+ */
+const beforeAllExecutedMap = new Map<string, boolean>();
+
+/**
  * Bun 环境下标记是否在 describe 块内（使用计数器支持嵌套）
  */
 let describeDepth = 0;
@@ -502,24 +509,24 @@ export function test(
         // 收集所有父套件（从根到当前套件）
         const allSuites = collectParentSuites(suite);
 
-        // 执行所有父套件的 beforeAll（只执行一次，通过检查标志）
+        // 执行所有父套件的 beforeAll（只执行一次，通过全局 Map 跟踪）
         // 注意：只执行定义了自己的 beforeAll 的套件，跳过继承的套件
         for (const parentSuite of allSuites) {
           if (parentSuite.beforeAll) {
             // 检查这个套件是否定义了自己的 beforeAll（不是从父套件继承的）
             const parentBeforeAll = parentSuite.parent?.beforeAll;
             const hasOwnBeforeAll = parentSuite.beforeAll !== parentBeforeAll;
-            
+
             // 只执行定义了自己的 beforeAll 的套件
             if (hasOwnBeforeAll) {
-              // 检查标志，确保只执行一次
-              // 使用严格相等检查，避免 undefined 或 false 被误判
-              const hasExecuted =
-                (parentSuite as any)._beforeAllExecuted === true;
+              // 使用套件的完整路径作为唯一标识符
+              const suiteKey = getFullSuiteName(parentSuite);
+              // 检查全局 Map，确保只执行一次
+              const hasExecuted = beforeAllExecutedMap.get(suiteKey) === true;
               if (!hasExecuted) {
                 await parentSuite.beforeAll();
-                // 直接设置属性，确保标志被正确设置
-                (parentSuite as any)._beforeAllExecuted = true;
+                // 在全局 Map 中标记为已执行
+                beforeAllExecutedMap.set(suiteKey, true);
               }
             }
           }
@@ -670,24 +677,26 @@ export function test(
             // 收集所有父套件（从根到当前套件）
             const allSuites = collectParentSuites(suite);
 
-            // 执行所有父套件的 beforeAll（只执行一次，通过检查标志）
+            // 执行所有父套件的 beforeAll（只执行一次，通过全局 Map 跟踪）
             // 注意：只执行定义了自己的 beforeAll 的套件，跳过继承的套件
             for (const parentSuite of allSuites) {
               if (parentSuite.beforeAll) {
                 // 检查这个套件是否定义了自己的 beforeAll（不是从父套件继承的）
                 const parentBeforeAll = parentSuite.parent?.beforeAll;
-                const hasOwnBeforeAll = parentSuite.beforeAll !== parentBeforeAll;
-                
+                const hasOwnBeforeAll =
+                  parentSuite.beforeAll !== parentBeforeAll;
+
                 // 只执行定义了自己的 beforeAll 的套件
                 if (hasOwnBeforeAll) {
-                  // 检查标志，确保只执行一次
-                  // 使用严格相等检查，避免 undefined 或 false 被误判
+                  // 使用套件的完整路径作为唯一标识符
+                  const suiteKey = getFullSuiteName(parentSuite);
+                  // 检查全局 Map，确保只执行一次
                   const hasExecuted =
-                    (parentSuite as any)._beforeAllExecuted === true;
+                    beforeAllExecutedMap.get(suiteKey) === true;
                   if (!hasExecuted) {
                     await parentSuite.beforeAll();
-                    // 直接设置属性，确保标志被正确设置
-                    (parentSuite as any)._beforeAllExecuted = true;
+                    // 在全局 Map 中标记为已执行
+                    beforeAllExecutedMap.set(suiteKey, true);
                   }
                 }
               }

@@ -10,6 +10,7 @@ import { createBrowserContext } from "./browser/browser-context.ts";
 import { buildClientBundle } from "./browser/bundle.ts";
 import { createTestPage } from "./browser/page.ts";
 import { logger } from "./logger.ts";
+import { _clearCurrentHooks } from "./test-utils.ts";
 import type {
   BrowserTestConfig,
   DescribeOptions,
@@ -380,6 +381,9 @@ export function describe(
     const parentAfterAll = suite.parent?.afterAll;
     currentSuite = suiteStack.pop() || rootSuite;
     if (IS_BUN) describeDepth--;
+
+    // 清空当前钩子，避免钩子被错误继承到其他套件
+    _clearCurrentHooks();
 
     // 如果有 afterAll 钩子，且这个套件定义了自己的 afterAll（不是从父套件继承的），
     // 注册一个特殊的测试用例来执行它

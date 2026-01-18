@@ -14,6 +14,17 @@ import type { TestContext, TestHooks, TestOptions } from "./types.ts";
 const currentHooks: TestHooks = {};
 
 /**
+ * 清空当前钩子（在 describe 函数结束时调用）
+ */
+export function _clearCurrentHooks(): void {
+  currentHooks.beforeAll = undefined;
+  currentHooks.afterAll = undefined;
+  currentHooks.beforeEach = undefined;
+  currentHooks.afterEach = undefined;
+  currentHooks.options = undefined;
+}
+
+/**
  * 设置 beforeAll 钩子
  */
 export function beforeAll(fn: () => void | Promise<void>): void {

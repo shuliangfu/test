@@ -1,11 +1,6 @@
 {
   "imports": {
-    "@/": "./src/",
-    "@/lib/": "./src/lib/",
-    "~/": "./",
-    "~utils/": "./utils/",
-    "~config/": "./config/",
-    "@dreamer/logger": "jsr:@dreamer/logger@1.0.0-beta.4",
-    "@dreamer/logger/client": "jsr:@dreamer/logger@1.0.0-beta.4/client"
+    "@dreamer/socket-io": "jsr:@dreamer/socket-io@1.0.0-beta.2",
+    "@dreamer/logger": "jsr:@dreamer/logger@1.0.0-beta.4"
   }
 }

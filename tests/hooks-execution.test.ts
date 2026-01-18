@@ -14,11 +14,18 @@ import {
 } from "../src/mod.ts";
 
 describe("钩子函数执行测试", () => {
+  beforeAll(() => {
+    console.log("beforeAll 被执行了.....................0");
+  });
+  afterAll(() => {
+    console.log("afterAll 被执行了.....................0");
+  });
   describe("beforeAll 执行测试", () => {
     let beforeAllCalled = false;
     let beforeAllCallCount = 0;
 
     beforeAll(() => {
+      console.log("beforeAll 被执行了.....................1");
       beforeAllCalled = true;
       beforeAllCallCount++;
     });
@@ -45,7 +52,7 @@ describe("钩子函数执行测试", () => {
     afterAll(() => {
       afterAllCalled = true;
       afterAllCallCount++;
-      console.log("afterAll 被执行了");
+      console.log("afterAll 被执行了..................... 1");
     });
 
     it("测试1: 验证 afterAll 会在所有测试后执行", () => {
@@ -130,7 +137,7 @@ describe("钩子函数执行测试", () => {
     afterAll(() => {
       afterAllCount++;
       executionOrder.push("afterAll");
-      console.log("组合测试 afterAll 被执行了");
+      console.log("组合测试 afterAll 被执行了..................... 2");
     });
 
     beforeEach(() => {
@@ -179,7 +186,7 @@ describe("钩子函数执行测试", () => {
     afterAll(async () => {
       await new Promise((resolve) => setTimeout(resolve, 10));
       asyncAfterAllCalled = true;
-      console.log("异步 afterAll 被执行了");
+      console.log("异步 afterAll 被执行了..................... 3");
     });
 
     beforeEach(async () => {
@@ -215,7 +222,7 @@ describe("钩子函数执行测试", () => {
 
     afterAll(() => {
       parentAfterAllCalled = true;
-      console.log("父套件 afterAll 被执行了");
+      console.log("父套件 afterAll 被执行了..................... 4");
     });
 
     beforeEach(() => {
@@ -243,7 +250,7 @@ describe("钩子函数执行测试", () => {
 
       afterAll(() => {
         childAfterAllCalled = true;
-        console.log("子套件 afterAll 被执行了");
+        console.log("子套件 afterAll 被执行了..................... 5");
       });
 
       beforeEach(() => {

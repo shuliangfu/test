@@ -1,1 +1,1 @@
-export const parentValue = "bun-parent-result";
+export const parentValue = "parent-result";

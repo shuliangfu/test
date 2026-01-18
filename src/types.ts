@@ -22,6 +22,32 @@ export interface TestSuite {
 }
 
 /**
+ * 浏览器测试配置
+ */
+export interface BrowserTestConfig {
+  /** 是否启用浏览器测试（默认：false） */
+  enabled?: boolean;
+  /** 客户端代码入口文件路径 */
+  entryPoint?: string;
+  /** 全局变量名（IIFE 格式，默认：从 entryPoint 推断） */
+  globalName?: string;
+  /** 是否无头模式（默认：true） */
+  headless?: boolean;
+  /** Chrome 可执行文件路径（可选，自动检测） */
+  executablePath?: string;
+  /** Chrome 启动参数 */
+  args?: string[];
+  /** HTML 模板（可选） */
+  htmlTemplate?: string;
+  /** 额外的 HTML body 内容（可选） */
+  bodyContent?: string;
+  /** 等待模块加载的超时时间（毫秒，默认：10000） */
+  moduleLoadTimeout?: number;
+  /** 是否在套件级别复用浏览器实例（默认：true，可显著提升性能） */
+  reuseBrowser?: boolean;
+}
+
+/**
  * 测试上下文接口（兼容 Deno.TestContext）
  */
 export interface TestContext {
@@ -31,6 +57,30 @@ export interface TestContext {
   sanitizeOps: boolean;
   sanitizeResources: boolean;
   step<T>(name: string, fn: (t: TestContext) => Promise<T> | T): Promise<T>;
+  /** 浏览器测试上下文（仅在 browser.enabled 为 true 时可用） */
+  browser?: {
+    /** Puppeteer Browser 实例 */
+    browser: any;
+    /** Puppeteer Page 实例 */
+    page: any;
+    /**
+     * 在浏览器中执行代码
+     * @param fn - 要在浏览器中执行的函数
+     * @returns 执行结果
+     */
+    evaluate<T>(fn: () => T | Promise<T>): Promise<T>;
+    /**
+     * 导航到指定 URL
+     * @param url - 目标 URL
+     */
+    goto(url: string): Promise<void>;
+    /**
+     * 等待页面中的条件满足
+     * @param fn - 条件函数
+     * @param options - 等待选项
+     */
+    waitFor(fn: () => boolean, options?: { timeout?: number }): Promise<void>;
+  };
 }
 
 /**
@@ -84,6 +134,8 @@ export interface TestOptions {
   sanitizeOps?: boolean;
   /** 是否启用资源清理检查（默认：true） */
   sanitizeResources?: boolean;
+  /** 浏览器测试配置（可选） */
+  browser?: BrowserTestConfig;
 }
 
 /**
@@ -106,6 +158,8 @@ export interface DescribeOptions {
   sanitizeOps?: boolean;
   /** 是否启用资源清理检查（默认：true） */
   sanitizeResources?: boolean;
+  /** 浏览器测试配置（可选，套件级别的默认配置） */
+  browser?: BrowserTestConfig;
 }
 
 /**

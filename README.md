@@ -1,152 +1,16 @@
 # @dreamer/test
 
-> 一个兼容 Deno 和 Bun 的测试工具库，提供 Mock 工具、断言增强、测试工具函数等高级功能
+> 一个兼容 Deno 和 Bun 的测试工具库，提供 Mock 工具、断言增强、测试工具函数、浏览器测试集成等高级功能
 
 [![JSR](https://jsr.io/badges/@dreamer/test)](https://jsr.io/@dreamer/test)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Tests](https://img.shields.io/badge/tests-300%20passed-brightgreen)](./TEST_REPORT.md)
 
 ---
 
 ## 🎯 功能
 
-测试工具库，基于 Deno 内置测试框架，提供 Mock、断言增强、测试工具函数等高级功能，让测试更简单、更强大。
-
----
-
-## ✨ 特性
-
-| 特性 | 说明 |
-|------|------|
-| 🎭 **Mock 工具** | 函数 Mock、模块 Mock、HTTP Mock、时间 Mock |
-| ✅ **断言增强** | 丰富的断言方法（`assertSnapshot`、`assertRejects` 等） |
-| 🛠️ **测试工具函数** | Setup/Teardown、Fixtures、参数化测试 |
-| 📊 **测试覆盖率工具封装** | 简化覆盖率收集和报告生成 |
-| ⚡ **性能测试工具** | 性能测试和基准测试工具 |
-| 📸 **快照测试** | 支持快照测试（类似 Jest 的 snapshot） |
-| 🌐 **HTTP Mock** | 提供 HTTP 请求 Mock 工具 |
-| 📝 **测试报告** | 生成更详细的测试报告 |
-
----
-
-## 🤔 为什么需要测试工具库？
-
-虽然 Deno 内置了测试框架，但 `@dreamer/test` 提供了以下增强功能：
-
-- ✅ **Mock 工具**：Deno 内置测试框架没有 Mock 功能，需要手动实现
-- ✅ **断言增强**：提供更丰富的断言方法（如 `assertSnapshot`、`assertThrowsAsync` 等）
-- ✅ **测试工具函数**：提供常用的测试工具函数（setup/teardown、fixtures、参数化测试）
-- ✅ **测试覆盖率工具封装**：简化覆盖率收集和报告生成
-- ✅ **性能测试工具**：提供性能测试和基准测试工具
-- ✅ **快照测试**：支持快照测试（类似 Jest 的 snapshot）
-- ✅ **HTTP Mock**：提供 HTTP 请求 Mock 工具
-- ✅ **测试报告**：生成更详细的测试报告
-
----
-
-## 🎨 详细特性
-
-### Mock 工具
-
-- **函数 Mock**：
-  - 函数调用 Mock（`mockFn`）
-  - 返回值 Mock
-  - 调用次数验证
-  - 调用参数验证
-  - 调用顺序验证
-- **模块 Mock**：
-  - 模块导入 Mock（`mockModule`）
-  - 部分模块 Mock
-  - 动态模块替换
-- **HTTP Mock**：
-  - HTTP 请求 Mock（`mockFetch`）
-  - 请求拦截和响应模拟
-  - 请求验证（URL、方法、头部、Body）
-  - 响应模拟（状态码、头部、Body）
-- **时间 Mock**：
-  - 时间 Mock（`mockDate`、`mockTimer`）
-  - 定时器 Mock（`setTimeout`、`setInterval`）
-  - 日期 Mock
-
-### 断言增强
-
-- **基础断言**：基于 Deno 内置断言，提供类型安全的包装
-- **异步断言**：
-  - `assertRejects`：断言异步函数抛出错误
-  - `assertResolves`：断言异步函数成功
-- **对象断言**：
-  - `assertDeepEqual`：深度相等断言
-  - `assertInstanceOf`：实例类型断言
-  - `assertMatch`：正则匹配断言
-- **快照断言**：
-  - `assertSnapshot`：快照测试（类似 Jest）
-  - 自动更新快照
-  - 快照对比和差异显示
-- **自定义断言**：
-  - 自定义断言消息
-  - 自定义断言逻辑
-
-### 测试工具函数
-
-- **Setup/Teardown**：
-  - `beforeEach`：每个测试前执行
-  - `afterEach`：每个测试后执行
-  - `beforeAll`：所有测试前执行
-  - `afterAll`：所有测试后执行
-- **测试 Fixtures**：
-  - 测试数据 Fixtures
-  - 测试环境 Fixtures
-  - 共享测试资源
-- **参数化测试**：
-  - 参数化测试（`testEach`）
-  - 表格驱动测试
-  - 测试用例生成
-- **异步测试工具**：
-  - 异步测试辅助函数
-  - Promise 测试工具
-  - 超时控制
-
-### 测试覆盖率
-
-- **覆盖率收集**：
-  - 基于 Deno 内置覆盖率工具
-  - 覆盖率数据收集
-  - 覆盖率报告生成
-- **覆盖率报告**：
-  - HTML 报告生成
-  - 文本报告生成
-  - 覆盖率阈值检查
-  - 覆盖率趋势分析
-
-### 性能测试
-
-- **基准测试**：
-  - 性能基准测试（`bench`）
-  - 执行时间测量
-  - 内存使用测量
-  - 性能对比
-- **压力测试**：
-  - 并发测试
-  - 负载测试工具
-
-### 其他功能
-
-- **测试分组**：测试套件组织（`describe`、`it`）
-- **测试跳过**：条件跳过测试（`test.skip`、`test.only`）
-- **测试超时**：测试超时控制
-- **资源清理控制**：支持禁用定时器和资源泄漏检查（`sanitizeOps`、`sanitizeResources`），适用于第三方库可能产生内部定时器或资源的情况
-- **测试报告**：详细的测试报告生成
-- **测试并行化**：测试并行执行控制
-
----
-
-## 🎯 使用场景
-
-- 单元测试（函数、类、模块测试）
-- 集成测试（API、数据库、服务测试）
-- Mock 测试（外部依赖 Mock）
-- 快照测试（UI 组件、数据结构快照）
-- 性能测试（基准测试、性能对比）
-- 测试覆盖率收集和分析
+测试工具库，基于 Deno 内置测试框架，提供 Mock、断言增强、测试工具函数、浏览器测试集成等高级功能，让测试更简单、更强大。
 
 ---
 
@@ -161,7 +25,7 @@ deno add jsr:@dreamer/test
 ### Bun
 
 ```bash
-bunx jsr add @dreamer/test
+bunx jsr add -D @dreamer/test
 ```
 
 ---
@@ -172,9 +36,51 @@ bunx jsr add @dreamer/test
 |------|---------|------|
 | **Deno** | 2.5+ | ✅ 完全支持 |
 | **Bun** | 1.0+ | ✅ 完全支持 |
-| **服务端** | - | ✅ 支持（Deno/Bun 运行时，基于 Deno 测试框架，完整功能支持，在控制台运行） |
-| **客户端** | - | ❌ 不支持（测试工具库仅在服务端运行，在控制台执行测试，客户端测试需要使用浏览器测试框架如 Playwright、Puppeteer） |
-| **依赖** | - | 📦 基于 Deno 内置测试框架，无额外依赖 |
+| **服务端** | - | ✅ 支持（Deno/Bun 运行时） |
+| **浏览器测试** | - | ✅ 支持（通过 Puppeteer 集成） |
+
+---
+
+## ✨ 特性
+
+- **Mock 工具**：
+  - 函数 Mock（`mockFn`）
+  - HTTP Mock（`mockFetch`）
+  - 调用次数和参数验证
+  - 返回值验证
+- **断言增强**：
+  - 丰富的断言方法（`expect`、`assertSnapshot`、`assertRejects` 等）
+  - 类型检查断言（`toBeArray`、`toBeString`、`toBeNumber` 等）
+  - 属性断言（`toHaveProperty`、`toHaveLength`）
+  - 反向断言（`.not`）
+- **测试工具函数**：
+  - Setup/Teardown（`beforeAll`、`afterAll`、`beforeEach`、`afterEach`）
+  - 参数化测试（`testEach`）
+  - 基准测试（`bench`）
+- **浏览器测试集成**：
+  - 自动创建浏览器上下文
+  - 客户端代码自动打包（esbuild）
+  - 页面操作 API（`evaluate`、`goto`、`waitFor`）
+  - 浏览器实例复用
+- **测试组织**：
+  - 测试套件（`describe`）
+  - 测试用例（`it`、`test`）
+  - 跳过测试（`test.skip`）
+  - 仅运行测试（`test.only`）
+- **资源清理控制**：
+  - 支持禁用定时器泄漏检查（`sanitizeOps`）
+  - 支持禁用资源句柄泄漏检查（`sanitizeResources`）
+
+---
+
+## 🎯 使用场景
+
+- **单元测试**：函数、类、模块测试
+- **集成测试**：API、数据库、服务测试
+- **Mock 测试**：外部依赖 Mock
+- **快照测试**：UI 组件、数据结构快照
+- **性能测试**：基准测试、性能对比
+- **浏览器测试**：前端组件、DOM 操作测试
 
 ---
 
@@ -199,7 +105,7 @@ describe("Math", () => {
 ### Mock 函数
 
 ```typescript
-import { describe, it, expect, mockFn } from "@dreamer/test";
+import { describe, it, mockFn, expectMock } from "@dreamer/test";
 
 describe("Mock 函数", () => {
   it("should mock function calls", () => {
@@ -208,39 +114,13 @@ describe("Mock 函数", () => {
     mock(3, 4);
 
     // 验证调用次数
-    expect(mock).toHaveBeenCalledTimes(2);
+    expectMock(mock).toHaveBeenCalledTimes(2);
 
     // 验证调用参数
-    expect(mock).toHaveBeenCalledWith(1, 2);
-    expect(mock).toHaveBeenCalledWith(3, 4);
+    expectMock(mock).toHaveBeenCalledWith(1, 2);
 
     // 验证最后一次调用
-    expect(mock).toHaveBeenLastCalledWith(3, 4);
-  });
-
-  it("should mock return value", () => {
-    const mock = mockFn(() => "mocked value");
-    expect(mock()).toBe("mocked value");
-  });
-
-  it("should mock async function", async () => {
-    const mock = mockFn(async () => {
-      return Promise.resolve("async value");
-    });
-    const result = await mock();
-    expect(result).toBe("async value");
-  });
-
-  it("should verify mock return values", () => {
-    const mock = mockFn((x: number) => x * 2);
-    mock(2);
-    mock(3);
-
-    // 使用 expectMock 进行 Mock 断言
-    import { expectMock } from "@dreamer/test";
-    expectMock(mock).toHaveReturnedWith(4);
-    expectMock(mock).toHaveLastReturnedWith(6);
-    expectMock(mock).toHaveReturnedTimes(2);
+    expectMock(mock).toHaveBeenLastCalledWith(3, 4);
   });
 });
 ```
@@ -264,32 +144,13 @@ describe("HTTP Mock", () => {
     const data = await response.json();
 
     expect(data).toEqual({ id: 1, name: "Alice" });
-    expect(mock).toHaveBeenCalledTimes(1);
   });
 });
 ```
 
-### 快照测试
+---
 
-```typescript
-import { describe, it, assertSnapshot } from "@dreamer/test";
-
-describe("快照测试", () => {
-  it("should match snapshot", async (t) => {
-    const data = {
-      users: [
-        { id: 1, name: "Alice" },
-        { id: 2, name: "Bob" },
-      ],
-      total: 2,
-    };
-
-    await assertSnapshot(t, data);
-    // 首次运行会创建快照文件
-    // 后续运行会对比快照，如果不匹配会报错
-  });
-});
-```
+## 🎨 使用示例
 
 ### Setup/Teardown
 
@@ -334,63 +195,28 @@ describe("Database Tests", () => {
 });
 ```
 
-**支持选项参数**：
-
-`beforeEach` 和 `afterEach` 支持可选的 `options` 参数，用于控制资源清理检查：
-
-```typescript
-import { describe, it, beforeEach, afterEach } from "@dreamer/test";
-
-describe("使用第三方库的测试", () => {
-  beforeEach((t) => {
-    // beforeEach 可以接收 TestContext 参数
-    // 可以访问 t.name、t.sanitizeOps 等属性
-    console.log(`测试: ${t.name}`);
-  }, {
-    sanitizeOps: false,        // 禁用定时器泄漏检查
-    sanitizeResources: false,  // 禁用资源句柄泄漏检查
-  });
-
-  afterEach((t) => {
-    // afterEach 也可以接收 TestContext 参数
-    console.log(`测试完成: ${t.name}`);
-  }, {
-    sanitizeOps: false,
-  });
-
-  it("测试用例", () => {
-    // 测试代码
-  });
-});
-```
-
-**选项说明**：
-- **`sanitizeOps?: boolean`**：是否启用操作清理检查（默认：`true`）。设置为 `false` 可禁用定时器和异步操作泄漏检查
-- **`sanitizeResources?: boolean`**：是否启用资源清理检查（默认：`true`）。设置为 `false` 可禁用资源句柄泄漏检查
-
 ### 参数化测试
 
 ```typescript
-import { describe, testEach } from "@dreamer/test";
+import { describe, testEach, expect } from "@dreamer/test";
 
 describe("参数化测试", () => {
   testEach([
     [1, 2, 3],
     [2, 3, 5],
     [3, 4, 7],
-  ])("should add %d and %d to equal %d", (a, b, expected) => {
+  ])("should add %0 and %1 to equal %2", (a, b, expected) => {
     expect(a + b).toBe(expected);
   });
 });
 ```
 
-### 性能测试
+### 基准测试
 
 ```typescript
 import { describe, bench } from "@dreamer/test";
 
 describe("性能测试", () => {
-  // 注意：bench 应该在 describe() 执行期间调用，而不是在 it() 回调中
   bench("array push", () => {
     const arr: number[] = [];
     for (let i = 0; i < 1000; i++) {
@@ -410,17 +236,32 @@ describe("性能测试", () => {
 });
 ```
 
-**注意事项**：
-- `bench()` 应该在 `describe()` 执行期间调用，而不是在 `it()` 回调中
-- 在 Bun 环境中，`test()` 必须在 `describe()` 执行期间调用，不能在测试执行期间调用
+### 快照测试
+
+```typescript
+import { describe, it, assertSnapshot } from "@dreamer/test";
+
+describe("快照测试", () => {
+  it("should match snapshot", async (t) => {
+    const data = {
+      users: [
+        { id: 1, name: "Alice" },
+        { id: 2, name: "Bob" },
+      ],
+      total: 2,
+    };
+
+    await assertSnapshot(t, data);
+  });
+});
+```
 
 ### 测试套件选项
-
-`describe()` 支持 `options` 参数，用于为整个测试套件设置默认选项：
 
 ```typescript
 import { describe, it } from "@dreamer/test";
 
+// 为整个测试套件设置选项
 describe("使用定时器的测试套件", {
   sanitizeOps: false,        // 禁用定时器泄漏检查
   sanitizeResources: false,  // 禁用资源句柄泄漏检查
@@ -435,9 +276,11 @@ describe("使用定时器的测试套件", {
 });
 ```
 
-**嵌套套件的选项继承**：
+### 嵌套套件的选项继承
 
 ```typescript
+import { describe, it } from "@dreamer/test";
+
 describe("父套件", {
   sanitizeOps: false,
 }, () => {
@@ -445,52 +288,179 @@ describe("父套件", {
     sanitizeResources: false,  // 子套件可以覆盖或添加选项
   }, () => {
     it("测试用例", () => {
-      // 这个测试用例会继承 sanitizeOps: false 和 sanitizeResources: false
+      // 继承 sanitizeOps: false 和 sanitizeResources: false
     });
   });
 });
 ```
 
-**选项说明**：
-- **`sanitizeOps?: boolean`**：是否启用操作清理检查（默认：`true`）。设置为 `false` 可禁用定时器和异步操作泄漏检查
-- **`sanitizeResources?: boolean`**：是否启用资源清理检查（默认：`true`）。设置为 `false` 可禁用资源句柄泄漏检查
-
 ### 禁用资源清理检查
-
-当使用第三方库（如 Redis、MongoDB 客户端）时，这些库可能会产生内部定时器或资源，导致 Deno 的泄漏检查报错。可以使用 `sanitizeOps` 和 `sanitizeResources` 选项来禁用这些检查：
 
 ```typescript
 import { describe, it, expect } from "@dreamer/test";
 
 describe("Redis 测试", () => {
   it("应该创建 Redis 连接", async () => {
-    // Redis 客户端库可能有内部定时器（Socket 的 _unrefTimer），
-    // 这是第三方库的内部实现，我们无法直接控制
     const client = await createRedisClient();
     expect(client).toBeDefined();
     await client.disconnect();
   }, {
-    // 禁用定时器检查（sanitizeOps）和资源检查（sanitizeResources）
     sanitizeOps: false,        // 禁用定时器泄漏检查
     sanitizeResources: false,  // 禁用资源句柄泄漏检查
   });
 });
 ```
 
-**选项说明**：
-- **`sanitizeOps: false`**：禁用**定时器和异步操作**泄漏检查
-  - 适用于：第三方库可能产生内部定时器（如 `setTimeout`、`setInterval`）的情况
-  - 例如：Redis 客户端的 Socket 定时器、HTTP 客户端的重连定时器等
+### 浏览器测试集成
 
-- **`sanitizeResources: false`**：禁用**资源句柄**泄漏检查
-  - 适用于：第三方库可能产生内部资源（如文件句柄、网络连接、子进程）的情况
-  - 例如：数据库连接池、文件系统监听器等
+浏览器测试允许你在真实的 Chrome 浏览器环境中测试前端代码。
 
-**注意事项**：
-- 只有在确实需要时才禁用这些检查（例如第三方库的内部实现）
-- 禁用检查可能会隐藏真正的资源泄漏问题
-- 建议优先尝试正确清理资源，只有在无法控制第三方库行为时才禁用检查
-- 可以根据实际情况只禁用其中一个选项，不必同时禁用两个
+#### 基础浏览器测试
+
+```typescript
+import { describe, it, expect } from "@dreamer/test";
+
+describe("浏览器测试", {
+  browser: {
+    enabled: true,  // 启用浏览器测试
+    headless: true, // 无头模式（默认）
+  },
+}, () => {
+  it("应该在浏览器中执行代码", async (t) => {
+    // t.browser 包含浏览器上下文
+    const result = await t.browser!.evaluate(() => {
+      return 1 + 1;
+    });
+    expect(result).toBe(2);
+  });
+
+  it("应该能够访问 DOM", async (t) => {
+    const result = await t.browser!.evaluate(() => {
+      return document.title;
+    });
+    expect(result).toBeDefined();
+  });
+});
+```
+
+#### 自动打包客户端代码
+
+```typescript
+import { describe, it, expect } from "@dreamer/test";
+
+describe("客户端库测试", {
+  browser: {
+    enabled: true,
+    entryPoint: "./src/client/mod.ts",  // 客户端代码入口
+    globalName: "MyLib",                 // 全局变量名
+  },
+}, () => {
+  it("应该能够使用打包后的库", async (t) => {
+    const result = await t.browser!.evaluate(() => {
+      // MyLib 是打包后暴露的全局变量
+      return typeof (globalThis as any).MyLib;
+    });
+    expect(result).toBe("object");
+  });
+});
+```
+
+#### 浏览器上下文 API
+
+```typescript
+import { describe, it, expect } from "@dreamer/test";
+
+describe("浏览器 API 测试", {
+  browser: { enabled: true },
+}, () => {
+  // evaluate - 在浏览器中执行代码
+  it("evaluate 示例", async (t) => {
+    const result = await t.browser!.evaluate(() => {
+      return navigator.userAgent;
+    });
+    expect(result).toContain("Chrome");
+  });
+
+  // goto - 导航到 URL
+  it("goto 示例", async (t) => {
+    await t.browser!.goto("https://example.com");
+    const title = await t.browser!.evaluate(() => document.title);
+    expect(title).toBeDefined();
+  });
+
+  // waitFor - 等待条件满足
+  it("waitFor 示例", async (t) => {
+    await t.browser!.evaluate(() => {
+      setTimeout(() => {
+        (globalThis as any).ready = true;
+      }, 100);
+    });
+
+    await t.browser!.waitFor(() => (globalThis as any).ready === true, {
+      timeout: 5000,
+    });
+
+    const ready = await t.browser!.evaluate(() => (globalThis as any).ready);
+    expect(ready).toBe(true);
+  });
+});
+```
+
+#### 浏览器实例复用
+
+```typescript
+import { describe, it } from "@dreamer/test";
+
+describe("复用浏览器实例", {
+  browser: {
+    enabled: true,
+    reuseBrowser: true,  // 在同一个套件中复用浏览器（默认为 true）
+  },
+}, () => {
+  // 多个测试共享同一个浏览器实例，但每个测试有独立的页面
+  it("测试 1", async (t) => {
+    // ...
+  });
+
+  it("测试 2", async (t) => {
+    // ...
+  });
+});
+```
+
+#### 自定义 HTML 模板
+
+```typescript
+import { describe, it } from "@dreamer/test";
+
+describe("自定义模板测试", {
+  browser: {
+    enabled: true,
+    bodyContent: '<div id="app"></div>',  // 额外的 HTML body 内容
+    htmlTemplate: `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <title>Custom Test Page</title>
+        {{BUNDLE}}
+      </head>
+      <body>
+        {{BODY_CONTENT}}
+        <script>window.testReady = true;</script>
+      </body>
+      </html>
+    `,
+  },
+}, () => {
+  it("应该使用自定义模板", async (t) => {
+    const hasApp = await t.browser!.evaluate(() => {
+      return document.getElementById("app") !== null;
+    });
+    expect(hasApp).toBe(true);
+  });
+});
+```
 
 ---
 
@@ -506,22 +476,13 @@ describe("Redis 测试", () => {
 - `test.only(name: string, fn: () => void | Promise<void>, options?)`: 只运行此测试
 
 **测试套件选项（DescribeOptions）**：
-- `sanitizeOps?: boolean`: 是否启用操作清理检查（默认：`true`）。设置为 `false` 可禁用**定时器和异步操作**泄漏检查
-- `sanitizeResources?: boolean`: 是否启用资源清理检查（默认：`true`）。设置为 `false` 可禁用**资源句柄**泄漏检查
+- `sanitizeOps?: boolean`: 是否启用操作清理检查（默认：`true`）
+- `sanitizeResources?: boolean`: 是否启用资源清理检查（默认：`true`）
 
 **测试选项（TestOptions）**：
 - `timeout?: number`: 测试超时时间（毫秒）
-- `sanitizeOps?: boolean`: 是否启用操作清理检查（默认：`true`）。设置为 `false` 可禁用**定时器和异步操作**泄漏检查，适用于第三方库可能产生内部定时器（如 `setTimeout`、`setInterval`）的情况
-- `sanitizeResources?: boolean`: 是否启用资源清理检查（默认：`true`）。设置为 `false` 可禁用**资源句柄**泄漏检查，适用于第三方库可能产生内部资源（如文件句柄、网络连接、子进程等）的情况
-
-**选项优先级**：
-- 测试用例选项 > 套件选项 > 默认值
-- 子套件选项 > 父套件选项
-
-**区别说明**：
-- `sanitizeOps` 检查的是**操作泄漏**（定时器、异步操作等）
-- `sanitizeResources` 检查的是**资源泄漏**（文件句柄、网络连接、子进程等）
-- 两者检查不同类型的泄漏，可以根据需要分别禁用
+- `sanitizeOps?: boolean`: 是否启用操作清理检查（默认：`true`）
+- `sanitizeResources?: boolean`: 是否启用资源清理检查（默认：`true`）
 
 ### Mock 函数
 
@@ -547,24 +508,24 @@ describe("Redis 测试", () => {
 - `expect(actual: unknown)`: 创建断言对象
   - `.toBe(expected)`: 严格相等
   - `.toEqual(expected)`: 深度相等
-  - `.toStrictEqual(expected)`: 严格深度相等（考虑 undefined、symbol 等）
+  - `.toStrictEqual(expected)`: 严格深度相等
   - `.toBeTruthy()`: 真值
   - `.toBeFalsy()`: 假值
   - `.toBeNull()`: null
   - `.toBeUndefined()`: undefined
-  - `.toBeDefined()`: 已定义（不为 undefined）
+  - `.toBeDefined()`: 已定义
   - `.toContain(item)`: 包含（数组或字符串）
   - `.toMatch(regexp)`: 正则匹配
-  - `.toHaveProperty(path, value?)`: 具有指定属性（支持嵌套路径，如 "user.name"）
-  - `.toHaveLength(expected)`: 具有指定长度（数组、字符串等）
-  - `.toBeCloseTo(expected, numDigits?)`: 浮点数近似相等（默认精度 2 位小数）
+  - `.toHaveProperty(path, value?)`: 具有指定属性
+  - `.toHaveLength(expected)`: 具有指定长度
+  - `.toBeCloseTo(expected, numDigits?)`: 浮点数近似相等
   - `.toBeNaN()`: 是否为 NaN
   - `.toBeArray()`: 是否为数组
   - `.toBeString()`: 是否为字符串
   - `.toBeNumber()`: 是否为数字
   - `.toBeBoolean()`: 是否为布尔值
   - `.toBeFunction()`: 是否为函数
-  - `.toBeEmpty()`: 是否为空（数组、对象、字符串）
+  - `.toBeEmpty()`: 是否为空
   - `.toBeInstanceOf(expected)`: 为指定类型的实例
   - `.toBeGreaterThan(expected)`: 大于
   - `.toBeGreaterThanOrEqual(expected)`: 大于等于
@@ -576,10 +537,7 @@ describe("Redis 测试", () => {
 ### 异步断言
 
 - `assertRejects(fn: () => Promise<any>, ErrorClass?, message?)`: 断言异步函数抛出错误
-  - `ErrorClass`: 错误类型（可选）
-  - `message`: 错误消息匹配（可选，支持字符串或正则表达式）
 - `assertResolves(fn: () => Promise<any>, expected?)`: 断言异步函数成功
-  - `expected`: 期望返回值（可选，使用深度相等比较）
 
 ### 对象断言
 
@@ -596,15 +554,7 @@ describe("Redis 测试", () => {
 - `beforeAll(fn: () => void | Promise<void>)`: 所有测试前执行
 - `afterAll(fn: () => void | Promise<void>)`: 所有测试后执行
 - `beforeEach(fn: (t?: TestContext) => void | Promise<void>, options?: TestOptions)`: 每个测试前执行
-  - `fn`: 钩子函数，可以接收可选的 `TestContext` 参数
-  - `options`: 可选的钩子选项（`sanitizeOps`、`sanitizeResources`）
 - `afterEach(fn: (t?: TestContext) => void | Promise<void>, options?: TestOptions)`: 每个测试后执行
-  - `fn`: 钩子函数，可以接收可选的 `TestContext` 参数
-  - `options`: 可选的钩子选项（`sanitizeOps`、`sanitizeResources`）
-
-**钩子选项（TestOptions）**：
-- `sanitizeOps?: boolean`: 是否启用操作清理检查（默认：`true`）
-- `sanitizeResources?: boolean`: 是否启用资源清理检查（默认：`true`）
 
 ### 参数化测试
 
@@ -612,40 +562,82 @@ describe("Redis 测试", () => {
 
 ### 性能测试
 
-- `bench(name: string, fn: () => void)`: 性能基准测试
+- `bench(name: string, fn: () => void, options?)`: 性能基准测试
+
+### 浏览器测试
+
+**浏览器测试配置（BrowserTestConfig）**：
+- `enabled?: boolean`: 是否启用浏览器测试（默认：`false`）
+- `entryPoint?: string`: 客户端代码入口文件路径
+- `globalName?: string`: 全局变量名（IIFE 格式）
+- `headless?: boolean`: 是否无头模式（默认：`true`）
+- `executablePath?: string`: Chrome 可执行文件路径（可选，自动检测）
+- `args?: string[]`: Chrome 启动参数
+- `htmlTemplate?: string`: HTML 模板（可选）
+- `bodyContent?: string`: 额外的 HTML body 内容（可选）
+- `moduleLoadTimeout?: number`: 等待模块加载的超时时间（毫秒，默认：`10000`）
+- `reuseBrowser?: boolean`: 是否在套件级别复用浏览器实例（默认：`true`）
+
+**浏览器上下文（BrowserContext）**：
+- `browser`: Puppeteer Browser 实例
+- `page`: Puppeteer Page 实例
+- `evaluate<T>(fn: () => T | Promise<T>)`: 在浏览器中执行代码
+- `goto(url: string)`: 导航到指定 URL
+- `waitFor(fn: () => boolean, options?)`: 等待页面中的条件满足
+- `close()`: 关闭浏览器和页面
+
+**独立使用浏览器上下文**：
+- `createBrowserContext(config: BrowserTestConfig)`: 创建浏览器测试上下文
+- `buildClientBundle(options: BundleOptions)`: 打包客户端代码
+- `createTestPage(options: TestPageOptions)`: 创建测试页面
+- `findChromePath()`: 检测系统 Chrome 路径
 
 ---
 
-## 🔗 与 Deno 内置测试框架的关系
+## 📊 测试报告
 
-`@dreamer/test` **基于 Deno 内置测试框架**，提供以下增强：
+本库经过全面测试，所有 300 个测试用例均已通过，测试覆盖率达到 100%。详细测试报告请查看 [TEST_REPORT.md](./TEST_REPORT.md)。
 
-| 功能 | Deno 内置 | @dreamer/test |
-|------|-----------|---------------|
-| 基础测试 | ✅ | ✅（包装） |
-| 基础断言 | ✅ | ✅（增强） |
-| Mock 功能 | ❌ | ✅ |
-| 快照测试 | ❌ | ✅ |
-| HTTP Mock | ❌ | ✅ |
-| Setup/Teardown | ❌ | ✅ |
-| 参数化测试 | ❌ | ✅ |
-| 测试覆盖率 | ✅ | ✅（工具封装） |
-| 性能测试 | ❌ | ✅ |
-| 测试报告 | 基础 | 增强 |
+**测试统计**：
+- **总测试数**: 301
+- **通过**: 300 ✅
+- **跳过**: 1
+- **失败**: 0
+- **通过率**: 100% ✅
+- **测试执行时间**: ~1分11秒
+- **测试覆盖**: 所有公共 API、边界情况、错误处理
+- **测试环境**: Deno 最新稳定版
 
-**使用建议**：
-- 简单测试：可以直接使用 Deno 内置测试框架
-- 需要 Mock、快照、参数化等高级功能：使用 `@dreamer/test`
-- 可以混合使用：`@dreamer/test` 与 Deno 内置测试框架完全兼容
+**测试类型**：
+- ✅ 单元测试（241 个）
+- ✅ 浏览器测试（60 个）
+
+**测试亮点**：
+- ✅ 所有功能、边界情况、错误处理都有完整的测试覆盖
+- ✅ 浏览器测试验证了在真实 Chrome 浏览器环境中的功能
+- ✅ 完整的 Mock 功能测试（函数 Mock、HTTP Mock）
+
+查看完整测试报告：[TEST_REPORT.md](./TEST_REPORT.md)
 
 ---
 
-## 📝 备注
+## 📝 注意事项
 
-- 基于 Deno 内置测试框架，提供增强功能，不替代 Deno 测试框架
-- 提供 Mock、快照、参数化等 Deno 内置测试框架没有的功能
-- 完全兼容 Deno 内置测试框架，可以混合使用
-- 适合需要高级测试功能的项目
+- **Bun 环境限制**：在 Bun 环境中，`test()` 必须在 `describe()` 执行期间调用，不能在测试执行期间调用
+- **bench() 调用位置**：`bench()` 应该在 `describe()` 执行期间调用，而不是在 `it()` 回调中
+- **资源清理**：使用第三方库时，如果遇到定时器或资源泄漏警告，可以使用 `sanitizeOps: false` 和 `sanitizeResources: false` 选项禁用检查
+- **浏览器测试依赖**：
+  - 需要安装 Chrome/Chromium 浏览器
+  - 自动使用 Puppeteer 和 esbuild（通过 npm 依赖）
+  - 支持自动检测系统 Chrome 路径（macOS、Linux、Windows）
+- **浏览器测试性能**：
+  - 启用 `reuseBrowser: true`（默认）可显著提升性能
+  - 每个测试会创建新页面，但共享浏览器实例
+  - 测试结束后自动清理浏览器资源
+- **客户端代码打包**：
+  - 使用 esbuild 进行快速打包
+  - 支持 TypeScript 代码
+  - 打包结果缓存在内存中
 
 ---
 

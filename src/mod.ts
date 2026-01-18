@@ -59,3 +59,7 @@ export {
 // 导出 HTTP Mock
 export { mockFetch } from "./mock-fetch.ts";
 export type { MockFetchFunction, MockFetchOptions } from "./types.ts";
+
+// 导出浏览器测试类型和函数
+export { cleanupAllBrowsers, cleanupSuiteBrowser } from "./test-runner.ts";
+export type { BrowserTestConfig } from "./types.ts";

@@ -4,14 +4,25 @@
  * 兼容 Deno 和 Bun 环境
  */
 
+import {
+  addSignalListener,
+  exit,
+  IS_BUN,
+  IS_DENO,
+} from "@dreamer/runtime-adapter"
+import type { BrowserContext } from "./browser/browser-context.ts"
+import { createBrowserContext } from "./browser/browser-context.ts"
+import { buildClientBundle } from "./browser/bundle.ts"
+import { createTestPage } from "./browser/page.ts"
 import type {
+  BrowserTestConfig,
   DescribeOptions,
   TestCase,
   TestContext,
   TestHooks,
   TestOptions,
   TestSuite,
-} from "./types.ts";
+} from "./types.ts"
 
 /**
  * 当前测试套件栈
@@ -24,9 +35,14 @@ const rootSuite: TestSuite = {
   suites: [],
 };
 
-import { IS_BUN, IS_DENO } from "@dreamer/runtime-adapter";
-
 let currentSuite = rootSuite;
+
+/**
+ * 套件级别的浏览器实例缓存
+ * key: 套件路径
+ * value: 浏览器上下文
+ */
+const suiteBrowserCache = new Map<string, BrowserContext>();
 
 /**
  * Bun 环境下标记是否在 describe 块内（使用计数器支持嵌套）
@@ -94,6 +110,231 @@ function createTestContext(name: string): TestContext {
       return await fn(createTestContext(`${name} > ${stepName}`));
     },
   };
+}
+
+/**
+ * 检查测试选项是否启用了浏览器测试
+ */
+function hasBrowserTest(options?: TestOptions): boolean {
+  return options?.browser?.enabled === true;
+}
+
+/**
+ * 获取浏览器测试配置（从测试选项或套件选项继承）
+ */
+function getBrowserConfig(
+  testOptions: TestOptions | undefined,
+  suiteOptions: DescribeOptions | undefined,
+): BrowserTestConfig | undefined {
+  // 优先使用测试选项中的配置
+  if (testOptions?.browser) {
+    return testOptions.browser;
+  }
+  // 其次使用套件选项中的配置
+  if (suiteOptions?.browser) {
+    return suiteOptions.browser;
+  }
+  return undefined;
+}
+
+/**
+ * 在测试执行前设置浏览器上下文
+ */
+async function setupBrowserTest(
+  config: BrowserTestConfig,
+  testContext: TestContext,
+  suitePath?: string,
+): Promise<void> {
+  // 如果配置了共享浏览器实例，尝试从缓存获取
+  let browserCtx: BrowserContext | undefined;
+  const shouldReuse = config.reuseBrowser !== false && suitePath;
+
+  if (shouldReuse) {
+    browserCtx = suiteBrowserCache.get(suitePath);
+  }
+
+  // 如果缓存中没有或不应该复用，创建新的浏览器实例
+  if (!browserCtx) {
+    try {
+      browserCtx = await createBrowserContext(config);
+
+      // 如果应该复用，保存到缓存
+      if (shouldReuse && suitePath) {
+        suiteBrowserCache.set(suitePath, browserCtx);
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error
+        ? error.message
+        : String(error);
+      throw new Error(
+        `创建浏览器上下文失败: ${errorMessage}。` +
+          `请检查 Chrome 是否已安装，或设置 executablePath 配置。`,
+      );
+    }
+  } else {
+    // 复用浏览器实例时，创建新页面
+    const newPage = await browserCtx.browser.newPage();
+    browserCtx.page = newPage;
+
+    // 如果配置了 entryPoint，需要重新加载
+    if (config.entryPoint) {
+      try {
+        const bundle = await buildClientBundle({
+          entryPoint: config.entryPoint,
+          globalName: config.globalName,
+        });
+
+        const htmlPath = await createTestPage({
+          bundleCode: bundle,
+          bodyContent: config.bodyContent,
+          template: config.htmlTemplate,
+        });
+
+        browserCtx.htmlPath = htmlPath;
+
+        await newPage.goto(`file://${htmlPath}`, {
+          waitUntil: "networkidle0",
+        });
+
+        const moduleLoadTimeout = config.moduleLoadTimeout || 10000;
+        const globalName = config.globalName;
+        if (globalName) {
+          await newPage.waitForFunction(
+            (name: string) => {
+              return typeof (window as any)[name] !== "undefined" &&
+                (window as any).testReady === true;
+            },
+            { timeout: moduleLoadTimeout },
+            globalName,
+          ).catch(() => {
+            return newPage.waitForFunction(
+              (name: string) => typeof (window as any)[name] !== "undefined",
+              { timeout: 2000 },
+              globalName,
+            );
+          });
+        } else {
+          await newPage.waitForFunction(
+            () => (window as any).testReady === true,
+            { timeout: moduleLoadTimeout },
+          );
+        }
+      } catch (error) {
+        // 如果加载失败，关闭页面并抛出错误
+        await newPage.close().catch(() => {});
+        throw error;
+      }
+    }
+  }
+
+  // 将浏览器上下文添加到 TestContext
+  (testContext as any).browser = {
+    browser: browserCtx.browser,
+    page: browserCtx.page,
+    evaluate: browserCtx.evaluate.bind(browserCtx),
+    goto: browserCtx.goto.bind(browserCtx),
+    waitFor: browserCtx.waitFor.bind(browserCtx),
+  };
+
+  // 保存浏览器上下文以便清理
+  (testContext as any)._browserContext = browserCtx;
+  (testContext as any)._shouldReuseBrowser = shouldReuse;
+
+  // 浏览器测试需要禁用资源清理检查
+  testContext.sanitizeOps = false;
+  testContext.sanitizeResources = false;
+}
+
+/**
+ * 在测试执行后清理浏览器上下文
+ */
+async function cleanupBrowserTest(testContext: TestContext): Promise<void> {
+  const browserCtx = (testContext as any)._browserContext as
+    | BrowserContext
+    | undefined;
+  const shouldReuse = (testContext as any)._shouldReuseBrowser;
+
+  if (browserCtx) {
+    if (shouldReuse) {
+      // 如果复用浏览器，只关闭页面，不关闭浏览器
+      try {
+        await browserCtx.page.close();
+      } catch {
+        // 忽略关闭错误
+      }
+      // 注意：复用模式下，浏览器实例保留在 suiteBrowserCache 中
+      // 需要在套件完成后调用 cleanupSuiteBrowser 或 cleanupAllBrowsers 来关闭
+    } else {
+      // 如果不复用，完全关闭浏览器
+      await browserCtx.close();
+    }
+
+    (testContext as any).browser = undefined;
+    (testContext as any)._browserContext = undefined;
+    (testContext as any)._shouldReuseBrowser = undefined;
+  }
+}
+
+/**
+ * 清理套件级别的浏览器缓存
+ * @param suitePath 套件路径
+ */
+export function cleanupSuiteBrowser(suitePath: string): Promise<void> {
+  const browserCtx = suiteBrowserCache.get(suitePath);
+  if (browserCtx) {
+    suiteBrowserCache.delete(suitePath);
+    return browserCtx.close();
+  }
+  return Promise.resolve();
+}
+
+/**
+ * 清理所有浏览器实例
+ * 在所有测试完成后调用，确保所有浏览器实例都被关闭
+ */
+export async function cleanupAllBrowsers(): Promise<void> {
+  const closePromises: Promise<void>[] = [];
+  for (const [suitePath, browserCtx] of suiteBrowserCache.entries()) {
+    suiteBrowserCache.delete(suitePath);
+    closePromises.push(
+      browserCtx.close().catch(() => {
+        // 忽略关闭错误
+      }),
+    );
+  }
+  await Promise.all(closePromises);
+}
+
+// 使用 runtime-adapter 提供的 API 注册进程退出时的清理钩子
+// 确保在所有测试完成后清理浏览器
+try {
+  // 监听 SIGINT 和 SIGTERM 信号
+  addSignalListener("SIGINT", async () => {
+    await cleanupAllBrowsers();
+    exit(130);
+  });
+  addSignalListener("SIGTERM", async () => {
+    await cleanupAllBrowsers();
+    exit(143);
+  });
+} catch {
+  // 忽略信号监听错误（可能在某些环境下不支持）
+}
+
+// 注册全局 unload 事件来清理浏览器（作为后备）
+if (typeof globalThis.addEventListener === "function") {
+  globalThis.addEventListener("beforeunload", () => {
+    // 异步清理所有浏览器
+    cleanupAllBrowsers().catch(() => {});
+  });
+
+  globalThis.addEventListener("unload", () => {
+    // 同步清理所有浏览器（尽力而为）
+    for (const [suitePath, browserCtx] of suiteBrowserCache.entries()) {
+      suiteBrowserCache.delete(suitePath);
+      browserCtx.close().catch(() => {});
+    }
+  });
 }
 
 /**
@@ -169,11 +410,7 @@ export function describe(
 export function test(
   name: string,
   fn: (t?: TestContext) => void | Promise<void>,
-  options?: {
-    timeout?: number;
-    sanitizeOps?: boolean;
-    sanitizeResources?: boolean;
-  },
+  options?: TestOptions,
 ): void {
   const testCase: TestCase = {
     name,
@@ -286,9 +523,35 @@ export function test(
           step: t.step.bind(t),
         });
 
+        // 检查是否启用浏览器测试
+        let browserCtx: BrowserContext | undefined;
+        let browserSetupError: Error | undefined;
+        if (hasBrowserTest(options)) {
+          const browserConfig = getBrowserConfig(options, suite.options);
+          if (browserConfig && browserConfig.enabled) {
+            const suitePath = getFullSuiteName(suite);
+            try {
+              await setupBrowserTest(browserConfig, testContext, suitePath);
+              browserCtx = (testContext as any)._browserContext;
+              // 同步 sanitize 选项到 Deno.TestContext
+              t.sanitizeOps = false;
+              t.sanitizeResources = false;
+            } catch (error) {
+              // 捕获浏览器设置错误，将其保存到测试上下文中
+              browserSetupError = error instanceof Error
+                ? error
+                : new Error(String(error));
+              // 将错误信息保存到测试上下文，以便测试函数可以访问
+              (testContext as any)._browserSetupError = browserSetupError;
+            }
+          }
+        }
+
         try {
           // 执行测试函数，如果函数内部修改了 sanitizeOps 或 sanitizeResources，
           // 需要同步到 Deno.TestContext
+          // 如果有浏览器设置错误，将其保存到测试上下文，让测试函数决定如何处理
+          // 测试函数可以通过 testContext._browserSetupError 访问错误信息
           await fn(testContext);
           // 同步测试上下文中的 sanitize 选项到 Deno.TestContext
           if (testContext.sanitizeOps !== undefined) {
@@ -298,6 +561,10 @@ export function test(
             t.sanitizeResources = testContext.sanitizeResources;
           }
         } finally {
+          // 清理浏览器上下文
+          if (browserCtx) {
+            await cleanupBrowserTest(testContext);
+          }
           // 执行 afterEach，传递 TestContext
           // 如果 afterEach 有选项，应用 sanitizeOps 和 sanitizeResources
           if (suite.afterEach) {
@@ -376,6 +643,39 @@ export function test(
             }
 
             const testContext = createTestContext(fullName);
+            // 应用套件选项
+            if (suite.options) {
+              if (suite.options.sanitizeOps !== undefined) {
+                testContext.sanitizeOps = suite.options.sanitizeOps;
+              }
+              if (suite.options.sanitizeResources !== undefined) {
+                testContext.sanitizeResources = suite.options.sanitizeResources;
+              }
+            }
+
+            // 检查是否启用浏览器测试
+            let browserCtx: BrowserContext | undefined;
+            let browserSetupError: Error | undefined;
+            if (hasBrowserTest(options)) {
+              const browserConfig = getBrowserConfig(options, suite.options);
+              if (browserConfig && browserConfig.enabled) {
+                const suitePath = getFullSuiteName(suite);
+                try {
+                  await setupBrowserTest(browserConfig, testContext, suitePath);
+                  browserCtx = (testContext as any)._browserContext;
+                  // 浏览器测试需要禁用资源清理检查
+                  testContext.sanitizeOps = false;
+                  testContext.sanitizeResources = false;
+                } catch (error) {
+                  // 捕获浏览器设置错误，将其保存到测试上下文中
+                  browserSetupError = error instanceof Error
+                    ? error
+                    : new Error(String(error));
+                  // 将错误信息保存到测试上下文，以便测试函数可以访问
+                  (testContext as any)._browserSetupError = browserSetupError;
+                }
+              }
+            }
 
             try {
               await fn(testContext);
@@ -388,6 +688,10 @@ export function test(
               testStats.total++;
               throw error; // 重新抛出错误，让 Bun 捕获
             } finally {
+              // 清理浏览器上下文
+              if (browserCtx) {
+                await cleanupBrowserTest(testContext);
+              }
               // 执行 afterEach，传递 TestContext
               if (suite.afterEach) {
                 // 检查是否有钩子选项
@@ -433,6 +737,19 @@ export function test(
 }
 
 /**
+ * 获取完整的套件路径
+ */
+function getFullSuiteName(suite: TestSuite): string {
+  const path: string[] = [];
+  let current: TestSuite | null = suite;
+  while (current && current !== rootSuite) {
+    path.unshift(current.name);
+    current = current.parent || null;
+  }
+  return path.join(" > ");
+}
+
+/**
  * 获取完整的测试名称（包含套件路径）
  */
 function getFullTestName(name: string): string {
@@ -447,21 +764,31 @@ function getFullTestName(name: string): string {
 
 /**
  * 跳过测试
+ * @param name 测试名称
+ * @param fn 测试函数（可以接受可选的测试上下文参数）
+ * @param options 测试选项（可选）
  */
 test.skip = function (
   name: string,
   fn: (t?: TestContext) => void | Promise<void>,
+  options?: TestOptions,
 ): void {
   const testCase: TestCase = {
     name,
     fn,
     skip: true,
+    timeout: options?.timeout,
+    ...(options?.sanitizeOps !== undefined &&
+      { sanitizeOps: options.sanitizeOps }),
+    ...(options?.sanitizeResources !== undefined &&
+      { sanitizeResources: options.sanitizeResources }),
   };
   currentSuite.tests.push(testCase);
 
   // 在 Deno 环境下，注册跳过测试
   if (IS_DENO) {
     const fullName = getFullTestName(name);
+    const suite = currentSuite;
     (globalThis as any).Deno.test({
       name: fullName,
       ignore: true, // Deno 使用 ignore 来跳过测试
@@ -473,14 +800,36 @@ test.skip = function (
           sanitizeExit: t.sanitizeExit,
           sanitizeOps: t.sanitizeOps,
           sanitizeResources: t.sanitizeResources,
-          step: t.step.bind(t),
+          step: t.step?.bind(t) || testContext.step,
         });
-        await fn(testContext);
+
+        // 检查是否启用浏览器测试（虽然测试被跳过，但配置应该被接受）
+        let browserCtx: BrowserContext | undefined;
+        if (hasBrowserTest(options)) {
+          const browserConfig = getBrowserConfig(options, suite.options);
+          if (browserConfig && browserConfig.enabled) {
+            const suitePath = getFullSuiteName(suite);
+            await setupBrowserTest(browserConfig, testContext, suitePath);
+            browserCtx = (testContext as any)._browserContext;
+            // 同步 sanitize 选项到 Deno.TestContext
+            t.sanitizeOps = false;
+            t.sanitizeResources = false;
+          }
+        }
+
+        try {
+          await fn(testContext);
+        } finally {
+          // 清理浏览器上下文
+          if (browserCtx) {
+            await cleanupBrowserTest(testContext);
+          }
+        }
       },
     });
   } else if (IS_BUN) {
     // Bun 环境下，注册跳过测试
-    // Bun 的 test.skip() 使用函数参数形式：test.skip(name, fn)
+    // Bun 的 test.skip() 使用函数参数形式：test.skip(name, fn, options?)
     const fullName = getFullTestName(name);
     (async () => {
       const bunTest = await getBunTest();
@@ -490,7 +839,7 @@ test.skip = function (
           console.log(`\x1b[33m⊘\x1b[0m ${fullName}`);
           const testContext = createTestContext(fullName);
           await fn(testContext);
-        });
+        }, options);
       }
     })();
   }
@@ -503,7 +852,7 @@ test.skip = function (
 test.only = function (
   name: string,
   fn: (t?: TestContext) => void | Promise<void>,
-  options?: { timeout?: number },
+  options?: TestOptions,
 ): void {
   const testCase: TestCase = {
     name,
@@ -520,6 +869,7 @@ test.only = function (
       only: true,
       parallel: false,
       fn: async (t: any) => {
+        const suite = currentSuite;
         const testContext = createTestContext(fullName);
         Object.assign(testContext, {
           origin: t.origin,
@@ -528,7 +878,29 @@ test.only = function (
           sanitizeResources: t.sanitizeResources,
           step: t.step?.bind(t) || testContext.step,
         });
-        await fn(testContext);
+
+        // 检查是否启用浏览器测试
+        let browserCtx: BrowserContext | undefined;
+        if (hasBrowserTest(options)) {
+          const browserConfig = getBrowserConfig(options, suite.options);
+          if (browserConfig && browserConfig.enabled) {
+            const suitePath = getFullSuiteName(suite);
+            await setupBrowserTest(browserConfig, testContext, suitePath);
+            browserCtx = (testContext as any)._browserContext;
+            // 同步 sanitize 选项到 Deno.TestContext
+            t.sanitizeOps = false;
+            t.sanitizeResources = false;
+          }
+        }
+
+        try {
+          await fn(testContext);
+        } finally {
+          // 清理浏览器上下文
+          if (browserCtx) {
+            await cleanupBrowserTest(testContext);
+          }
+        }
       },
     });
   } else if (IS_BUN) {
@@ -552,6 +924,29 @@ test.only = function (
           }
 
           const testContext = createTestContext(fullName);
+          // 应用套件选项
+          if (suite.options) {
+            if (suite.options.sanitizeOps !== undefined) {
+              testContext.sanitizeOps = suite.options.sanitizeOps;
+            }
+            if (suite.options.sanitizeResources !== undefined) {
+              testContext.sanitizeResources = suite.options.sanitizeResources;
+            }
+          }
+
+          // 检查是否启用浏览器测试
+          let browserCtx: BrowserContext | undefined;
+          if (hasBrowserTest(options)) {
+            const browserConfig = getBrowserConfig(options, suite.options);
+            if (browserConfig && browserConfig.enabled) {
+              const suitePath = getFullSuiteName(suite);
+              await setupBrowserTest(browserConfig, testContext, suitePath);
+              browserCtx = (testContext as any)._browserContext;
+              // 浏览器测试需要禁用资源清理检查
+              testContext.sanitizeOps = false;
+              testContext.sanitizeResources = false;
+            }
+          }
 
           try {
             await fn(testContext);
@@ -564,6 +959,10 @@ test.only = function (
             testStats.total++;
             throw error; // 重新抛出错误，让 Bun 捕获
           } finally {
+            // 清理浏览器上下文
+            if (browserCtx) {
+              await cleanupBrowserTest(testContext);
+            }
             // 执行 afterEach
             if (suite.afterEach) {
               await suite.afterEach();

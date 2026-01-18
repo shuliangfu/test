@@ -4,7 +4,7 @@
 
 [![JSR](https://jsr.io/badges/@dreamer/test)](https://jsr.io/@dreamer/test)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Tests](https://img.shields.io/badge/tests-300%20passed-brightgreen)](./TEST_REPORT.md)
+[![Tests](https://img.shields.io/badge/tests-347%20passed-brightgreen)](./TEST_REPORT.md)
 
 ---
 
@@ -60,8 +60,10 @@ bunx jsr add -D @dreamer/test
 - **浏览器测试集成**：
   - 自动创建浏览器上下文
   - 客户端代码自动打包（@dreamer/esbuild）
+  - Deno/Bun 解析器插件支持（自动解析 JSR、npm、相对路径、路径别名等）
   - 页面操作 API（`evaluate`、`goto`、`waitFor`）
   - 浏览器实例复用
+  - 自动资源清理（`cleanupAllBrowsers`）
 - **测试组织**：
   - 测试套件（`describe`）
   - 测试用例（`it`、`test`）
@@ -462,6 +464,44 @@ describe("自定义模板测试", {
 });
 ```
 
+#### 浏览器资源清理
+
+`@dreamer/test` 提供了完善的浏览器资源清理机制，确保所有浏览器实例在测试完成后被正确关闭，避免资源泄漏：
+
+**自动清理机制**：
+- 每个测试完成后，自动关闭测试使用的页面
+- 浏览器实例保留在缓存中，等待所有测试完成后统一清理
+- 在进程退出时（SIGINT、SIGTERM 信号）自动调用 `cleanupAllBrowsers()`
+
+**手动清理**：
+```typescript
+import { describe, afterAll, cleanupAllBrowsers } from "@dreamer/test";
+
+describe("浏览器测试套件", {
+  browser: { enabled: true },
+}, () => {
+  afterAll(async () => {
+    // 手动清理所有浏览器实例
+    // 这会在所有测试完成后执行，确保所有浏览器都被关闭
+    await cleanupAllBrowsers();
+  });
+
+  it("测试用例 1", async (t) => {
+    // 测试代码
+  });
+
+  it("测试用例 2", async (t) => {
+    // 测试代码
+  });
+});
+```
+
+**清理机制说明**：
+- `cleanupAllBrowsers()` 会关闭所有测试套件中创建的浏览器实例
+- 并行关闭所有浏览器，提高清理效率
+- 忽略关闭过程中的错误，确保所有浏览器都能被尝试关闭
+- 建议在测试套件的 `afterAll` 钩子中调用，确保测试完成后清理资源
+
 ---
 
 ## 📚 API 文档
@@ -591,31 +631,36 @@ describe("自定义模板测试", {
 - `buildClientBundle(options: BundleOptions)`: 打包客户端代码
 - `createTestPage(options: TestPageOptions)`: 创建测试页面
 - `findChromePath()`: 检测系统 Chrome 路径
+- `cleanupAllBrowsers()`: 清理所有浏览器实例（在所有测试完成后调用）
+- `cleanupSuiteBrowser(suitePath: string)`: 清理指定套件的浏览器实例
 
 ---
 
 ## 📊 测试报告
 
-本库经过全面测试，所有 300 个测试用例均已通过，测试覆盖率达到 100%。详细测试报告请查看 [TEST_REPORT.md](./TEST_REPORT.md)。
+本库经过全面测试，所有 347 个测试用例均已通过，测试覆盖率达到 100%。详细测试报告请查看 [TEST_REPORT.md](./TEST_REPORT.md)。
 
 **测试统计**：
-- **总测试数**: 301
-- **通过**: 300 ✅
+- **总测试数**: 347
+- **通过**: 347 ✅
 - **跳过**: 1
 - **失败**: 0
 - **通过率**: 100% ✅
-- **测试执行时间**: ~1分11秒
+- **测试执行时间**: ~36秒
 - **测试覆盖**: 所有公共 API、边界情况、错误处理
 - **测试环境**: Deno 最新稳定版
 
 **测试类型**：
-- ✅ 单元测试（241 个）
-- ✅ 浏览器测试（60 个）
+- ✅ 单元测试（268 个）
+- ✅ 浏览器测试（79 个）
 
 **测试亮点**：
 - ✅ 所有功能、边界情况、错误处理都有完整的测试覆盖
 - ✅ 浏览器测试验证了在真实 Chrome 浏览器环境中的功能
 - ✅ 完整的 Mock 功能测试（函数 Mock、HTTP Mock）
+- ✅ 完善的钩子函数执行测试（29 个测试）
+- ✅ Deno 解析器插件测试（17 个测试）
+- ✅ 浏览器资源清理机制测试
 
 查看完整测试报告：[TEST_REPORT.md](./TEST_REPORT.md)
 
@@ -634,6 +679,11 @@ describe("自定义模板测试", {
   - 启用 `reuseBrowser: true`（默认）可显著提升性能
   - 每个测试会创建新页面，但共享浏览器实例
   - 测试结束后自动清理浏览器资源
+- **浏览器资源清理**：
+  - 每个测试完成后自动关闭页面
+  - 浏览器实例保留在缓存中，等待所有测试完成后统一清理
+  - 在进程退出时（SIGINT、SIGTERM）自动调用 `cleanupAllBrowsers()`
+  - 建议在测试套件的 `afterAll` 钩子中手动调用 `cleanupAllBrowsers()` 确保资源清理
 - **客户端代码打包**：
   - 使用 @dreamer/esbuild 进行快速打包
   - 支持 TypeScript 代码

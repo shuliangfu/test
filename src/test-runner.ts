@@ -657,9 +657,13 @@ export function test(
 
             // 执行所有父套件的 beforeAll（只执行一次，通过检查标志）
             for (const parentSuite of allSuites) {
-              if (parentSuite.beforeAll && !(parentSuite as any)._beforeAllExecuted) {
-                await parentSuite.beforeAll();
-                (parentSuite as any)._beforeAllExecuted = true;
+              if (parentSuite.beforeAll) {
+                // 检查标志，确保只执行一次
+                const hasExecuted = (parentSuite as any)._beforeAllExecuted === true;
+                if (!hasExecuted) {
+                  await parentSuite.beforeAll();
+                  (parentSuite as any)._beforeAllExecuted = true;
+                }
               }
             }
 
@@ -961,9 +965,12 @@ test.only = function (
       if (bunTest && bunTest.only) {
         const testFn = async () => {
           // 执行 beforeAll（只执行一次，通过检查标志）
-          if (suite.beforeAll && !(suite as any)._beforeAllExecuted) {
-            await suite.beforeAll();
-            (suite as any)._beforeAllExecuted = true;
+          if (suite.beforeAll) {
+            const hasExecuted = (suite as any)._beforeAllExecuted === true;
+            if (!hasExecuted) {
+              await suite.beforeAll();
+              (suite as any)._beforeAllExecuted = true;
+            }
           }
 
           // 执行 beforeEach

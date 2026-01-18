@@ -503,22 +503,23 @@ export function test(
         const allSuites = collectParentSuites(suite);
 
         // 执行所有父套件的 beforeAll（只执行一次，通过检查标志）
+        // 注意：只执行定义了自己的 beforeAll 的套件，跳过继承的套件
         for (const parentSuite of allSuites) {
           if (parentSuite.beforeAll) {
-            // 检查标志，确保只执行一次
-            // 使用严格相等检查，避免 undefined 或 false 被误判
-            const hasExecuted =
-              (parentSuite as any)._beforeAllExecuted === true;
-            // 添加调试：检查套件对象和标志
-            if (!hasExecuted) {
-              await parentSuite.beforeAll();
-              // 直接设置属性，确保标志被正确设置
-              (parentSuite as any)._beforeAllExecuted = true;
-              // 验证标志是否设置成功
-              if ((parentSuite as any)._beforeAllExecuted !== true) {
-                logger.warn(
-                  `警告：beforeAll 标志设置失败，套件: ${parentSuite.name}`,
-                );
+            // 检查这个套件是否定义了自己的 beforeAll（不是从父套件继承的）
+            const parentBeforeAll = parentSuite.parent?.beforeAll;
+            const hasOwnBeforeAll = parentSuite.beforeAll !== parentBeforeAll;
+            
+            // 只执行定义了自己的 beforeAll 的套件
+            if (hasOwnBeforeAll) {
+              // 检查标志，确保只执行一次
+              // 使用严格相等检查，避免 undefined 或 false 被误判
+              const hasExecuted =
+                (parentSuite as any)._beforeAllExecuted === true;
+              if (!hasExecuted) {
+                await parentSuite.beforeAll();
+                // 直接设置属性，确保标志被正确设置
+                (parentSuite as any)._beforeAllExecuted = true;
               }
             }
           }
@@ -670,16 +671,24 @@ export function test(
             const allSuites = collectParentSuites(suite);
 
             // 执行所有父套件的 beforeAll（只执行一次，通过检查标志）
+            // 注意：只执行定义了自己的 beforeAll 的套件，跳过继承的套件
             for (const parentSuite of allSuites) {
               if (parentSuite.beforeAll) {
-                // 检查标志，确保只执行一次
-                // 使用严格相等检查，避免 undefined 或 false 被误判
-                const hasExecuted =
-                  (parentSuite as any)._beforeAllExecuted === true;
-                if (!hasExecuted) {
-                  await parentSuite.beforeAll();
-                  // 直接设置属性，确保标志被正确设置
-                  (parentSuite as any)._beforeAllExecuted = true;
+                // 检查这个套件是否定义了自己的 beforeAll（不是从父套件继承的）
+                const parentBeforeAll = parentSuite.parent?.beforeAll;
+                const hasOwnBeforeAll = parentSuite.beforeAll !== parentBeforeAll;
+                
+                // 只执行定义了自己的 beforeAll 的套件
+                if (hasOwnBeforeAll) {
+                  // 检查标志，确保只执行一次
+                  // 使用严格相等检查，避免 undefined 或 false 被误判
+                  const hasExecuted =
+                    (parentSuite as any)._beforeAllExecuted === true;
+                  if (!hasExecuted) {
+                    await parentSuite.beforeAll();
+                    // 直接设置属性，确保标志被正确设置
+                    (parentSuite as any)._beforeAllExecuted = true;
+                  }
                 }
               }
             }

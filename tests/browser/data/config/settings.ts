@@ -1,4 +1,4 @@
 export const settings = {
-  name: "test-settings",
+  name: "bun-test-settings",
   version: "1.0.0"
 };

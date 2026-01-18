@@ -1,3 +1,3 @@
 export function helperFunction() {
-  return "helper-result";
+  return "bun-helper-result";
 }

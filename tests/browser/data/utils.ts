@@ -1,1 +1,1 @@
-export const utilValue = "util-result";
+export const utilValue = "bun-util-result";

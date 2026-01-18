@@ -502,10 +502,16 @@ export function test(
         for (const parentSuite of allSuites) {
           if (parentSuite.beforeAll) {
             // 检查标志，确保只执行一次
-            const hasExecuted = (parentSuite as any)._beforeAllExecuted === true;
-            if (!hasExecuted) {
+            // 使用严格相等检查，避免 undefined 或 false 被误判
+            if ((parentSuite as any)._beforeAllExecuted !== true) {
               await parentSuite.beforeAll();
-              (parentSuite as any)._beforeAllExecuted = true;
+              // 使用 Object.defineProperty 确保标志被正确设置
+              Object.defineProperty(parentSuite, "_beforeAllExecuted", {
+                value: true,
+                writable: true,
+                enumerable: false,
+                configurable: true,
+              });
             }
           }
         }
@@ -659,10 +665,16 @@ export function test(
             for (const parentSuite of allSuites) {
               if (parentSuite.beforeAll) {
                 // 检查标志，确保只执行一次
-                const hasExecuted = (parentSuite as any)._beforeAllExecuted === true;
-                if (!hasExecuted) {
+                // 使用严格相等检查，避免 undefined 或 false 被误判
+                if ((parentSuite as any)._beforeAllExecuted !== true) {
                   await parentSuite.beforeAll();
-                  (parentSuite as any)._beforeAllExecuted = true;
+                  // 使用 Object.defineProperty 确保标志被正确设置
+                  Object.defineProperty(parentSuite, "_beforeAllExecuted", {
+                    value: true,
+                    writable: true,
+                    enumerable: false,
+                    configurable: true,
+                  });
                 }
               }
             }
@@ -966,10 +978,17 @@ test.only = function (
         const testFn = async () => {
           // 执行 beforeAll（只执行一次，通过检查标志）
           if (suite.beforeAll) {
-            const hasExecuted = (suite as any)._beforeAllExecuted === true;
-            if (!hasExecuted) {
+            // 检查标志，确保只执行一次
+            // 使用严格相等检查，避免 undefined 或 false 被误判
+            if ((suite as any)._beforeAllExecuted !== true) {
               await suite.beforeAll();
-              (suite as any)._beforeAllExecuted = true;
+              // 使用 Object.defineProperty 确保标志被正确设置
+              Object.defineProperty(suite, "_beforeAllExecuted", {
+                value: true,
+                writable: true,
+                enumerable: false,
+                configurable: true,
+              });
             }
           }
 

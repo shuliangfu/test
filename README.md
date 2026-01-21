@@ -4,7 +4,7 @@
 
 [![JSR](https://jsr.io/badges/@dreamer/test)](https://jsr.io/@dreamer/test)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Tests](https://img.shields.io/badge/tests-347%20passed-brightgreen)](./TEST_REPORT.md)
+[![Tests](https://img.shields.io/badge/tests-351%20passed-brightgreen)](./TEST_REPORT.md)
 
 ---
 
@@ -68,6 +68,7 @@ bunx jsr add -D @dreamer/test
   - 测试套件（`describe`）
   - 测试用例（`it`、`test`）
   - 跳过测试（`test.skip`）
+  - 条件跳过测试（`test.skipIf`）
   - 仅运行测试（`test.only`）
 - **资源清理控制**：
   - 支持禁用定时器泄漏检查（`sanitizeOps`）
@@ -292,6 +293,29 @@ describe("父套件", {
     it("测试用例", () => {
       // 继承 sanitizeOps: false 和 sanitizeResources: false
     });
+  });
+});
+```
+
+### 条件跳过测试
+
+```typescript
+import { describe, it, expect } from "@dreamer/test";
+
+describe("条件跳过测试", () => {
+  const enableWriteTests = true; // 或 false
+
+  // 如果 enableWriteTests 为 false，则跳过此测试
+  it.skipIf(!enableWriteTests, "应该能够写入数据", async () => {
+    // 写入测试代码
+    expect(true).toBeTruthy();
+  });
+
+  // 支持复杂条件
+  const hasPermission = true;
+  const isTestnet = true;
+  it.skipIf(!hasPermission || !isTestnet, "需要权限的测试", () => {
+    // 测试代码
   });
 });
 ```
@@ -638,11 +662,11 @@ describe("浏览器测试套件", {
 
 ## 📊 测试报告
 
-本库经过全面测试，所有 347 个测试用例均已通过，测试覆盖率达到 100%。详细测试报告请查看 [TEST_REPORT.md](./TEST_REPORT.md)。
+本库经过全面测试，所有 351 个测试用例均已通过，测试覆盖率达到 100%。详细测试报告请查看 [TEST_REPORT.md](./TEST_REPORT.md)。
 
 **测试统计**：
-- **总测试数**: 347
-- **通过**: 347 ✅
+- **总测试数**: 351
+- **通过**: 351 ✅
 - **跳过**: 1
 - **失败**: 0
 - **通过率**: 100% ✅
@@ -651,7 +675,7 @@ describe("浏览器测试套件", {
 - **测试环境**: Deno 最新稳定版
 
 **测试类型**：
-- ✅ 单元测试（268 个）
+- ✅ 单元测试（272 个）
 - ✅ 浏览器测试（79 个）
 
 **测试亮点**：

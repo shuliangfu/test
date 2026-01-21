@@ -211,32 +211,103 @@ async function setupBrowserTest(
 
         browserCtx.htmlPath = htmlPath;
 
-        await newPage.goto(`file://${htmlPath}`, {
-          waitUntil: "networkidle0",
+        // 在页面加载前设置错误监听器，以便捕获所有运行时错误
+        const consoleErrors: string[] = [];
+        newPage.on("console", (msg: any) => {
+          if (msg.type() === "error") {
+            consoleErrors.push(msg.text());
+          }
         });
+        newPage.on("pageerror", (error: any) => {
+          consoleErrors.push(error.message);
+        });
+
+        // 加载页面，捕获加载错误
+        try {
+          const response = await newPage.goto(`file://${htmlPath}`, {
+            waitUntil: "networkidle0",
+          });
+          
+          // 检查页面加载是否成功
+          if (!response || !response.ok()) {
+            const status = response?.status() || "unknown";
+            throw new Error(
+              `页面加载失败：HTTP 状态码 ${status}。` +
+                `HTML 文件路径: ${htmlPath}`,
+            );
+          }
+          
+          // 验证页面 URL 是否正确
+          const actualUrl = newPage.url();
+          if (!actualUrl.startsWith("file://")) {
+            throw new Error(
+              `页面加载后 URL 不正确：期望 file:// 协议，实际: ${actualUrl}。` +
+                `HTML 文件路径: ${htmlPath}`,
+            );
+          }
+        } catch (error) {
+          // 如果页面加载失败，关闭页面并抛出错误
+          await newPage.close().catch(() => {});
+          const errorMessage = error instanceof Error
+            ? error.message
+            : String(error);
+          const errorDetails = consoleErrors.length > 0
+            ? `\n浏览器控制台错误: ${consoleErrors.join("\n")}`
+            : "";
+          throw new Error(
+            `页面加载失败: ${errorMessage}。` +
+              `HTML 文件路径: ${htmlPath}${errorDetails}`,
+          );
+        }
 
         const moduleLoadTimeout = config.moduleLoadTimeout || 10000;
         const globalName = config.globalName;
         if (globalName) {
-          await newPage.waitForFunction(
-            (name: string) => {
-              return typeof (window as any)[name] !== "undefined" &&
-                (window as any).testReady === true;
-            },
-            { timeout: moduleLoadTimeout },
-            globalName,
-          ).catch(() => {
-            return newPage.waitForFunction(
-              (name: string) => typeof (window as any)[name] !== "undefined",
-              { timeout: 2000 },
+          // 等待全局变量存在且 testReady 标记已设置
+          try {
+            await newPage.waitForFunction(
+              (name: string) => {
+                return typeof (window as any)[name] !== "undefined" &&
+                  (window as any).testReady === true;
+              },
+              { timeout: moduleLoadTimeout },
               globalName,
             );
-          });
+          } catch (_error) {
+            // 如果超时，尝试只检查全局变量（可能 testReady 设置失败）
+            try {
+              await newPage.waitForFunction(
+                (name: string) => typeof (window as any)[name] !== "undefined",
+                { timeout: 2000 },
+                globalName,
+              );
+            } catch (_retryError) {
+              // 如果仍然失败，抛出更详细的错误信息
+              const errorDetails = consoleErrors.length > 0
+                ? `\n浏览器控制台错误: ${consoleErrors.join("\n")}`
+                : "";
+              throw new Error(
+                `模块加载超时：无法找到全局变量 "${globalName}" 或 testReady 标记未设置。` +
+                  `入口文件: ${config.entryPoint}${errorDetails}`,
+              );
+            }
+          }
         } else {
-          await newPage.waitForFunction(
-            () => (window as any).testReady === true,
-            { timeout: moduleLoadTimeout },
-          );
+          // 如果没有 globalName，只等待 testReady 标记
+          try {
+            await newPage.waitForFunction(
+              () => (window as any).testReady === true,
+              { timeout: moduleLoadTimeout },
+            );
+          } catch (_error) {
+            const errorDetails = consoleErrors.length > 0
+              ? `\n浏览器控制台错误: ${consoleErrors.join("\n")}`
+              : "";
+            throw new Error(
+              `模块加载超时：testReady 标记未设置。` +
+                `入口文件: ${config.entryPoint}${errorDetails}`,
+            );
+          }
         }
       } catch (error) {
         // 如果加载失败，关闭页面并抛出错误
@@ -931,6 +1002,28 @@ test.skip = function (
     })();
   }
   // 其他环境：skip 测试会在 runSuite 中处理
+};
+
+/**
+ * 条件跳过测试
+ * @param condition 如果为 true，则跳过测试；如果为 false，则正常执行测试
+ * @param name 测试名称
+ * @param fn 测试函数（可以接受可选的测试上下文参数）
+ * @param options 测试选项（可选）
+ */
+test.skipIf = function (
+  condition: boolean,
+  name: string,
+  fn: (t?: TestContext) => void | Promise<void>,
+  options?: TestOptions,
+): void {
+  if (condition) {
+    // 条件为真，跳过测试
+    test.skip(name, fn, options);
+  } else {
+    // 条件为假，正常执行测试
+    test(name, fn, options);
+  }
 };
 
 /**

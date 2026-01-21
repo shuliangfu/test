@@ -18,6 +18,12 @@
  *   it("应该通过", () => {
  *     expect(1 + 1).toBe(2);
  *   });
+ *
+ *   // 条件跳过测试
+ *   const enableWriteTests = true;
+ *   it.skipIf(!enableWriteTests, "写入测试", () => {
+ *     // 测试代码
+ *   });
  * });
  * ```
  */

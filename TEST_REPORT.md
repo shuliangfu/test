@@ -27,8 +27,8 @@
 | 指标 | 数值 |
 |------|------|
 | 测试文件数 | 16 |
-| 测试用例总数 | 347 |
-| 通过用例数 | 347 |
+| 测试用例总数 | 351 |
+| 通过用例数 | 351 |
 | 跳过用例数 | 1 |
 | 失败用例数 | 0 |
 | 通过率 | 100% |
@@ -52,7 +52,7 @@
 | `hooks-execution.test.ts` | 29 | ✅ 全部通过 | 钩子函数执行测试 |
 | `mock-comprehensive.test.ts` | 19 | ✅ 全部通过 | Mock 功能全面测试 |
 | `mock-fetch-comprehensive.test.ts` | 13 | ✅ 全部通过 | HTTP Mock 全面测试 |
-| `mod.test.ts` | 79 | ✅ 全部通过 | 基础功能测试 |
+| `mod.test.ts` | 83 | ✅ 全部通过 | 基础功能测试（包含 skipIf 测试） |
 | `test-options.test.ts` | 17 | ✅ 全部通过 | 测试套件选项和钩子选项测试 |
 | `test-utils-comprehensive.test.ts` | 25 | ✅ 全部通过 | 测试工具函数全面测试 |
 

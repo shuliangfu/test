@@ -648,4 +648,38 @@ describe("@dreamer/test 自测试", () => {
       }
     });
   });
+
+  describe("test.skipIf 和 it.skipIf", () => {
+    it("应该验证 skipIf 方法存在", () => {
+      // 验证 skipIf 方法存在
+      expect(typeof it.skipIf).toBe("function");
+      expect(typeof it.skipIf).toBe("function");
+    });
+
+    // 注意：在 Bun 环境下，不能在测试执行期间调用 test() 函数
+    // 所以这些测试用例在 describe() 执行期间直接调用 skipIf
+    // 而不是在 it() 回调内部调用
+
+    // skipIf(true) 应该跳过测试 - 在 describe 块内直接调用
+    it.skipIf(true, "被跳过的测试（skipIf true）", () => {
+      // 这个测试会被跳过，不会执行
+      expect(true).toBeTruthy();
+    });
+
+    // skipIf(false) 应该执行测试 - 在 describe 块内直接调用
+    it.skipIf(false, "正常执行的测试（skipIf false）", () => {
+      // 这个测试会正常执行
+      expect(true).toBeTruthy();
+    });
+
+    // 应该支持复杂条件 - 在 describe 块内直接调用
+    const condition1 = true;
+    const condition2 = false;
+    const shouldSkip = condition1 && condition2;
+    it.skipIf(shouldSkip, "条件跳过的测试（复杂条件）", () => {
+      // 如果 shouldSkip 为 true，这个测试会被跳过
+      // 如果 shouldSkip 为 false，这个测试会正常执行
+      expect(true).toBeTruthy();
+    });
+  });
 });

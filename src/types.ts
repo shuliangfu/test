@@ -46,6 +46,13 @@ export interface BrowserTestConfig {
   /** 是否在套件级别复用浏览器实例（默认：true，可显著提升性能） */
   reuseBrowser?: boolean;
   /**
+   * 是否将 JSR/npm 标为 external（仅影响打包格式，浏览器绝不生成 require）。
+   * - true（默认）：输出 ESM，用 <script type="module"> 加载，external 为 import，不生成 require。
+   * - false：输出 IIFE，把 JSR 等打进 bundle，用普通 script 也可；不生成 require。
+   * 入口含 @dreamer/socket-io 等 JSR 时，设为 false 可省去“入口自挂 window[globalName]”的约定。
+   */
+  browserMode?: boolean;
+  /**
    * 浏览器初始化失败时的行为（默认：'throw'）
    * - 'throw'：在调用测试函数前直接抛出原始错误，便于快速定位
    * - 'pass'：将错误写入 testContext._browserSetupError，仍执行测试函数，便于断言错误内容

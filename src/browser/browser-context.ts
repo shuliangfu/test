@@ -92,10 +92,11 @@ export async function createBrowserContext(
         consoleErrors.push(error.message);
       });
 
-      // 打包客户端代码
+      // 打包客户端代码（browserMode: false 时会把 JSR 打进去，避免浏览器里 require() 报错）
       const bundle = await buildClientBundle({
         entryPoint: config.entryPoint,
         globalName: config.globalName,
+        browserMode: config.browserMode,
       });
 
       // 创建测试页面

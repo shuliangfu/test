@@ -204,12 +204,13 @@ async function setupBrowserTest(
     const newPage = await browserCtx.browser.newPage();
     browserCtx.page = newPage;
 
-    // 如果配置了 entryPoint，需要重新加载
+    // 如果配置了 entryPoint，需要重新加载（browserMode 透传给 build，入口含 JSR 时传 false）
     if (config.entryPoint) {
       try {
         const bundle = await buildClientBundle({
           entryPoint: config.entryPoint,
           globalName: config.globalName,
+          browserMode: config.browserMode,
         });
 
         const htmlPath = await createTestPage({

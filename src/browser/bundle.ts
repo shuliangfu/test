@@ -32,6 +32,11 @@ export interface BundleOptions {
   target?: string;
   /** 是否压缩（默认：false） */
   minify?: boolean;
+  /**
+   * 是否将 JSR/npm 标为 external（仅 browser 有效）。
+   * false 时会把 JSR 打进去，适合入口含 @dreamer/socket-io 等 JSR 的浏览器测试。
+   */
+  browserMode?: boolean;
 }
 
 /**
@@ -43,7 +48,7 @@ export interface BundleOptions {
 function getCacheKey(options: BundleOptions): string {
   return `${options.entryPoint}:${options.globalName || ""}:${
     options.platform || "browser"
-  }:${options.target || "es2020"}:${options.minify || false}`;
+  }:${options.target || "es2020"}:${options.minify || false}:${options.browserMode ?? ""}`;
 }
 
 /**
@@ -79,15 +84,22 @@ async function executeBuild(
 
   try {
     // 转换选项格式，适配 @dreamer/esbuild 的 BundleOptions
-    // 如果指定了 globalName，使用 IIFE 格式；否则使用 ESM 格式
+    // 浏览器不支持 require，故绝不产出 require：显式 browserMode===true 时用 ESM，用已有 <script type="module"> 加载，external 为 import；
+    // browserMode===false 时用 IIFE，把 JSR 打进 bundle，也不产出 require。
+    const useEsmToAvoidRequire = options.browserMode === true;
+    const format = useEsmToAvoidRequire
+      ? "esm"
+      : (options.globalName ? "iife" : "esm");
+
     const bundleOptions: EsbuildBundleOptions = {
       entryPoint: options.entryPoint,
-      globalName: options.globalName,
+      globalName: format === "iife" ? options.globalName : undefined,
       platform: options.platform || "browser",
       target: options.target || "es2020",
       minify: options.minify || false,
-      format: options.globalName ? "iife" : "esm",
+      format,
       sourcemap: false,
+      ...(options.browserMode !== undefined && { browserMode: options.browserMode }),
     };
 
     const result = await buildBundle(bundleOptions);

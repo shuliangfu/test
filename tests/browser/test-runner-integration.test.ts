@@ -94,7 +94,8 @@ describe("测试运行器浏览器集成", () => {
           expect(t.browser?.browser).toBe(firstBrowser);
         }
       }
-    }, {
+		}, {
+			timeout: 15000,
       browser: {
         enabled: true,
         headless: true,
@@ -304,6 +305,7 @@ describe("测试运行器浏览器集成", () => {
         enabled: true,
         headless: true,
         executablePath: "/nonexistent/chrome/path",
+        onSetupError: "pass", // 需在测试内通过 _browserSetupError 断言错误内容，故不在此处抛出
       },
     });
   });

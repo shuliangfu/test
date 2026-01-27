@@ -45,6 +45,12 @@ export interface BrowserTestConfig {
   moduleLoadTimeout?: number;
   /** 是否在套件级别复用浏览器实例（默认：true，可显著提升性能） */
   reuseBrowser?: boolean;
+  /**
+   * 浏览器初始化失败时的行为（默认：'throw'）
+   * - 'throw'：在调用测试函数前直接抛出原始错误，便于快速定位
+   * - 'pass'：将错误写入 testContext._browserSetupError，仍执行测试函数，便于断言错误内容
+   */
+  onSetupError?: "throw" | "pass";
 }
 
 /**

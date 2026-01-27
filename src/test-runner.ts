@@ -132,10 +132,19 @@ function createTestContext(name: string): TestContext {
 }
 
 /**
- * 检查测试选项是否启用了浏览器测试
+ * 检查测试选项或套件选项是否启用了浏览器测试
+ * 当 it() 未传 browser 配置时，会从 describe 的 suite.options 继承
+ *
+ * @param testOptions - 测试用例的第三个参数（it 的 options）
+ * @param suiteOptions - 套件的 options（describe 的第三个参数）
+ * @returns 是否启用浏览器测试
  */
-function hasBrowserTest(options?: TestOptions): boolean {
-  return options?.browser?.enabled === true;
+function hasBrowserTest(
+  testOptions?: TestOptions,
+  suiteOptions?: DescribeOptions,
+): boolean {
+  return testOptions?.browser?.enabled === true ||
+    suiteOptions?.browser?.enabled === true;
 }
 
 /**
@@ -650,10 +659,10 @@ export function test(
           step: t.step.bind(t),
         });
 
-        // 检查是否启用浏览器测试
+        // 检查是否启用浏览器测试（支持从 describe 的 suite.options 继承）
         let browserCtx: BrowserContext | undefined;
         let browserSetupError: Error | undefined;
-        if (hasBrowserTest(options)) {
+        if (hasBrowserTest(options, suite.options)) {
           const browserConfig = getBrowserConfig(options, suite.options);
           if (browserConfig && browserConfig.enabled) {
             const suitePath = getFullSuiteName(suite);
@@ -675,10 +684,18 @@ export function test(
         }
 
         try {
+          // 若浏览器初始化失败，按 onSetupError 决定：默认 'throw' 直接抛出，'pass' 则继续执行由测试内通过 _browserSetupError 断言
+          const browserSetupErr = (testContext as any)._browserSetupError as
+            | Error
+            | undefined;
+          if (browserSetupErr) {
+            const cfg = getBrowserConfig(options, suite.options);
+            if (cfg?.onSetupError !== "pass") {
+              throw browserSetupErr;
+            }
+          }
           // 执行测试函数，如果函数内部修改了 sanitizeOps 或 sanitizeResources，
           // 需要同步到 Deno.TestContext
-          // 如果有浏览器设置错误，将其保存到测试上下文，让测试函数决定如何处理
-          // 测试函数可以通过 testContext._browserSetupError 访问错误信息
           await fn(testContext);
           // 同步测试上下文中的 sanitize 选项到 Deno.TestContext
           if (testContext.sanitizeOps !== undefined) {
@@ -808,10 +825,10 @@ export function test(
               }
             }
 
-            // 检查是否启用浏览器测试
+            // 检查是否启用浏览器测试（支持从 describe 的 suite.options 继承）
             let browserCtx: BrowserContext | undefined;
             let browserSetupError: Error | undefined;
-            if (hasBrowserTest(options)) {
+            if (hasBrowserTest(options, suite.options)) {
               const browserConfig = getBrowserConfig(options, suite.options);
               if (browserConfig && browserConfig.enabled) {
                 const suitePath = getFullSuiteName(suite);
@@ -833,6 +850,16 @@ export function test(
             }
 
             try {
+              // 若浏览器初始化失败，按 onSetupError 决定：默认 'throw'，'pass' 则继续执行
+              const browserSetupErr = (testContext as any)._browserSetupError as
+                | Error
+                | undefined;
+              if (browserSetupErr) {
+                const cfg = getBrowserConfig(options, suite.options);
+                if (cfg?.onSetupError !== "pass") {
+                  throw browserSetupErr;
+                }
+              }
               await fn(testContext);
               // 测试通过，统计数量
               testStats.passed++;
@@ -961,9 +988,9 @@ test.skip = function (
           step: t.step?.bind(t) || testContext.step,
         });
 
-        // 检查是否启用浏览器测试（虽然测试被跳过，但配置应该被接受）
+        // 检查是否启用浏览器测试（虽然测试被跳过，但配置应该被接受；支持从 suite.options 继承）
         let browserCtx: BrowserContext | undefined;
-        if (hasBrowserTest(options)) {
+        if (hasBrowserTest(options, suite.options)) {
           const browserConfig = getBrowserConfig(options, suite.options);
           if (browserConfig && browserConfig.enabled) {
             const suitePath = getFullSuiteName(suite);
@@ -1059,21 +1086,36 @@ test.only = function (
           step: t.step?.bind(t) || testContext.step,
         });
 
-        // 检查是否启用浏览器测试
+        // 检查是否启用浏览器测试（支持从 suite.options 继承）
         let browserCtx: BrowserContext | undefined;
-        if (hasBrowserTest(options)) {
+        if (hasBrowserTest(options, suite.options)) {
           const browserConfig = getBrowserConfig(options, suite.options);
           if (browserConfig && browserConfig.enabled) {
             const suitePath = getFullSuiteName(suite);
-            await setupBrowserTest(browserConfig, testContext, suitePath);
-            browserCtx = (testContext as any)._browserContext;
-            // 同步 sanitize 选项到 Deno.TestContext
-            t.sanitizeOps = false;
-            t.sanitizeResources = false;
+            try {
+              await setupBrowserTest(browserConfig, testContext, suitePath);
+              browserCtx = (testContext as any)._browserContext;
+              // 同步 sanitize 选项到 Deno.TestContext
+              t.sanitizeOps = false;
+              t.sanitizeResources = false;
+            } catch (error) {
+              (testContext as any)._browserSetupError = error instanceof Error
+                ? error
+                : new Error(String(error));
+            }
           }
         }
 
         try {
+          const browserSetupErr = (testContext as any)._browserSetupError as
+            | Error
+            | undefined;
+          if (browserSetupErr) {
+            const cfg = getBrowserConfig(options, suite.options);
+            if (cfg?.onSetupError !== "pass") {
+              throw browserSetupErr;
+            }
+          }
           await fn(testContext);
         } finally {
           // 清理浏览器上下文
@@ -1120,21 +1162,36 @@ test.only = function (
             }
           }
 
-          // 检查是否启用浏览器测试
+          // 检查是否启用浏览器测试（支持从 suite.options 继承）
           let browserCtx: BrowserContext | undefined;
-          if (hasBrowserTest(options)) {
+          if (hasBrowserTest(options, suite.options)) {
             const browserConfig = getBrowserConfig(options, suite.options);
             if (browserConfig && browserConfig.enabled) {
               const suitePath = getFullSuiteName(suite);
-              await setupBrowserTest(browserConfig, testContext, suitePath);
-              browserCtx = (testContext as any)._browserContext;
-              // 浏览器测试需要禁用资源清理检查
-              testContext.sanitizeOps = false;
-              testContext.sanitizeResources = false;
+              try {
+                await setupBrowserTest(browserConfig, testContext, suitePath);
+                browserCtx = (testContext as any)._browserContext;
+                // 浏览器测试需要禁用资源清理检查
+                testContext.sanitizeOps = false;
+                testContext.sanitizeResources = false;
+              } catch (error) {
+                (testContext as any)._browserSetupError = error instanceof Error
+                  ? error
+                  : new Error(String(error));
+              }
             }
           }
 
           try {
+            const browserSetupErr = (testContext as any)._browserSetupError as
+              | Error
+              | undefined;
+            if (browserSetupErr) {
+              const cfg = getBrowserConfig(options, suite.options);
+              if (cfg?.onSetupError !== "pass") {
+                throw browserSetupErr;
+              }
+            }
             await fn(testContext);
             // 测试通过，统计数量
             testStats.passed++;

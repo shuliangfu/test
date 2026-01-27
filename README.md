@@ -4,7 +4,7 @@
 
 [![JSR](https://jsr.io/badges/@dreamer/test)](https://jsr.io/@dreamer/test)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Tests](https://img.shields.io/badge/tests-351%20passed-brightgreen)](./TEST_REPORT.md)
+[![Tests](https://img.shields.io/badge/tests-359%20passed-brightgreen)](./TEST_REPORT.md)
 
 ---
 
@@ -662,28 +662,30 @@ describe("浏览器测试套件", {
 
 ## 📊 测试报告
 
-本库经过全面测试，所有 351 个测试用例均已通过，测试覆盖率达到 100%。详细测试报告请查看 [TEST_REPORT.md](./TEST_REPORT.md)。
+本库经过全面测试，359 个测试用例通过，2 个按设计跳过（test.skip / skipIf），测试覆盖率达到 100%。详细测试报告请查看 [TEST_REPORT.md](./TEST_REPORT.md)。
 
 **测试统计**：
-- **总测试数**: 351
-- **通过**: 351 ✅
-- **跳过**: 1
+- **测试文件数**: 18
+- **总测试数**: 361
+- **通过**: 359 ✅
+- **跳过**: 2（test.skip、skipIf 等按设计跳过）
 - **失败**: 0
 - **通过率**: 100% ✅
-- **测试执行时间**: ~36秒
+- **测试执行时间**: 58秒
 - **测试覆盖**: 所有公共 API、边界情况、错误处理
 - **测试环境**: Deno 最新稳定版
 
 **测试类型**：
 - ✅ 单元测试（272 个）
-- ✅ 浏览器测试（79 个）
+- ✅ 浏览器测试（89 个）
 
 **测试亮点**：
 - ✅ 所有功能、边界情况、错误处理都有完整的测试覆盖
 - ✅ 浏览器测试验证了在真实 Chrome 浏览器环境中的功能
 - ✅ 完整的 Mock 功能测试（函数 Mock、HTTP Mock）
-- ✅ 完善的钩子函数执行测试（29 个测试）
+- ✅ 完善的钩子函数执行测试（27 个测试）
 - ✅ Deno 解析器插件测试（17 个测试）
+- ✅ 浏览器 beforeAll 执行、Socket.IO/Logger 编译等专项测试
 - ✅ 浏览器资源清理机制测试
 
 查看完整测试报告：[TEST_REPORT.md](./TEST_REPORT.md)

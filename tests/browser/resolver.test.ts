@@ -3,7 +3,7 @@
  *
  * Deno 环境测试：
  * - JSR 包的子路径导出（如 @dreamer/logger/client）
- * - 直接使用 jsr: 协议（如 jsr:@dreamer/logger@1.0.0-beta.7/client）
+ * - 直接使用 jsr: 协议（如 jsr:@dreamer/logger@^1.0.0-beta.7/client）
  * - 直接使用 npm: 协议（如 npm:esbuild@^0.27.2）
  * - 相对路径导入（如 ./utils, ../config）
  * - 路径别名（如通过 deno.json imports 配置的别名）
@@ -70,7 +70,7 @@ export { logger };
       await writeTextFile(
         entryFileJsrDirect,
         `// 直接使用 jsr: 协议导入子路径
-import { createLogger } from "jsr:@dreamer/logger@1.0.0-beta.7/client";
+import { createLogger } from "jsr:@dreamer/logger@^1.0.0-beta.7/client";
 
 const logger = createLogger("test-jsr-direct");
 logger.info("Test JSR protocol direct import");
@@ -196,8 +196,8 @@ export function multiply(a: number, b: number): number {
           "~utils/": "./utils/",
           "~config/": "./config/",
           // 同时保留原有的包导入映射
-          "@dreamer/logger": "jsr:@dreamer/logger@1.0.0-beta.7",
-          "@dreamer/logger/client": "jsr:@dreamer/logger@1.0.0-beta.7/client",
+          "@dreamer/logger": "jsr:@dreamer/logger@^1.0.0-beta.7",
+          "@dreamer/logger/client": "jsr:@dreamer/logger@^1.0.0-beta.7/client",
         },
       };
       writeTextFileSync(
@@ -328,7 +328,7 @@ export { msg, sum, product, helper, config };
           const testFile = join(testDataDir, "test-jsr-subpath.ts");
           await writeTextFile(
             testFile,
-            `import { createLogger } from "jsr:@dreamer/logger@1.0.0-beta.7/client";
+            `import { createLogger } from "jsr:@dreamer/logger@^1.0.0-beta.7/client";
 
 const logger = createLogger("test");
 logger.info("Test");

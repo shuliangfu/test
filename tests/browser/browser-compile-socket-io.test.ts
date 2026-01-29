@@ -108,8 +108,8 @@ export function testLogger() {
         JSON.stringify(
           {
             imports: {
-              "@dreamer/socket-io": "jsr:@dreamer/socket-io@1.0.0-beta.2",
-              "@dreamer/logger": "jsr:@dreamer/logger@1.0.0-beta.7",
+              "@dreamer/socket-io": "jsr:@dreamer/socket-io@^1.0.0-beta.2",
+              "@dreamer/logger": "jsr:@dreamer/logger@^1.0.0-beta.7",
             },
           },
           null,
@@ -129,12 +129,12 @@ export function testLogger() {
             version: "1.0.0",
             type: "module",
             imports: {
-              "@dreamer/socket-io": "jsr:@dreamer/socket-io@1.0.0-beta.2",
+              "@dreamer/socket-io": "jsr:@dreamer/socket-io@^1.0.0-beta.2",
               "@dreamer/socket-io/client":
-                "jsr:@dreamer/socket-io@1.0.0-beta.2/client",
-              "@dreamer/logger": "jsr:@dreamer/logger@1.0.0-beta.7",
+                "jsr:@dreamer/socket-io@^1.0.0-beta.2/client",
+              "@dreamer/logger": "jsr:@dreamer/logger@^1.0.0-beta.7",
               "@dreamer/logger/client":
-                "jsr:@dreamer/logger@1.0.0-beta.7/client",
+                "jsr:@dreamer/logger@^1.0.0-beta.7/client",
             },
           },
           null,
@@ -485,8 +485,8 @@ export function testLogger() {
             version: "1.0.0",
             type: "module",
             imports: {
-              "@dreamer/socket-io": "jsr:@dreamer/socket-io@1.0.0-beta.2",
-              "@dreamer/logger": "jsr:@dreamer/logger@1.0.0-beta.7",
+              "@dreamer/socket-io": "jsr:@dreamer/socket-io@^1.0.0-beta.2",
+              "@dreamer/logger": "jsr:@dreamer/logger@^1.0.0-beta.7",
             },
           },
           null,

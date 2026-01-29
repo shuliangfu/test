@@ -3,7 +3,7 @@
 > 一个兼容 Deno 和 Bun 的测试工具库，提供 Mock 工具、断言增强、测试工具函数、浏览器测试集成等高级功能
 
 [![JSR](https://jsr.io/badges/@dreamer/test)](https://jsr.io/@dreamer/test)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE.md)
 [![Tests](https://img.shields.io/badge/tests-359%20passed-brightgreen)](./TEST_REPORT.md)
 
 ---

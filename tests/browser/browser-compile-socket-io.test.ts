@@ -3,6 +3,7 @@
  * 测试 resolver 插件在浏览器编译时能否正确处理 socket-io client 依赖
  */
 
+import { buildBundle } from "@dreamer/esbuild";
 import {
   IS_DENO,
   join,
@@ -11,7 +12,6 @@ import {
   writeTextFile,
 } from "@dreamer/runtime-adapter";
 import { describe, expect, it } from "@dreamer/test";
-import { buildBundle } from "@dreamer/esbuild";
 import { getTestDataDir, getTestOutputDir } from "./test-utils.ts";
 
 // 测试数据目录
@@ -109,7 +109,7 @@ export function testLogger() {
           {
             imports: {
               "@dreamer/socket-io": "jsr:@dreamer/socket-io@1.0.0-beta.2",
-              "@dreamer/logger": "jsr:@dreamer/logger@1.0.0-beta.4",
+              "@dreamer/logger": "jsr:@dreamer/logger@1.0.0-beta.7",
             },
           },
           null,
@@ -132,9 +132,9 @@ export function testLogger() {
               "@dreamer/socket-io": "jsr:@dreamer/socket-io@1.0.0-beta.2",
               "@dreamer/socket-io/client":
                 "jsr:@dreamer/socket-io@1.0.0-beta.2/client",
-              "@dreamer/logger": "jsr:@dreamer/logger@1.0.0-beta.4",
+              "@dreamer/logger": "jsr:@dreamer/logger@1.0.0-beta.7",
               "@dreamer/logger/client":
-                "jsr:@dreamer/logger@1.0.0-beta.4/client",
+                "jsr:@dreamer/logger@1.0.0-beta.7/client",
             },
           },
           null,
@@ -486,7 +486,7 @@ export function testLogger() {
             type: "module",
             imports: {
               "@dreamer/socket-io": "jsr:@dreamer/socket-io@1.0.0-beta.2",
-              "@dreamer/logger": "jsr:@dreamer/logger@1.0.0-beta.4",
+              "@dreamer/logger": "jsr:@dreamer/logger@1.0.0-beta.7",
             },
           },
           null,

@@ -1,822 +1,845 @@
-# @dreamer/test 测试报告
+# @dreamer/test Test Report
 
-## 📋 测试概述
+## 📋 Test Overview
 
-本报告详细记录了 `@dreamer/test`
-测试工具库的测试覆盖情况和测试结果。该库提供了完整的 Mock
-工具、断言增强、测试工具函数、浏览器测试集成等功能，并兼容 Deno 和 Bun 运行时。
+This report provides a detailed record of the test coverage and test results for
+the `@dreamer/test` testing utility library. The library provides complete Mock
+utilities, assertion enhancements, test utility functions, browser test
+integration, and other features, and is compatible with both Deno and Bun
+runtimes.
 
-**测试日期**: 2026-01-27 **测试版本**: 1.0.0-beta.14 **测试框架**: Deno
-内置测试框架 + Bun 测试框架
+**Test Date**: 2026-01-27 **Test Version**: 1.0.0-beta.14 **Test Framework**:
+Deno built-in test framework + Bun test framework
 
-## 🎯 测试目标
+## 🎯 Test Objectives
 
-1. 验证所有核心功能的正确性
-2. 确保断言方法的准确性和完整性
-3. 验证 Mock 功能的正确性
-4. 确保跨运行时兼容性（Deno 和 Bun）
-5. 验证测试工具函数的正确性
-6. 确保错误处理和边界情况的正确性
-7. 验证测试套件选项和钩子选项功能
-8. 验证浏览器测试上下文管理功能
-9. 验证客户端代码打包和加载功能
+1. Verify the correctness of all core functionality
+2. Ensure the accuracy and completeness of assertion methods
+3. Verify the correctness of Mock functionality
+4. Ensure cross-runtime compatibility (Deno and Bun)
+5. Verify the correctness of test utility functions
+6. Ensure the correctness of error handling and edge cases
+7. Verify test suite options and hook options functionality
+8. Verify browser test context management functionality
+9. Verify client-side code bundling and loading functionality
 
-## 📊 测试统计
+## 📊 Test Statistics
 
-### 总体统计
+### Overall Statistics
 
-| 指标         | 数值        |
-| ------------ | ----------- |
-| 测试文件数   | 18          |
-| 测试用例总数 | 361         |
-| 通过用例数   | 359         |
-| 跳过用例数   | 2           |
-| 失败用例数   | 0           |
-| 通过率       | 100%        |
-| 测试执行时间 | 58秒 (Deno) |
-| 代码覆盖率   | 全面覆盖    |
+| Metric               | Value                  |
+| -------------------- | ---------------------- |
+| Number of test files | 18                     |
+| Total test cases     | 361                    |
+| Passed cases         | 359                    |
+| Skipped cases        | 2                      |
+| Failed cases         | 0                      |
+| Pass rate            | 100%                   |
+| Test execution time  | 58 seconds (Deno)      |
+| Code coverage        | Comprehensive coverage |
 
-### 测试文件清单
+### Test File List
 
-| 文件名                                      | 测试用例数 | 状态                  | 说明                                 |
-| ------------------------------------------- | ---------- | --------------------- | ------------------------------------ |
-| `assertions-comprehensive.test.ts`          | 25         | ✅ 全部通过           | 断言工具函数全面测试                 |
-| `browser/beforeall-execution.test.ts`       | 6          | ✅ 全部通过           | 浏览器测试 beforeAll 执行测试        |
-| `browser/browser-compile-socket-io.test.ts` | 5          | ✅ 全部通过           | 浏览器编译 Socket.IO/Logger 依赖测试 |
-| `browser/browser-context.test.ts`           | 13         | ✅ 全部通过           | 浏览器测试上下文管理                 |
-| `browser/browser-integration.test.ts`       | 8          | ✅ 全部通过           | 浏览器测试集成                       |
-| `browser/bundle.test.ts`                    | 7          | ✅ 全部通过           | 客户端代码打包测试                   |
-| `browser/chrome.test.ts`                    | 3          | ✅ 全部通过           | Chrome 路径检测测试                  |
-| `browser/dependencies.test.ts`              | 4          | ✅ 全部通过           | 浏览器测试依赖管理                   |
-| `browser/page.test.ts`                      | 7          | ✅ 全部通过           | 测试页面创建测试                     |
-| `browser/resolver.test.ts`                  | 17         | ✅ 全部通过           | Deno 解析器插件测试                  |
-| `browser/test-runner-integration.test.ts`   | 19         | ✅ 全部通过（1 跳过） | 测试运行器浏览器集成                 |
-| `expect-comprehensive.test.ts`              | 63         | ✅ 全部通过           | Expect 断言全面测试                  |
-| `hooks-execution.test.ts`                   | 27         | ✅ 全部通过           | 钩子函数执行测试                     |
-| `mock-comprehensive.test.ts`                | 19         | ✅ 全部通过           | Mock 功能全面测试                    |
-| `mock-fetch-comprehensive.test.ts`          | 13         | ✅ 全部通过           | HTTP Mock 全面测试                   |
-| `mod.test.ts`                               | 83         | ✅ 全部通过（1 跳过） | 基础功能测试（包含 skipIf 测试）     |
-| `test-options.test.ts`                      | 17         | ✅ 全部通过           | 测试套件选项和钩子选项测试           |
-| `test-utils-comprehensive.test.ts`          | 25         | ✅ 全部通过           | 测试工具函数全面测试                 |
+| File name                                   | Test cases | Status                    | Description                                           |
+| ------------------------------------------- | ---------- | ------------------------- | ----------------------------------------------------- |
+| `assertions-comprehensive.test.ts`          | 25         | ✅ All passed             | Comprehensive assertion utility function tests        |
+| `browser/beforeall-execution.test.ts`       | 6          | ✅ All passed             | Browser test beforeAll execution tests                |
+| `browser/browser-compile-socket-io.test.ts` | 5          | ✅ All passed             | Browser compilation Socket.IO/Logger dependency tests |
+| `browser/browser-context.test.ts`           | 13         | ✅ All passed             | Browser test context management                       |
+| `browser/browser-integration.test.ts`       | 8          | ✅ All passed             | Browser test integration                              |
+| `browser/bundle.test.ts`                    | 7          | ✅ All passed             | Client-side code bundling tests                       |
+| `browser/chrome.test.ts`                    | 3          | ✅ All passed             | Chrome path detection tests                           |
+| `browser/dependencies.test.ts`              | 4          | ✅ All passed             | Browser test dependency management                    |
+| `browser/page.test.ts`                      | 7          | ✅ All passed             | Test page creation tests                              |
+| `browser/resolver.test.ts`                  | 17         | ✅ All passed             | Deno resolver plugin tests                            |
+| `browser/test-runner-integration.test.ts`   | 19         | ✅ All passed (1 skipped) | Test runner browser integration                       |
+| `expect-comprehensive.test.ts`              | 63         | ✅ All passed             | Expect assertion comprehensive tests                  |
+| `hooks-execution.test.ts`                   | 27         | ✅ All passed             | Hook function execution tests                         |
+| `mock-comprehensive.test.ts`                | 19         | ✅ All passed             | Mock functionality comprehensive tests                |
+| `mock-fetch-comprehensive.test.ts`          | 13         | ✅ All passed             | HTTP Mock comprehensive tests                         |
+| `mod.test.ts`                               | 83         | ✅ All passed (1 skipped) | Basic functionality tests (includes skipIf tests)     |
+| `test-options.test.ts`                      | 17         | ✅ All passed             | Test suite options and hook options tests             |
+| `test-utils-comprehensive.test.ts`          | 25         | ✅ All passed             | Test utility function comprehensive tests             |
 
-## 🔍 功能模块测试覆盖
+## 🔍 Functional Module Test Coverage
 
-### 1. 浏览器测试 beforeAll 执行测试（6 个测试）
+### 1. Browser Test beforeAll Execution Tests (6 tests)
 
-#### 1.1 嵌套套件中的 beforeAll
+#### 1.1 beforeAll in Nested Suites
 
-- ✅ 嵌套套件 1：验证 beforeAll 只执行一次（测试 1、2、3）
-- ✅ 嵌套套件 2：验证 beforeAll 只执行一次（测试 4、5）
-- ✅ afterAll 关闭服务器
+- ✅ Nested suite 1: Verify beforeAll executes only once (tests 1, 2, 3)
+- ✅ Nested suite 2: Verify beforeAll executes only once (tests 4, 5)
+- ✅ afterAll closes the server
 
-### 2. 浏览器编译 Socket.IO/Logger 测试（5 个测试）
+### 2. Browser Compilation Socket.IO/Logger Tests (5 tests)
 
-#### 2.1 编译与依赖转换
+#### 2.1 Compilation and Dependency Transformation
 
-- ✅ 应该创建测试文件和目录
-- ✅ 应该能够成功编译包含 socket-io client 和 logger client 的代码
-- ✅ 应该能够正确处理 external 依赖
-- ✅ 应该能够编译包含相对路径导入的代码
-- ✅ 应该能够成功编译包含 logger client 的代码
+- ✅ Should create test files and directories
+- ✅ Should successfully compile code containing socket-io client and logger
+  client
+- ✅ Should correctly handle external dependencies
+- ✅ Should compile code containing relative path imports
+- ✅ Should successfully compile code containing logger client
 
-### 3. 浏览器测试上下文管理（13 个测试）
+### 3. Browser Test Context Management (13 tests)
 
 #### 3.1 createBrowserContext
 
-- ✅ 应该创建浏览器上下文（无 entryPoint）
-- ✅ 应该支持 headless 模式
-- ✅ 应该支持自定义 Chrome 路径（如果提供）
-- ✅ 应该支持自定义启动参数
-- ✅ 应该能够执行浏览器代码（evaluate）
-- ✅ 应该能够导航到 URL（goto）
-- ✅ 应该能够等待条件（waitFor）
-- ✅ 应该能够创建包含 entryPoint 的上下文
-- ✅ 应该支持自定义 globalName
-- ✅ 应该支持自定义 bodyContent
-- ✅ 应该支持自定义 HTML 模板
-- ✅ 应该支持自定义 moduleLoadTimeout
-- ✅ 应该能够正确关闭浏览器
+- ✅ Should create browser context (without entryPoint)
+- ✅ Should support headless mode
+- ✅ Should support custom Chrome path (if provided)
+- ✅ Should support custom launch arguments
+- ✅ Should be able to execute browser code (evaluate)
+- ✅ Should be able to navigate to URL (goto)
+- ✅ Should be able to wait for conditions (waitFor)
+- ✅ Should be able to create context with entryPoint
+- ✅ Should support custom globalName
+- ✅ Should support custom bodyContent
+- ✅ Should support custom HTML template
+- ✅ Should support custom moduleLoadTimeout
+- ✅ Should correctly close the browser
 
-### 4. 浏览器测试集成（8 个测试）
+### 4. Browser Test Integration (8 tests)
 
-#### 4.1 测试运行器集成
+#### 4.1 Test Runner Integration
 
-- ✅ 应该在 TestContext 中提供 browser 属性
-- ✅ 应该支持套件级别的浏览器配置
-- ✅ 应该支持测试级别的浏览器配置
+- ✅ Should provide browser property in TestContext
+- ✅ Should support suite-level browser configuration
+- ✅ Should support test-level browser configuration
 
-#### 4.2 浏览器测试配置继承
+#### 4.2 Browser Test Configuration Inheritance
 
-- ✅ 应该继承套件的浏览器配置
+- ✅ Should inherit suite's browser configuration
 
-#### 4.3 浏览器上下文 API
+#### 4.3 Browser Context API
 
-- ✅ 应该支持 evaluate 方法
-- ✅ 应该支持 goto 方法
-- ✅ 应该支持 waitFor 方法
+- ✅ Should support evaluate method
+- ✅ Should support goto method
+- ✅ Should support waitFor method
 
-#### 4.4 完整的浏览器测试流程
+#### 4.4 Complete Browser Test Flow
 
-- ✅ 应该能够执行完整的浏览器测试
+- ✅ Should be able to execute complete browser test flow
 
-### 5. 客户端代码打包（7 个测试）
+### 5. Client-Side Code Bundling (7 tests)
 
 #### 5.1 buildClientBundle
 
-- ✅ 应该能够打包简单的 JavaScript 代码
-- ✅ 应该支持 globalName 选项
-- ✅ 应该支持 minify 选项
-- ✅ 应该支持 platform 选项
-- ✅ 应该支持 target 选项
-- ✅ 应该处理 TypeScript 代码
-- ✅ 应该处理包含多个导出的模块
+- ✅ Should be able to bundle simple JavaScript code
+- ✅ Should support globalName option
+- ✅ Should support minify option
+- ✅ Should support platform option
+- ✅ Should support target option
+- ✅ Should handle TypeScript code
+- ✅ Should handle modules with multiple exports
 
-### 6. Chrome 路径检测（3 个测试）
+### 6. Chrome Path Detection (3 tests)
 
 #### 6.1 findChromePath
 
-- ✅ 应该返回字符串或 undefined
-- ✅ 如果找到 Chrome，应该返回有效路径
-- ✅ 应该快速执行
+- ✅ Should return string or undefined
+- ✅ Should return valid path if Chrome is found
+- ✅ Should execute quickly
 
-### 7. 浏览器测试依赖管理（4 个测试）
+### 7. Browser Test Dependency Management (4 tests)
 
 #### 7.1 getPuppeteer
 
-- ✅ 应该返回 Puppeteer 模块
-- ✅ 应该返回相同的 Puppeteer 实例
+- ✅ Should return Puppeteer module
+- ✅ Should return the same Puppeteer instance
 
 #### 7.2 getBuildBundle
 
-- ✅ 应该返回 buildBundle 函数
-- ✅ 应该返回相同的 buildBundle 函数
+- ✅ Should return buildBundle function
+- ✅ Should return the same buildBundle function
 
-### 8. 测试页面创建（7 个测试）
+### 8. Test Page Creation (7 tests)
 
 #### 8.1 createTestPage
 
-- ✅ 应该创建 HTML 文件
-- ✅ 应该包含打包后的代码
-- ✅ 应该使用默认模板
-- ✅ 应该支持自定义 bodyContent
-- ✅ 应该支持自定义模板
-- ✅ 应该替换模板中的所有占位符
-- ✅ 应该包含 testReady 标记
+- ✅ Should create HTML file
+- ✅ Should include bundled code
+- ✅ Should use default template
+- ✅ Should support custom bodyContent
+- ✅ Should support custom template
+- ✅ Should replace all placeholders in template
+- ✅ Should include testReady marker
 
-### 9. Deno 解析器插件（17 个测试）
+### 9. Deno Resolver Plugin (17 tests)
 
-#### 9.1 基础解析功能
+#### 9.1 Basic Resolution Functionality
 
-- ✅ 应该创建测试目录和测试文件
-- ✅ 应该能够自动解析（不显式添加插件）
+- ✅ Should create test directory and test file
+- ✅ Should be able to resolve automatically (without explicitly adding plugin)
 
-#### 9.2 JSR 包子路径导出解析
+#### 9.2 JSR Package Subpath Export Resolution
 
-- ✅ 应该能够解析 @dreamer/logger/client
-- ✅ 应该能够自动解析（不显式添加插件）
+- ✅ Should be able to resolve @dreamer/logger/client
+- ✅ Should be able to resolve automatically (without explicitly adding plugin)
 
-#### 9.3 协议支持
+#### 9.3 Protocol Support
 
-- ✅ 应该能够解析直接使用 jsr: 协议的导入
-- ✅ 应该能够解析 jsr: 协议的子路径
-- ✅ 应该能够识别 npm: 协议
+- ✅ Should be able to resolve imports using jsr: protocol directly
+- ✅ Should be able to resolve jsr: protocol subpaths
+- ✅ Should be able to recognize npm: protocol
 
-#### 9.4 子路径导出测试
+#### 9.4 Subpath Export Tests
 
-- ✅ 应该能够解析单级子路径
-- ✅ 应该能够处理通过 deno.json imports 映射的子路径
+- ✅ Should be able to resolve single-level subpaths
+- ✅ Should be able to handle subpaths mapped through deno.json imports
 
-#### 9.5 相对路径导入测试
+#### 9.5 Relative Path Import Tests
 
-- ✅ 应该能够解析同级目录的相对路径导入
-- ✅ 应该能够解析子目录的相对路径导入
-- ✅ 应该能够解析父目录的相对路径导入
+- ✅ Should be able to resolve relative path imports in the same directory
+- ✅ Should be able to resolve relative path imports in subdirectories
+- ✅ Should be able to resolve relative path imports in parent directories
 
-#### 9.6 路径别名测试
+#### 9.6 Path Alias Tests
 
-- ✅ 应该能够解析通过 deno.json imports 配置的别名
-- ✅ 应该能够解析带子路径的别名
-- ✅ 应该能够解析 deno.json 中配置的路径别名
-- ✅ 应该能够解析 @/ 路径别名
-- ✅ 应该能够解析 ~/ 路径别名
+- ✅ Should be able to resolve aliases configured in deno.json imports
+- ✅ Should be able to resolve aliases with subpaths
+- ✅ Should be able to resolve path aliases configured in deno.json
+- ✅ Should be able to resolve @/ path alias
+- ✅ Should be able to resolve ~/ path alias
 
-#### 9.7 清理功能
+#### 9.7 Cleanup Functionality
 
-- ✅ 应该清理测试输出目录
+- ✅ Should clean up test output directory
 
-### 10. 测试运行器浏览器集成（19 个测试）
+### 10. Test Runner Browser Integration (19 tests)
 
-#### 10.1 浏览器测试启用和配置
+#### 10.1 Browser Test Enablement and Configuration
 
-- ✅ 应该在启用浏览器测试时提供 browser 上下文
-- ✅ 应该在未启用浏览器测试时不提供 browser 上下文
-- ✅ 应该支持测试级别的浏览器配置
+- ✅ Should provide browser context when browser tests are enabled
+- ✅ Should not provide browser context when browser tests are not enabled
+- ✅ Should support test-level browser configuration
 
-#### 10.2 套件级别的浏览器配置
+#### 10.2 Suite-Level Browser Configuration
 
-- ✅ 应该继承套件的浏览器配置
-- ✅ 应该允许测试级别覆盖套件配置
+- ✅ Should inherit suite's browser configuration
+- ✅ Should allow test-level override of suite configuration
 
-#### 10.3 浏览器实例复用
+#### 10.3 Browser Instance Reuse
 
-- ✅ 应该在同一个套件中复用浏览器实例
-- ✅ 应该在复用模式下为每个测试创建新页面
+- ✅ Should reuse browser instance within the same suite
+- ✅ Should create new page for each test in reuse mode
 
-#### 10.4 浏览器实例不复用
+#### 10.4 No Browser Instance Reuse
 
-- ✅ 应该在 reuseBrowser=false 时为每个测试创建新浏览器
+- ✅ Should create new browser for each test when reuseBrowser=false
 
-#### 10.5 entryPoint 自动打包和加载
+#### 10.5 entryPoint Auto Bundling and Loading
 
-- ✅ 应该自动打包并加载 entryPoint
-- ✅ 应该支持 entryPoint 和 globalName 配置
+- ✅ Should automatically bundle and load entryPoint
+- ✅ Should support entryPoint and globalName configuration
 
-#### 10.6 浏览器上下文 API 集成
+#### 10.6 Browser Context API Integration
 
-- ✅ 应该支持 evaluate 方法
-- ✅ 应该支持 goto 方法
-- ✅ 应该支持 waitFor 方法
+- ✅ Should support evaluate method
+- ✅ Should support goto method
+- ✅ Should support waitFor method
 
-#### 10.7 配置继承
+#### 10.7 Configuration Inheritance
 
-- ✅ 应该继承父套件的浏览器配置
-- ✅ 应该允许子套件覆盖父套件配置
+- ✅ Should inherit parent suite's browser configuration
+- ✅ Should allow child suite to override parent suite configuration
 
-#### 10.8 资源清理
+#### 10.8 Resource Cleanup
 
-- ✅ 应该在测试结束后自动清理浏览器上下文
+- ✅ Should automatically clean up browser context after tests complete
 
-**浏览器资源清理机制**：
+**Browser Resource Cleanup Mechanism**:
 
-`@dreamer/test`
-提供了完善的浏览器资源清理机制，确保所有浏览器实例在测试完成后被正确关闭，避免资源泄漏：
+`@dreamer/test` provides a comprehensive browser resource cleanup mechanism to
+ensure all browser instances are properly closed after test completion, avoiding
+resource leaks:
 
-1. **`cleanupAllBrowsers()` 方法**：
-   - **功能**：清理所有测试套件中创建的浏览器实例
-   - **使用场景**：在所有测试完成后，确保所有浏览器实例都被关闭
-   - **实现原理**：
-     - 遍历所有套件的浏览器缓存（`suiteBrowserCache`）
-     - 并行关闭所有浏览器实例
-     - 忽略关闭过程中的错误，确保所有浏览器都能被尝试关闭
-   - **自动调用**：
-     - 在进程退出时（SIGINT、SIGTERM 信号）自动调用
-     - 可以在测试套件的 `afterAll` 钩子中手动调用
-   - **使用示例**：
+1. **`cleanupAllBrowsers()` Method**:
+   - **Functionality**: Clean up all browser instances created in test suites
+   - **Use case**: After all tests complete, ensure all browser instances are
+     closed
+   - **Implementation**:
+     - Iterate through all suites' browser cache (`suiteBrowserCache`)
+     - Close all browser instances in parallel
+     - Ignore errors during close process to ensure all browsers are attempted
+       to be closed
+   - **Automatic invocation**:
+     - Automatically called on process exit (SIGINT, SIGTERM signals)
+     - Can be manually called in test suite's `afterAll` hook
+   - **Usage example**:
      ```typescript
      import { afterAll, cleanupAllBrowsers } from "@dreamer/test";
 
-     describe("浏览器测试套件", () => {
+     describe("Browser test suite", () => {
        afterAll(async () => {
-         // 自动清理所有浏览器实例
+         // Automatically clean up all browser instances
          await cleanupAllBrowsers();
        });
 
-       // ... 测试用例
+       // ... test cases
      });
      ```
 
-2. **自动清理机制**：
-   - 每个测试完成后，自动关闭测试使用的页面
-   - 浏览器实例保留在缓存中，等待所有测试完成后统一清理
-   - 支持 `reuseBrowser` 配置，控制浏览器实例的复用策略
+2. **Automatic Cleanup Mechanism**:
+   - After each test completes, automatically close the page used by the test
+   - Browser instances remain in cache, waiting for unified cleanup after all
+     tests complete
+   - Supports `reuseBrowser` configuration to control browser instance reuse
+     strategy
 
-3. **进程退出清理**：
-   - 注册了 SIGINT 和 SIGTERM 信号监听器
-   - 在进程退出时自动调用 `cleanupAllBrowsers()`
-   - 确保即使测试被中断，浏览器实例也能被正确清理
+3. **Process Exit Cleanup**:
+   - Registered SIGINT and SIGTERM signal listeners
+   - Automatically calls `cleanupAllBrowsers()` on process exit
+   - Ensures browser instances are properly cleaned up even when tests are
+     interrupted
 
-#### 10.9 错误处理
+#### 10.9 Error Handling
 
-- ✅ 应该在 Chrome 未找到时提供清晰的错误信息
+- ✅ Should provide clear error message when Chrome is not found
 
-#### 10.10 test.only 和 test.skip 支持
+#### 10.10 test.only and test.skip Support
 
-- ⏭️ 应该支持 test.skip 中的浏览器测试（已跳过）
+- ⏭️ Should support browser tests in test.skip (skipped)
 
-### 11. Expect 断言系统（63 个测试）
+### 11. Expect Assertion System (63 tests)
 
-#### 11.1 基础断言方法
+#### 11.1 Basic Assertion Methods
 
-- ✅ `toBe()` - 严格相等断言
-- ✅ `toEqual()` - 深度相等断言
-- ✅ `toBeTruthy()` - 真值断言
-- ✅ `toBeFalsy()` - 假值断言
-- ✅ `toBeNull()` - null 断言
-- ✅ `toBeUndefined()` - undefined 断言
-- ✅ `toBeDefined()` - 已定义断言
-- ✅ `toMatch()` - 正则匹配断言
-- ✅ `toContain()` - 包含断言（数组/字符串）
+- ✅ `toBe()` - Strict equality assertion
+- ✅ `toEqual()` - Deep equality assertion
+- ✅ `toBeTruthy()` - Truthy assertion
+- ✅ `toBeFalsy()` - Falsy assertion
+- ✅ `toBeNull()` - null assertion
+- ✅ `toBeUndefined()` - undefined assertion
+- ✅ `toBeDefined()` - Defined assertion
+- ✅ `toMatch()` - Regex match assertion
+- ✅ `toContain()` - Contains assertion (array/string)
 
-#### 11.2 数值比较断言
+#### 11.2 Numeric Comparison Assertions
 
-- ✅ `toBeGreaterThan()` - 大于断言
-- ✅ `toBeGreaterThanOrEqual()` - 大于等于断言
-- ✅ `toBeLessThan()` - 小于断言
-- ✅ `toBeLessThanOrEqual()` - 小于等于断言
-- ✅ `toBeCloseTo()` - 浮点数近似相等断言（支持自定义精度）
-- ✅ `toBeNaN()` - NaN 断言
+- ✅ `toBeGreaterThan()` - Greater than assertion
+- ✅ `toBeGreaterThanOrEqual()` - Greater than or equal assertion
+- ✅ `toBeLessThan()` - Less than assertion
+- ✅ `toBeLessThanOrEqual()` - Less than or equal assertion
+- ✅ `toBeCloseTo()` - Floating point approximate equality assertion (supports
+  custom precision)
+- ✅ `toBeNaN()` - NaN assertion
 
-#### 11.3 类型检查断言
+#### 11.3 Type Check Assertions
 
-- ✅ `toBeArray()` - 数组类型断言
-- ✅ `toBeString()` - 字符串类型断言
-- ✅ `toBeNumber()` - 数字类型断言
-- ✅ `toBeBoolean()` - 布尔类型断言
-- ✅ `toBeFunction()` - 函数类型断言
-- ✅ `toBeInstanceOf()` - 实例类型断言
+- ✅ `toBeArray()` - Array type assertion
+- ✅ `toBeString()` - String type assertion
+- ✅ `toBeNumber()` - Number type assertion
+- ✅ `toBeBoolean()` - Boolean type assertion
+- ✅ `toBeFunction()` - Function type assertion
+- ✅ `toBeInstanceOf()` - Instance type assertion
 
-#### 11.4 长度和空值断言
+#### 11.4 Length and Empty Value Assertions
 
-- ✅ `toHaveLength()` - 长度断言（数组/字符串/类数组对象）
-- ✅ `toBeEmpty()` - 空值断言（数组/字符串/对象）
+- ✅ `toHaveLength()` - Length assertion (array/string/array-like object)
+- ✅ `toBeEmpty()` - Empty value assertion (array/string/object)
 
-#### 11.5 属性断言
+#### 11.5 Property Assertions
 
-- ✅ `toHaveProperty()` - 属性存在断言
-  - 支持嵌套路径（如 `"user.name"`）
-  - 支持可选值检查
-  - 支持数组索引路径
+- ✅ `toHaveProperty()` - Property existence assertion
+  - Supports nested paths (e.g. `"user.name"`)
+  - Supports optional value check
+  - Supports array index paths
+
+#### 11.6 Strict Deep Equality
 
-#### 11.6 严格深度相等
+- ✅ `toStrictEqual()` - Strict deep equality assertion
+  - Distinguishes `undefined` and missing properties
+  - Considers Symbol properties
+  - Supports array strict equality
 
-- ✅ `toStrictEqual()` - 严格深度相等断言
-  - 区分 `undefined` 和缺失属性
-  - 考虑 Symbol 属性
-  - 支持数组严格相等
+#### 11.7 Error Throw Assertions
 
-#### 11.7 错误抛出断言
+- ✅ `toThrow()` - Error throw assertion
+  - Supports error type check
+  - Supports error message string match
+  - Supports error message regex match
 
-- ✅ `toThrow()` - 错误抛出断言
-  - 支持错误类型检查
-  - 支持错误消息字符串匹配
-  - 支持错误消息正则表达式匹配
+#### 11.8 Negation Assertions (.not)
 
-#### 11.8 反向断言（.not）
+- ✅ All assertion methods support `.not` negation
+- ✅ Negation assertion error messages are clear and explicit
+- ✅ Negation assertion logic is correct
 
-- ✅ 所有断言方法都支持 `.not` 反向断言
-- ✅ 反向断言错误消息清晰明确
-- ✅ 反向断言逻辑正确
+#### 11.9 Edge Case Tests
 
-#### 11.9 边界情况测试
+- ✅ null value handling
+- ✅ undefined value handling
+- ✅ Empty value handling (empty array, empty string, empty object)
+- ✅ Special number handling (NaN, Infinity, -Infinity)
+- ✅ Nested object handling
+- ✅ Array edge cases
+- ✅ String edge cases
 
-- ✅ null 值处理
-- ✅ undefined 值处理
-- ✅ 空值处理（空数组、空字符串、空对象）
-- ✅ 特殊数字处理（NaN、Infinity、-Infinity）
-- ✅ 嵌套对象处理
-- ✅ 数组边界情况
-- ✅ 字符串边界情况
+### 12. Assertion Utility Functions (25 tests)
 
-### 12. 断言工具函数（25 个测试）
+#### 12.1 Async Assertions
 
-#### 12.1 异步断言
+- ✅ `assertRejects()` - Async function error assertion
+  - Supports error type check
+  - Supports error message string match
+  - Supports error message regex match
+  - Correctly handles function success case
+  - Correctly handles error type mismatch case
+  - Correctly handles error message mismatch case
 
-- ✅ `assertRejects()` - 异步函数错误断言
-  - 支持错误类型检查
-  - 支持错误消息字符串匹配
-  - 支持错误消息正则表达式匹配
-  - 正确处理函数成功执行的情况
-  - 正确处理错误类型不匹配的情况
-  - 正确处理错误消息不匹配的情况
+- ✅ `assertResolves()` - Async function success assertion
+  - Supports return value check (using deep equality comparison)
+  - Correctly handles function failure case
+  - Correctly handles return value mismatch case
 
-- ✅ `assertResolves()` - 异步函数成功断言
-  - 支持返回值检查（使用深度相等比较）
-  - 正确处理函数失败的情况
-  - 正确处理返回值不匹配的情况
+#### 12.2 Deep Equality Assertions
 
-#### 12.2 深度相等断言
+- ✅ `assertDeepEqual()` - Deep equality assertion
+  - Supports nested object comparison
+  - Supports array comparison
+  - Correctly handles unequal case
+  - Correctly handles structurally different case
 
-- ✅ `assertDeepEqual()` - 深度相等断言
-  - 支持嵌套对象比较
-  - 支持数组比较
-  - 正确处理不相等的情况
-  - 正确处理结构不同的情况
+#### 12.3 Instance Type Assertions
 
-#### 12.3 实例类型断言
+- ✅ `assertInstanceOf()` - Instance type assertion
+  - Supports built-in types (Date, Array, Object, etc.)
+  - Supports custom class instances
+  - Correctly handles non-instance case
+  - Correctly handles type mismatch case
 
-- ✅ `assertInstanceOf()` - 实例类型断言
-  - 支持内置类型（Date、Array、Object 等）
-  - 支持自定义类实例
-  - 正确处理不是实例的情况
-  - 正确处理类型不匹配的情况
+#### 12.4 Regex Match Assertions
 
-#### 12.4 正则匹配断言
+- ✅ `assertMatch()` - Regex match assertion
+  - Supports RegExp object
+  - Supports string pattern
+  - Supports complex regex expressions
+  - Correctly handles mismatch case
 
-- ✅ `assertMatch()` - 正则匹配断言
-  - 支持 RegExp 对象
-  - 支持字符串模式
-  - 支持复杂正则表达式
-  - 正确处理不匹配的情况
+### 13. Mock Functionality (19 tests)
 
-### 13. Mock 功能（19 个测试）
+#### 13.1 Mock Function Creation
 
-#### 13.1 Mock 函数创建
+- ✅ `mockFn()` - Create Mock function
+  - Supports type inference
+  - Supports default return value
+  - Supports implementation function
 
-- ✅ `mockFn()` - 创建 Mock 函数
-  - 支持类型推断
-  - 支持默认返回值
-  - 支持实现函数
+#### 13.2 Mock Call Recording
 
-#### 13.2 Mock 调用记录
+- ✅ Record function call count
+- ✅ Record call arguments
+- ✅ Record return values
+- ✅ Record call order
 
-- ✅ 记录函数调用次数
-- ✅ 记录调用参数
-- ✅ 记录返回值
-- ✅ 记录调用顺序
+#### 13.3 Mock Assertions (MockExpect)
 
-#### 13.3 Mock 断言（MockExpect）
+- ✅ `toHaveBeenCalled()` - Check if called
+- ✅ `toHaveBeenCalledTimes()` - Check call count
+- ✅ `toHaveBeenCalledWith()` - Check call arguments
+- ✅ `toHaveBeenLastCalledWith()` - Check last call arguments
+- ✅ `toHaveBeenNthCalledWith()` - Check Nth call arguments
+- ✅ `toHaveReturned()` - Check if returned value
+- ✅ `toHaveReturnedWith()` - Check return value
+- ✅ `toHaveReturnedTimes()` - Check return count
+- ✅ `toHaveLastReturnedWith()` - Check last return value
+- ✅ `toHaveNthReturnedWith()` - Check Nth return value
+- ✅ `.not` negation assertion support
 
-- ✅ `toHaveBeenCalled()` - 检查是否被调用
-- ✅ `toHaveBeenCalledTimes()` - 检查调用次数
-- ✅ `toHaveBeenCalledWith()` - 检查调用参数
-- ✅ `toHaveBeenLastCalledWith()` - 检查最后一次调用参数
-- ✅ `toHaveBeenNthCalledWith()` - 检查第 N 次调用参数
-- ✅ `toHaveReturned()` - 检查是否返回值
-- ✅ `toHaveReturnedWith()` - 检查返回值
-- ✅ `toHaveReturnedTimes()` - 检查返回次数
-- ✅ `toHaveLastReturnedWith()` - 检查最后一次返回值
-- ✅ `toHaveNthReturnedWith()` - 检查第 N 次返回值
-- ✅ `.not` 反向断言支持
+#### 13.4 Mock Behavior Control
 
-#### 13.4 Mock 行为控制
+- ✅ Set return value
+- ✅ Set implementation function
+- ✅ Reset Mock
+- ✅ Clear call records
 
-- ✅ 设置返回值
-- ✅ 设置实现函数
-- ✅ 重置 Mock
-- ✅ 清除调用记录
+#### 13.5 Edge Cases
 
-#### 13.5 边界情况
+- ✅ Handle multiple calls with different arguments
+- ✅ Handle uncalled case
+- ✅ Handle call count of 0 case
 
-- ✅ 处理多次调用但参数不同
-- ✅ 处理未调用的情况
-- ✅ 处理调用次数为 0 的情况
+### 14. HTTP Mock Functionality (13 tests)
 
-### 14. HTTP Mock 功能（13 个测试）
+#### 14.1 Mock Fetch Creation
 
-#### 14.1 Mock Fetch 创建
+- ✅ `mockFetch()` - Create Mock Fetch
+  - Supports URL string matching
+  - Supports URL regex matching
+  - Supports HTTP method matching
+  - Supports request body validation
 
-- ✅ `mockFetch()` - 创建 Mock Fetch
-  - 支持 URL 字符串匹配
-  - 支持 URL 正则表达式匹配
-  - 支持 HTTP 方法匹配
-  - 支持请求体验证
+#### 14.2 Response Customization
 
-#### 14.2 响应定制
+- ✅ Custom response status code
+- ✅ Custom response headers
+- ✅ Custom response body (JSON, text, Blob, etc.)
+- ✅ Simulate network error
+- ✅ Simulate timeout
 
-- ✅ 自定义响应状态码
-- ✅ 自定义响应头
-- ✅ 自定义响应体（JSON、文本、Blob 等）
-- ✅ 模拟网络错误
-- ✅ 模拟超时
+#### 14.3 Request Validation
 
-#### 14.3 请求验证
+- ✅ Validate request URL
+- ✅ Validate request method
+- ✅ Validate request headers
+- ✅ Validate request body
 
-- ✅ 验证请求 URL
-- ✅ 验证请求方法
-- ✅ 验证请求头
-- ✅ 验证请求体
+#### 14.4 Mock Management
 
-#### 14.4 Mock 管理
+- ✅ Restore original fetch
+- ✅ Clear Mock rules
+- ✅ Multiple Mock rules priority
 
-- ✅ 恢复原始 fetch
-- ✅ 清除 Mock 规则
-- ✅ 多个 Mock 规则优先级
+### 15. Hook Function Execution Tests (27 tests)
 
-### 15. 钩子函数执行测试（27 个测试）
+#### 15.1 beforeAll Execution Tests
 
-#### 15.1 beforeAll 执行测试
+- ✅ beforeAll should execute before the first test
+- ✅ beforeAll should execute only once
+- ✅ beforeAll should execute before all tests
 
-- ✅ beforeAll 应该在第一个测试前执行
-- ✅ beforeAll 应该只执行一次
-- ✅ beforeAll 应该在所有测试前执行
+#### 15.2 afterAll Execution Tests
 
-#### 15.2 afterAll 执行测试
+- ✅ afterAll executes after all tests
+- ✅ Verify afterAll execution timing
 
-- ✅ afterAll 会在所有测试后执行
-- ✅ 验证 afterAll 的执行时机
+#### 15.3 beforeEach Execution Tests
 
-#### 15.3 beforeEach 执行测试
+- ✅ beforeEach should execute before each test
+- ✅ Verify beforeEach execution order
 
-- ✅ beforeEach 应该在每个测试前执行
-- ✅ 验证 beforeEach 的执行顺序
+#### 15.4 afterEach Execution Tests
 
-#### 15.4 afterEach 执行测试
+- ✅ afterEach should execute after each test
+- ✅ Verify afterEach execution order
 
-- ✅ afterEach 应该在每个测试后执行
-- ✅ 验证 afterEach 的执行顺序
+#### 15.5 Hook Function Combination Tests
 
-#### 15.5 钩子函数组合测试
+- ✅ Verify hook execution order (beforeAll → beforeEach → test → afterEach →
+  afterAll)
+- ✅ Support hook execution for multiple test cases
 
-- ✅ 验证钩子执行顺序（beforeAll → beforeEach → test → afterEach → afterAll）
-- ✅ 支持多个测试用例的钩子执行
+#### 15.6 Async Hook Function Tests
 
-#### 15.6 异步钩子函数测试
+- ✅ Async beforeAll should execute
+- ✅ Async hooks should work correctly
+- ✅ Async afterAll should execute
 
-- ✅ 异步 beforeAll 应该执行
-- ✅ 异步钩子应该正常工作
-- ✅ 异步 afterAll 应该执行
+#### 15.7 Nested Suite Hook Function Tests
 
-#### 15.7 嵌套套件的钩子函数测试
+- ✅ Parent and child suite hook execution order
+- ✅ Nested suite hook inheritance
 
-- ✅ 父套件和子套件的钩子执行顺序
-- ✅ 嵌套套件的钩子继承
+#### 15.8 Hook Function Receiving TestContext Tests
 
-#### 15.8 钩子函数接收 TestContext 测试
+- ✅ beforeEach should receive TestContext
+- ✅ afterEach should receive TestContext
 
-- ✅ beforeEach 应该接收 TestContext
-- ✅ afterEach 应该接收 TestContext
+### 16. Test Utility Functions (25 tests)
 
-### 16. 测试工具函数（25 个测试）
+#### 16.1 Setup/Teardown Hooks
 
-#### 16.1 Setup/Teardown 钩子
+- ✅ `beforeAll()` - Execute before all tests
+- ✅ `afterAll()` - Execute after all tests
+- ✅ `beforeEach()` - Execute before each test
+  - Supports receiving `TestContext` parameter
+  - Supports `options` parameter (`sanitizeOps`, `sanitizeResources`)
+- ✅ `afterEach()` - Execute after each test
+  - Supports receiving `TestContext` parameter
+  - Supports `options` parameter (`sanitizeOps`, `sanitizeResources`)
+- ✅ Supports async hooks
+- ✅ Supports nested suite hook inheritance
 
-- ✅ `beforeAll()` - 所有测试前执行
-- ✅ `afterAll()` - 所有测试后执行
-- ✅ `beforeEach()` - 每个测试前执行
-  - 支持接收 `TestContext` 参数
-  - 支持 `options` 参数（`sanitizeOps`、`sanitizeResources`）
-- ✅ `afterEach()` - 每个测试后执行
-  - 支持接收 `TestContext` 参数
-  - 支持 `options` 参数（`sanitizeOps`、`sanitizeResources`）
-- ✅ 支持异步钩子
-- ✅ 支持嵌套套件的钩子继承
+#### 16.2 Parameterized Tests
 
-#### 16.2 参数化测试
+- ✅ `testEach()` - Parameterized tests
+  - Supports primitive type parameters (number, string)
+  - Supports object parameters
+  - Supports array parameters
+  - Supports single parameter
+  - Supports parameter name substitution (`%0`, `%1`, etc.)
 
-- ✅ `testEach()` - 参数化测试
-  - 支持基本类型参数（数字、字符串）
-  - 支持对象参数
-  - 支持数组参数
-  - 支持单个参数
-  - 支持参数名称替换（`%0`, `%1` 等）
+#### 16.3 Benchmark Tests
 
-#### 16.3 基准测试
+- ✅ `bench()` - Benchmark tests
+  - Supports basic benchmark tests
+  - Supports custom run count (`n` option)
+  - Supports warmup count (`warmup` option)
+  - Supports async benchmark tests
+  - Output format beautification (Deno and Bun environments)
 
-- ✅ `bench()` - 基准测试
-  - 支持基本基准测试
-  - 支持自定义运行次数（`n` 选项）
-  - 支持预热次数（`warmup` 选项）
-  - 支持异步基准测试
-  - 输出格式美化（Deno 和 Bun 环境）
+#### 16.4 Test Composition
 
-#### 16.4 测试组合
+- ✅ Supports nested `describe()`
+- ✅ Supports multiple test cases
+- ✅ Supports test suite organization
 
-- ✅ 支持嵌套 `describe()`
-- ✅ 支持多个测试用例
-- ✅ 支持测试套件组织
+### 17. Test Suite Options and Hook Options (17 tests)
 
-### 17. 测试套件选项和钩子选项（17 个测试）
+#### 17.1 Test Suite Options (DescribeOptions)
 
-#### 17.1 测试套件选项（DescribeOptions）
+- ✅ `describe()` supports `options` parameter
+  - Supports `sanitizeOps` option
+  - Supports `sanitizeResources` option
+  - Supports setting both options
+- ✅ Nested suite option inheritance
+  - Child suite inherits parent suite's options
+  - Child suite can override parent suite's options
+- ✅ Multi-level nested suite option merging
+  - Supports multi-level nesting
+  - Options correctly merged and inherited
 
-- ✅ `describe()` 支持 `options` 参数
-  - 支持 `sanitizeOps` 选项
-  - 支持 `sanitizeResources` 选项
-  - 支持同时设置两个选项
-- ✅ 嵌套套件的选项继承
-  - 子套件继承父套件的选项
-  - 子套件可以覆盖父套件的选项
-- ✅ 多层嵌套套件的选项合并
-  - 支持多层嵌套
-  - 选项正确合并和继承
+#### 17.2 Hook Options (TestOptions)
 
-#### 17.2 钩子选项（TestOptions）
+- ✅ `beforeEach()` supports `options` parameter
+  - Supports `sanitizeOps` option
+  - Supports `sanitizeResources` option
+  - Supports setting both options
+  - Supports receiving `TestContext` parameter
+- ✅ `afterEach()` supports `options` parameter
+  - Supports `sanitizeOps` option
+  - Supports `sanitizeResources` option
+  - Supports setting both options
+  - Supports receiving `TestContext` parameter
 
-- ✅ `beforeEach()` 支持 `options` 参数
-  - 支持 `sanitizeOps` 选项
-  - 支持 `sanitizeResources` 选项
-  - 支持同时设置两个选项
-  - 支持接收 `TestContext` 参数
-- ✅ `afterEach()` 支持 `options` 参数
-  - 支持 `sanitizeOps` 选项
-  - 支持 `sanitizeResources` 选项
-  - 支持同时设置两个选项
-  - 支持接收 `TestContext` 参数
+#### 17.3 Option Priority
 
-#### 17.3 选项优先级
+- ✅ Test case options override suite options
+- ✅ Child suite options override parent suite options
+- ✅ Hook options correctly applied to test context
 
-- ✅ 测试用例选项覆盖套件选项
-- ✅ 子套件选项覆盖父套件选项
-- ✅ 钩子选项正确应用到测试上下文
+#### 17.4 Practical Application Scenarios
 
-#### 17.4 实际应用场景
+- ✅ Suite-level disable timer leak check
+- ✅ Disable timer leak check in `beforeEach`
+- ✅ Multi-level nested suite option merging
 
-- ✅ 套件级别禁用定时器泄漏检查
-- ✅ `beforeEach` 中禁用定时器泄漏检查
-- ✅ 多层嵌套套件的选项合并
+### 18. Basic Functionality Tests (83 tests)
 
-### 18. 基础功能测试（83 个测试）
+#### 18.1 Cross-Runtime Compatibility
 
-#### 18.1 跨运行时兼容性
+- ✅ **Deno Environment**
+  - Uses Deno built-in test framework
+  - Supports all Deno test features
+  - Sequential test execution (`parallel: false`)
+  - Supports test context (TestContext)
+  - Supports suite options and hook options
 
-- ✅ **Deno 环境**
-  - 使用 Deno 内置测试框架
-  - 支持所有 Deno 测试特性
-  - 顺序执行测试（`parallel: false`）
-  - 支持测试上下文（TestContext）
-  - 支持套件选项和钩子选项
+- ✅ **Bun Environment**
+  - Uses Bun test framework (`bun:test`)
+  - Supports all Bun test features
+  - Correctly handles `describe()` nesting
+  - Correctly handles test registration timing
+  - Supports test timeout setting
+  - Supports suite options and hook options
 
-- ✅ **Bun 环境**
-  - 使用 Bun 测试框架（`bun:test`）
-  - 支持所有 Bun 测试特性
-  - 正确处理 `describe()` 嵌套
-  - 正确处理测试注册时机
-  - 支持测试超时设置
-  - 支持套件选项和钩子选项
+#### 18.2 Test Organization
 
-#### 18.2 测试组织
+- ✅ `describe()` - Test suite
+  - Supports nested suites
+  - Supports suite hook inheritance
+  - Supports suite name path
+  - Supports suite options (`options` parameter)
 
-- ✅ `describe()` - 测试套件
-  - 支持嵌套套件
-  - 支持套件钩子继承
-  - 支持套件名称路径
-  - 支持套件选项（`options` 参数）
+- ✅ `test()` / `it()` - Test case
+  - Supports test name
+  - Supports test function
+  - Supports test options (timeout, sanitizeOps, etc.)
+  - Supports test context parameter
 
-- ✅ `test()` / `it()` - 测试用例
-  - 支持测试名称
-  - 支持测试函数
-  - 支持测试选项（timeout、sanitizeOps 等）
-  - 支持测试上下文参数
+- ✅ `test.skip()` - Skip test
+- ✅ `test.only()` - Run only this test
 
-- ✅ `test.skip()` - 跳过测试
-- ✅ `test.only()` - 仅运行此测试
+## 🐛 Fixed Issues
 
-## 🐛 已修复的问题
+### 1. Bun Environment Compatibility Issues
 
-### 1. Bun 环境兼容性问题
+**Problem Description**:
 
-**问题描述**：
+- In Bun environment, `test()` must be called during `describe()` execution, not
+  during test execution
+- `testEach()` and `bench()` calling `test()` inside `it()` callback caused
+  errors
 
-- 在 Bun 环境中，`test()` 必须在 `describe()`
-  执行期间调用，不能在测试执行期间调用
-- `testEach()` 和 `bench()` 在 `it()` 回调中调用 `test()` 导致错误
+**Fix**:
 
-**修复方案**：
+- Use `describeDepth` counter to track nested `describe()` depth
+- In `test()`, check if inside `describe()` block (`describeDepth > 0`)
+- If not inside `describe()` block, throw friendly error message
+- Modify test code to move `testEach()` and `bench()` calls to during
+  `describe()` execution
 
-- 使用 `describeDepth` 计数器跟踪嵌套 `describe()` 深度
-- 在 `test()` 中检查是否在 `describe()` 块内（`describeDepth > 0`）
-- 如果不在 `describe()` 块内，抛出友好的错误提示
-- 修改测试代码，将 `testEach()` 和 `bench()` 的调用移到 `describe()` 执行期间
+**Fix Result**:
 
-**修复结果**：
+- ✅ All tests pass in Bun environment
+- ✅ All tests pass in Deno environment
+- ✅ Error messages are clear and explicit
 
-- ✅ 所有测试在 Bun 环境中通过
-- ✅ 所有测试在 Deno 环境中通过
-- ✅ 错误提示清晰明确
+### 2. Assertion Method Issues
 
-### 2. 断言方法问题
+**Issue 1: `assertResolves` Object Comparison Problem**
 
-**问题 1：`assertResolves` 对象比较问题**
+- **Problem**: Used `!==` for object comparison, could not correctly compare
+  nested objects
+- **Fix**: Use `deepEqual()` function for deep comparison
+- **Result**: ✅ Fixed
 
-- **问题**：使用 `!==` 比较对象，无法正确比较嵌套对象
-- **修复**：使用 `deepEqual()` 函数进行深度比较
-- **结果**：✅ 修复完成
+**Issue 2: `assertInstanceOf` Test Case Error**
 
-**问题 2：`assertInstanceOf` 测试用例错误**
+- **Problem**: `assertInstanceOf("", String)` test case was wrong, string
+  literal is not an instance of `String` constructor
+- **Fix**: Changed to `assertInstanceOf(new String(""), String)`
+- **Result**: ✅ Fixed
 
-- **问题**：`assertInstanceOf("", String)` 测试用例错误，字符串字面量不是
-  `String` 构造函数的实例
-- **修复**：改为 `assertInstanceOf(new String(""), String)`
-- **结果**：✅ 修复完成
+**Issue 3: `NotExpect` Missing Comparison Methods**
 
-**问题 3：`NotExpect` 缺少比较方法**
+- **Problem**: `NotExpect` class lacked override for comparison methods like
+  `toBeGreaterThan`, `toBeLessThan`, etc.
+- **Fix**: Added override implementation for all comparison methods
+- **Result**: ✅ Fixed
 
-- **问题**：`NotExpect` 类缺少 `toBeGreaterThan`、`toBeLessThan` 等比较方法的
-  override
-- **修复**：添加所有比较方法的 override 实现
-- **结果**：✅ 修复完成
+**Issue 4: `NotExpect` Missing `toBeInstanceOf`**
 
-**问题 4：`NotExpect` 缺少 `toBeInstanceOf`**
+- **Problem**: `NotExpect` class lacked override for `toBeInstanceOf` method
+- **Fix**: Added override implementation for `toBeInstanceOf`
+- **Result**: ✅ Fixed
 
-- **问题**：`NotExpect` 类缺少 `toBeInstanceOf` 方法的 override
-- **修复**：添加 `toBeInstanceOf` 的 override 实现
-- **结果**：✅ 修复完成
+**Issue 5: `assertRejects` Regex Support**
 
-**问题 5：`assertRejects` 支持正则表达式**
+- **Problem**: `assertRejects` `msgIncludes` parameter only supported string,
+  not regex
+- **Fix**: Updated type definition to `string | RegExp`, adjusted internal logic
+- **Result**: ✅ Fixed
 
-- **问题**：`assertRejects` 的 `msgIncludes` 参数只支持字符串，不支持正则表达式
-- **修复**：更新类型定义为 `string | RegExp`，并调整内部逻辑
-- **结果**：✅ 修复完成
+### 3. Test Suite Options and Hook Options Issues
 
-### 3. 测试套件选项和钩子选项问题
+**Problem Description**:
 
-**问题描述**：
+- `describe()` did not support `options` parameter
+- `beforeEach()` and `afterEach()` did not support `options` parameter
+- In Bun environment, calling `describe()` inside test case caused errors
 
-- `describe()` 不支持 `options` 参数
-- `beforeEach()` 和 `afterEach()` 不支持 `options` 参数
-- 在 Bun 环境下，测试用例内部调用 `describe()` 会导致错误
+**Fix**:
 
-**修复方案**：
+- Added `options` parameter support for `describe()` (`DescribeOptions`)
+- Added `options` parameter support for `beforeEach()` and `afterEach()`
+  (`TestOptions`)
+- Implemented option inheritance and override mechanism
+- Correctly apply options to test context in Deno and Bun environments
+- Modified test code to avoid dynamically creating test suites inside test cases
 
-- 为 `describe()` 添加 `options` 参数支持（`DescribeOptions`）
-- 为 `beforeEach()` 和 `afterEach()` 添加 `options` 参数支持（`TestOptions`）
-- 实现选项的继承和覆盖机制
-- 在 Deno 和 Bun 环境下正确应用选项到测试上下文
-- 修改测试代码，避免在测试用例内部动态创建测试套件
+**Fix Result**:
 
-**修复结果**：
+- ✅ `describe()` supports `options` parameter
+- ✅ `beforeEach()` and `afterEach()` support `options` parameter
+- ✅ Options correctly inherited and overridden
+- ✅ All tests pass in Deno and Bun environments
 
-- ✅ `describe()` 支持 `options` 参数
-- ✅ `beforeEach()` 和 `afterEach()` 支持 `options` 参数
-- ✅ 选项正确继承和覆盖
-- ✅ 所有测试在 Deno 和 Bun 环境中通过
+## ✅ Test Coverage
 
-## ✅ 测试覆盖情况
+### Code Coverage
 
-### 代码覆盖率
+| Module                       | Coverage | Description                                |
+| ---------------------------- | -------- | ------------------------------------------ |
+| `expect.ts`                  | 100%     | All assertion methods have tests           |
+| `assertions.ts`              | 100%     | All assertion utility functions have tests |
+| `mock.ts`                    | 100%     | All Mock functionality has tests           |
+| `mock-fetch.ts`              | 100%     | All HTTP Mock functionality has tests      |
+| `test-utils.ts`              | 100%     | All test utility functions have tests      |
+| `test-runner.ts`             | 100%     | Test runner core logic has tests           |
+| `types.ts`                   | 100%     | All type definitions have test coverage    |
+| `browser/browser-context.ts` | 100%     | Browser context management has tests       |
+| `browser/bundle.ts`          | 100%     | Client-side code bundling has tests        |
+| `browser/chrome.ts`          | 100%     | Chrome path detection has tests            |
+| `browser/dependencies.ts`    | 100%     | Dependency management has tests            |
+| `browser/page.ts`            | 100%     | Test page creation has tests               |
+| `browser/resolver.ts`        | 100%     | Deno resolver plugin has tests             |
 
-| 模块                         | 覆盖率 | 说明                        |
-| ---------------------------- | ------ | --------------------------- |
-| `expect.ts`                  | 100%   | 所有断言方法都有测试        |
-| `assertions.ts`              | 100%   | 所有断言工具函数都有测试    |
-| `mock.ts`                    | 100%   | 所有 Mock 功能都有测试      |
-| `mock-fetch.ts`              | 100%   | 所有 HTTP Mock 功能都有测试 |
-| `test-utils.ts`              | 100%   | 所有测试工具函数都有测试    |
-| `test-runner.ts`             | 100%   | 测试运行器核心逻辑都有测试  |
-| `types.ts`                   | 100%   | 所有类型定义都有测试覆盖    |
-| `browser/browser-context.ts` | 100%   | 浏览器上下文管理都有测试    |
-| `browser/bundle.ts`          | 100%   | 客户端代码打包都有测试      |
-| `browser/chrome.ts`          | 100%   | Chrome 路径检测都有测试     |
-| `browser/dependencies.ts`    | 100%   | 依赖管理都有测试            |
-| `browser/page.ts`            | 100%   | 测试页面创建都有测试        |
-| `browser/resolver.ts`        | 100%   | Deno 解析器插件都有测试     |
+### Functional Coverage
 
-### 功能覆盖
+- ✅ **Assertion System**: All assertion methods have comprehensive tests
+- ✅ **Mock Functionality**: All Mock functionality has comprehensive tests
+- ✅ **HTTP Mock**: All HTTP Mock functionality has comprehensive tests
+- ✅ **Test Utilities**: All test utility functions have comprehensive tests
+- ✅ **Test Suite Options**: All option functionality has comprehensive tests
+- ✅ **Hook Options**: All hook option functionality has comprehensive tests
+- ✅ **Browser Tests**: Browser context management, code bundling, page
+  creation, resolver plugin all have comprehensive tests
+- ✅ **Browser Resource Cleanup**: Comprehensive browser resource cleanup
+  mechanism, including `cleanupAllBrowsers()` method and automatic cleanup
+- ✅ **Hook Functions**: All hook function execution order and functionality
+  have comprehensive tests
+- ✅ **Cross-Runtime**: Deno and Bun environments both have test verification
+- ✅ **Edge Cases**: All edge cases have test coverage
+- ✅ **Error Handling**: All error cases have test coverage
 
-- ✅ **断言系统**：所有断言方法都有全面测试
-- ✅ **Mock 功能**：所有 Mock 功能都有全面测试
-- ✅ **HTTP Mock**：所有 HTTP Mock 功能都有全面测试
-- ✅ **测试工具**：所有测试工具函数都有全面测试
-- ✅ **测试套件选项**：所有选项功能都有全面测试
-- ✅ **钩子选项**：所有钩子选项功能都有全面测试
-- ✅
-  **浏览器测试**：浏览器上下文管理、代码打包、页面创建、解析器插件都有全面测试
-- ✅ **浏览器资源清理**：完善的浏览器资源清理机制，包括 `cleanupAllBrowsers()`
-  方法和自动清理功能
-- ✅ **钩子函数**：所有钩子函数的执行顺序和功能都有全面测试
-- ✅ **跨运行时**：Deno 和 Bun 环境都有测试验证
-- ✅ **边界情况**：所有边界情况都有测试覆盖
-- ✅ **错误处理**：所有错误情况都有测试覆盖
+## 🚀 Performance Tests
 
-## 🚀 性能测试
+### Test Execution Performance
 
-### 测试执行性能
+| Environment | Execution time | Test cases | Average per test |
+| ----------- | -------------- | ---------- | ---------------- |
+| Deno        | 58 seconds     | 359        | ~162ms           |
 
-| 环境 | 执行时间 | 测试用例数 | 平均每个测试 |
-| ---- | -------- | ---------- | ------------ |
-| Deno | 58秒     | 359        | ~162ms       |
+**Note**: The long test execution time is mainly because browser tests need to
+launch real Chrome browser instances. Each browser test case requires creating,
+configuring, and closing a browser. This is expected behavior.
 
-**说明**：测试执行时间较长主要是因为浏览器测试需要启动真实的 Chrome
-浏览器实例，每个浏览器测试用例都需要创建、配置和关闭浏览器，这是符合预期的。
+### Benchmark Test Examples
 
-### 基准测试示例
+All benchmark test functionality has been verified, supporting:
 
-所有基准测试功能都经过验证，支持：
+- Custom run count
+- Warmup mechanism
+- Async operations
+- Performance report output
 
-- 自定义运行次数
-- 预热机制
-- 异步操作
-- 性能报告输出
+## 📝 Test Quality Assessment
 
-## 📝 测试质量评估
+### Strengths
 
-### 优点
+1. **Comprehensive Coverage**: All functional modules have detailed test cases
+2. **Edge Case Testing**: Adequate testing of edge cases and error handling
+3. **Cross-Runtime**: Supports both Deno and Bun environments
+4. **Maintainability**: Test code structure is clear, easy to maintain
+5. **Error Messages**: Error messages are clear and explicit, easy to debug
+6. **Option Support**: Comprehensive test suite options and hook options support
 
-1. **全面覆盖**：所有功能模块都有详细的测试用例
-2. **边界测试**：充分测试了边界情况和错误处理
-3. **跨运行时**：同时支持 Deno 和 Bun 环境
-4. **可维护性**：测试代码结构清晰，易于维护
-5. **错误提示**：错误消息清晰明确，便于调试
-6. **选项支持**：完善的测试套件选项和钩子选项支持
+### Improvement Suggestions
 
-### 改进建议
+1. **Performance Tests**: Can add more performance benchmark tests
+2. **Integration Tests**: Can add more end-to-end integration tests
+3. **Documentation Tests**: Can add more documentation example test verification
 
-1. **性能测试**：可以添加更多性能基准测试
-2. **集成测试**：可以添加更多端到端集成测试
-3. **文档测试**：可以添加更多文档示例的测试验证
+## 🎯 Conclusion
 
-## 🎯 结论
+The `@dreamer/test` testing utility library has undergone comprehensive testing.
+All functional modules have achieved 100% test coverage. Test results
+demonstrate:
 
-`@dreamer/test` 测试工具库经过全面测试，所有功能模块都达到了 100%
-的测试覆盖率。测试结果证明：
+1. ✅ **Functional Completeness**: All declared functionality is correctly
+   implemented
+2. ✅ **Stability**: 359 test cases passed, 2 skipped by design (test.skip /
+   skipIf), no failed cases
+3. ✅ **Compatibility**: Works correctly in both Deno and Bun environments
+4. ✅ **Reliability**: Edge cases and error handling have been verified
+5. ✅ **Maintainability**: Test code structure is clear, easy to extend
+6. ✅ **Flexibility**: Comprehensive option system, supports flexible test
+   configuration
+7. ✅ **Browser Tests**: Complete browser test integration, supports Puppeteer
+   and @dreamer/esbuild
 
-1. ✅ **功能完整性**：所有声明的功能都正确实现
-2. ✅ **稳定性**：359 个测试用例通过，2 个按设计跳过（test.skip /
-   skipIf），无失败用例
-3. ✅ **兼容性**：在 Deno 和 Bun 环境中都能正常工作
-4. ✅ **可靠性**：边界情况和错误处理都经过验证
-5. ✅ **可维护性**：测试代码结构清晰，易于扩展
-6. ✅ **灵活性**：完善的选项系统，支持灵活的测试配置
-7. ✅ **浏览器测试**：完整的浏览器测试集成，支持 Puppeteer 和 @dreamer/esbuild
-
-该库已经准备好用于生产环境，可以安全地用于项目测试中。
+The library is ready for production use and can be safely used in project
+testing.
 
 ---
 
-**测试报告生成时间**: 2026-01-27 **测试执行环境**:
+**Test Report Generated**: 2026-01-27 **Test Execution Environment**:
 
-- Deno: 最新稳定版
+- Deno: Latest stable version
 - Puppeteer: v24.35.0
-- @dreamer/esbuild: v1.0.0-beta.4 **测试框架**: @dreamer/test@^1.0.0-beta.14
-  **本次执行**: `deno test -A tests/` → ok \| 359 passed \| 0 failed \| 2
-  ignored (58s)
+- @dreamer/esbuild: v1.0.0-beta.4 **Test Framework**:
+  @dreamer/test@^1.0.0-beta.14 **This Execution**: `deno test -A tests/` → ok |
+  359 passed | 0 failed | 2 ignored (58s)

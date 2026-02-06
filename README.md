@@ -1,7 +1,10 @@
 # @dreamer/test
 
-> 一个兼容 Deno 和 Bun 的测试工具库，提供 Mock
-> 工具、断言增强、测试工具函数、浏览器测试集成等高级功能
+> A testing utility library compatible with Deno and Bun, providing Mock tools,
+> assertion enhancements, test utility functions, browser test integration, and
+> other advanced features
+
+English | [中文 (Chinese)](./README-zh.md)
 
 [![JSR](https://jsr.io/badges/@dreamer/test)](https://jsr.io/@dreamer/test)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE.md)
@@ -9,14 +12,15 @@
 
 ---
 
-## 🎯 功能
+## 🎯 Overview
 
-测试工具库，基于 Deno 内置测试框架，提供
-Mock、断言增强、测试工具函数、浏览器测试集成等高级功能，让测试更简单、更强大。
+A testing utility library based on Deno's built-in test framework, providing
+Mock, assertion enhancements, test utility functions, browser test integration,
+and other advanced features to make testing simpler and more powerful.
 
 ---
 
-## 📦 安装
+## 📦 Installation
 
 ### Deno
 
@@ -32,66 +36,67 @@ bunx jsr add -D @dreamer/test
 
 ---
 
-## 🌍 环境兼容性
+## 🌍 Compatibility
 
-| 环境           | 版本要求 | 状态                           |
-| -------------- | -------- | ------------------------------ |
-| **Deno**       | 2.5+     | ✅ 完全支持                    |
-| **Bun**        | 1.0+     | ✅ 完全支持                    |
-| **服务端**     | -        | ✅ 支持（Deno/Bun 运行时）     |
-| **浏览器测试** | -        | ✅ 支持（通过 Puppeteer 集成） |
-
----
-
-## ✨ 特性
-
-- **Mock 工具**：
-  - 函数 Mock（`mockFn`）
-  - HTTP Mock（`mockFetch`）
-  - 调用次数和参数验证
-  - 返回值验证
-- **断言增强**：
-  - 丰富的断言方法（`expect`、`assertSnapshot`、`assertRejects` 等）
-  - 类型检查断言（`toBeArray`、`toBeString`、`toBeNumber` 等）
-  - 属性断言（`toHaveProperty`、`toHaveLength`）
-  - 反向断言（`.not`）
-- **测试工具函数**：
-  - Setup/Teardown（`beforeAll`、`afterAll`、`beforeEach`、`afterEach`）
-  - 参数化测试（`testEach`）
-  - 基准测试（`bench`）
-- **浏览器测试集成**：
-  - 自动创建浏览器上下文
-  - 客户端代码自动打包（@dreamer/esbuild）
-  - Deno/Bun 解析器插件支持（自动解析 JSR、npm、相对路径、路径别名等）
-  - 页面操作 API（`evaluate`、`goto`、`waitFor`）
-  - 浏览器实例复用
-  - 自动资源清理（`cleanupAllBrowsers`）
-- **测试组织**：
-  - 测试套件（`describe`）
-  - 测试用例（`it`、`test`）
-  - 跳过测试（`test.skip`）
-  - 条件跳过测试（`test.skipIf`）
-  - 仅运行测试（`test.only`）
-- **资源清理控制**：
-  - 支持禁用定时器泄漏检查（`sanitizeOps`）
-  - 支持禁用资源句柄泄漏检查（`sanitizeResources`）
+| Environment       | Version | Status                                   |
+| ----------------- | ------- | ---------------------------------------- |
+| **Deno**          | 2.5+    | ✅ Fully supported                       |
+| **Bun**           | 1.0+    | ✅ Fully supported                       |
+| **Server**        | -       | ✅ Supported (Deno/Bun runtime)          |
+| **Browser tests** | -       | ✅ Supported (via Puppeteer integration) |
 
 ---
 
-## 🎯 使用场景
+## ✨ Features
 
-- **单元测试**：函数、类、模块测试
-- **集成测试**：API、数据库、服务测试
-- **Mock 测试**：外部依赖 Mock
-- **快照测试**：UI 组件、数据结构快照
-- **性能测试**：基准测试、性能对比
-- **浏览器测试**：前端组件、DOM 操作测试
+- **Mock tools**:
+  - Function Mock (`mockFn`)
+  - HTTP Mock (`mockFetch`)
+  - Call count and argument validation
+  - Return value validation
+- **Assertion enhancements**:
+  - Rich assertion methods (`expect`, `assertSnapshot`, `assertRejects`, etc.)
+  - Type check assertions (`toBeArray`, `toBeString`, `toBeNumber`, etc.)
+  - Property assertions (`toHaveProperty`, `toHaveLength`)
+  - Negation assertions (`.not`)
+- **Test utility functions**:
+  - Setup/Teardown (`beforeAll`, `afterAll`, `beforeEach`, `afterEach`)
+  - Parameterized tests (`testEach`)
+  - Benchmark tests (`bench`)
+- **Browser test integration**:
+  - Auto-create browser context
+  - Auto-bundle client code (@dreamer/esbuild)
+  - Deno/Bun resolver plugin support (auto-resolve JSR, npm, relative paths,
+    path aliases, etc.)
+  - Page operation API (`evaluate`, `goto`, `waitFor`)
+  - Browser instance reuse
+  - Auto resource cleanup (`cleanupAllBrowsers`)
+- **Test organization**:
+  - Test suites (`describe`)
+  - Test cases (`it`, `test`)
+  - Skip test (`test.skip`)
+  - Conditional skip test (`test.skipIf`)
+  - Run only test (`test.only`)
+- **Resource cleanup control**:
+  - Support disabling timer leak check (`sanitizeOps`)
+  - Support disabling resource handle leak check (`sanitizeResources`)
 
 ---
 
-## 🚀 快速开始
+## 🎯 Use Cases
 
-### 基础测试
+- **Unit tests**: Function, class, module tests
+- **Integration tests**: API, database, service tests
+- **Mock tests**: External dependency mocking
+- **Snapshot tests**: UI component, data structure snapshots
+- **Performance tests**: Benchmarks, performance comparison
+- **Browser tests**: Frontend components, DOM operation tests
+
+---
+
+## 🚀 Quick Start
+
+### Basic Tests
 
 ```typescript
 import { describe, expect, it } from "@dreamer/test";
@@ -107,24 +112,24 @@ describe("Math", () => {
 });
 ```
 
-### Mock 函数
+### Mock Functions
 
 ```typescript
 import { describe, expectMock, it, mockFn } from "@dreamer/test";
 
-describe("Mock 函数", () => {
+describe("Mock functions", () => {
   it("should mock function calls", () => {
     const mock = mockFn();
     mock(1, 2);
     mock(3, 4);
 
-    // 验证调用次数
+    // Verify call count
     expectMock(mock).toHaveBeenCalledTimes(2);
 
-    // 验证调用参数
+    // Verify call arguments
     expectMock(mock).toHaveBeenCalledWith(1, 2);
 
-    // 验证最后一次调用
+    // Verify last call
     expectMock(mock).toHaveBeenLastCalledWith(3, 4);
   });
 });
@@ -155,7 +160,7 @@ describe("HTTP Mock", () => {
 
 ---
 
-## 🎨 使用示例
+## 🎨 Usage Examples
 
 ### Setup/Teardown
 
@@ -174,22 +179,22 @@ describe("Database Tests", () => {
   let db: Database;
 
   beforeAll(async () => {
-    // 所有测试前执行一次
+    // Execute once before all tests
     db = await connectDatabase();
   });
 
   afterAll(async () => {
-    // 所有测试后执行一次
+    // Execute once after all tests
     await db.close();
   });
 
   beforeEach(async () => {
-    // 每个测试前执行
+    // Execute before each test
     await db.clear();
   });
 
   afterEach(async () => {
-    // 每个测试后执行
+    // Execute after each test
     await db.cleanup();
   });
 
@@ -200,12 +205,12 @@ describe("Database Tests", () => {
 });
 ```
 
-### 参数化测试
+### Parameterized Tests
 
 ```typescript
 import { describe, expect, testEach } from "@dreamer/test";
 
-describe("参数化测试", () => {
+describe("Parameterized tests", () => {
   testEach([
     [1, 2, 3],
     [2, 3, 5],
@@ -216,12 +221,12 @@ describe("参数化测试", () => {
 });
 ```
 
-### 基准测试
+### Benchmark Tests
 
 ```typescript
 import { bench, describe } from "@dreamer/test";
 
-describe("性能测试", () => {
+describe("Performance tests", () => {
   bench("array push", () => {
     const arr: number[] = [];
     for (let i = 0; i < 1000; i++) {
@@ -235,18 +240,18 @@ describe("性能测试", () => {
       arr = arr.concat([i]);
     }
   }, {
-    n: 100, // 运行次数（默认：100）
-    warmup: 10, // 预热次数（默认：10）
+    n: 100, // Run count (default: 100)
+    warmup: 10, // Warmup count (default: 10)
   });
 });
 ```
 
-### 快照测试
+### Snapshot Tests
 
 ```typescript
 import { assertSnapshot, describe, it } from "@dreamer/test";
 
-describe("快照测试", () => {
+describe("Snapshot tests", () => {
   it("should match snapshot", async (t) => {
     const data = {
       users: [
@@ -261,108 +266,109 @@ describe("快照测试", () => {
 });
 ```
 
-### 测试套件选项
+### Test Suite Options
 
 ```typescript
 import { describe, it } from "@dreamer/test";
 
-// 为整个测试套件设置选项
-describe("使用定时器的测试套件", {
-  sanitizeOps: false, // 禁用定时器泄漏检查
-  sanitizeResources: false, // 禁用资源句柄泄漏检查
+// Set options for entire test suite
+describe("Test suite using timers", {
+  sanitizeOps: false, // Disable timer leak check
+  sanitizeResources: false, // Disable resource handle leak check
 }, () => {
-  it("测试用例 1", () => {
-    // 这个测试用例会继承套件的选项
+  it("Test case 1", () => {
+    // This test case inherits suite options
   });
 
-  it("测试用例 2", () => {
-    // 这个测试用例也会继承套件的选项
+  it("Test case 2", () => {
+    // This test case also inherits suite options
   });
 });
 ```
 
-### 嵌套套件的选项继承
+### Nested Suite Option Inheritance
 
 ```typescript
 import { describe, it } from "@dreamer/test";
 
-describe("父套件", {
+describe("Parent suite", {
   sanitizeOps: false,
 }, () => {
-  describe("子套件", {
-    sanitizeResources: false, // 子套件可以覆盖或添加选项
+  describe("Child suite", {
+    sanitizeResources: false, // Child suite can override or add options
   }, () => {
-    it("测试用例", () => {
-      // 继承 sanitizeOps: false 和 sanitizeResources: false
+    it("Test case", () => {
+      // Inherits sanitizeOps: false and sanitizeResources: false
     });
   });
 });
 ```
 
-### 条件跳过测试
+### Conditional Skip Test
 
 ```typescript
 import { describe, expect, it } from "@dreamer/test";
 
-describe("条件跳过测试", () => {
-  const enableWriteTests = true; // 或 false
+describe("Conditional skip tests", () => {
+  const enableWriteTests = true; // or false
 
-  // 如果 enableWriteTests 为 false，则跳过此测试
-  it.skipIf(!enableWriteTests, "应该能够写入数据", async () => {
-    // 写入测试代码
+  // Skip this test if enableWriteTests is false
+  it.skipIf(!enableWriteTests, "Should be able to write data", async () => {
+    // Write test code
     expect(true).toBeTruthy();
   });
 
-  // 支持复杂条件
+  // Supports complex conditions
   const hasPermission = true;
   const isTestnet = true;
-  it.skipIf(!hasPermission || !isTestnet, "需要权限的测试", () => {
-    // 测试代码
+  it.skipIf(!hasPermission || !isTestnet, "Test requiring permission", () => {
+    // Test code
   });
 });
 ```
 
-### 禁用资源清理检查
+### Disable Resource Cleanup Check
 
 ```typescript
 import { describe, expect, it } from "@dreamer/test";
 
-describe("Redis 测试", () => {
-  it("应该创建 Redis 连接", async () => {
+describe("Redis tests", () => {
+  it("Should create Redis connection", async () => {
     const client = await createRedisClient();
     expect(client).toBeDefined();
     await client.disconnect();
   }, {
-    sanitizeOps: false, // 禁用定时器泄漏检查
-    sanitizeResources: false, // 禁用资源句柄泄漏检查
+    sanitizeOps: false, // Disable timer leak check
+    sanitizeResources: false, // Disable resource handle leak check
   });
 });
 ```
 
-### 浏览器测试集成
+### Browser Test Integration
 
-浏览器测试允许你在真实的 Chrome 浏览器环境中测试前端代码。
+Browser tests allow you to test frontend code in a real Chrome browser
+environment.
 
-#### 基础浏览器测试
+#### Basic Browser Tests
 
 ```typescript
 import { describe, expect, it } from "@dreamer/test";
 
-describe("浏览器测试", {
+describe("Browser tests", {
   browser: {
-    enabled: true, // 启用浏览器测试
-    headless: true, // 无头模式（默认）
+    enabled: true, // Enable browser tests
+    headless: true, // Headless mode (default)
   },
 }, () => {
-  it("应该在浏览器中执行代码", async (t) => {
-    // t.browser 包含浏览器上下文
+  it("Should execute code in browser", async (t) => {
+    // t.browser contains browser context
     const result = await t.browser!.evaluate(() => {
       return 1 + 1;
     });
     expect(result).toBe(2);
   });
 
-  it("应该能够访问 DOM", async (t) => {
+  it("Should be able to access DOM", async (t) => {
     const result = await t.browser!.evaluate(() => {
       return document.title;
     });
@@ -371,21 +377,21 @@ describe("浏览器测试", {
 });
 ```
 
-#### 自动打包客户端代码
+#### Auto-Bundle Client Code
 
 ```typescript
 import { describe, expect, it } from "@dreamer/test";
 
-describe("客户端库测试", {
+describe("Client library tests", {
   browser: {
     enabled: true,
-    entryPoint: "./src/client/mod.ts", // 客户端代码入口
-    globalName: "MyLib", // 全局变量名
+    entryPoint: "./src/client/mod.ts", // Client code entry point
+    globalName: "MyLib", // Global variable name
   },
 }, () => {
-  it("应该能够使用打包后的库", async (t) => {
+  it("Should be able to use bundled library", async (t) => {
     const result = await t.browser!.evaluate(() => {
-      // MyLib 是打包后暴露的全局变量
+      // MyLib is the global variable exposed after bundling
       return typeof (globalThis as any).MyLib;
     });
     expect(result).toBe("object");
@@ -393,31 +399,31 @@ describe("客户端库测试", {
 });
 ```
 
-#### 浏览器上下文 API
+#### Browser Context API
 
 ```typescript
 import { describe, expect, it } from "@dreamer/test";
 
-describe("浏览器 API 测试", {
+describe("Browser API tests", {
   browser: { enabled: true },
 }, () => {
-  // evaluate - 在浏览器中执行代码
-  it("evaluate 示例", async (t) => {
+  // evaluate - Execute code in browser
+  it("evaluate example", async (t) => {
     const result = await t.browser!.evaluate(() => {
       return navigator.userAgent;
     });
     expect(result).toContain("Chrome");
   });
 
-  // goto - 导航到 URL
-  it("goto 示例", async (t) => {
+  // goto - Navigate to URL
+  it("goto example", async (t) => {
     await t.browser!.goto("https://example.com");
     const title = await t.browser!.evaluate(() => document.title);
     expect(title).toBeDefined();
   });
 
-  // waitFor - 等待条件满足
-  it("waitFor 示例", async (t) => {
+  // waitFor - Wait for condition to be met
+  it("waitFor example", async (t) => {
     await t.browser!.evaluate(() => {
       setTimeout(() => {
         (globalThis as any).ready = true;
@@ -434,37 +440,37 @@ describe("浏览器 API 测试", {
 });
 ```
 
-#### 浏览器实例复用
+#### Browser Instance Reuse
 
 ```typescript
 import { describe, it } from "@dreamer/test";
 
-describe("复用浏览器实例", {
+describe("Reuse browser instance", {
   browser: {
     enabled: true,
-    reuseBrowser: true, // 在同一个套件中复用浏览器（默认为 true）
+    reuseBrowser: true, // Reuse browser within same suite (default: true)
   },
 }, () => {
-  // 多个测试共享同一个浏览器实例，但每个测试有独立的页面
-  it("测试 1", async (t) => {
+  // Multiple tests share same browser instance, but each test has independent page
+  it("Test 1", async (t) => {
     // ...
   });
 
-  it("测试 2", async (t) => {
+  it("Test 2", async (t) => {
     // ...
   });
 });
 ```
 
-#### 自定义 HTML 模板
+#### Custom HTML Template
 
 ```typescript
 import { describe, it } from "@dreamer/test";
 
-describe("自定义模板测试", {
+describe("Custom template tests", {
   browser: {
     enabled: true,
-    bodyContent: '<div id="app"></div>', // 额外的 HTML body 内容
+    bodyContent: '<div id="app"></div>', // Additional HTML body content
     htmlTemplate: `
       <!DOCTYPE html>
       <html>
@@ -481,7 +487,7 @@ describe("自定义模板测试", {
     `,
   },
 }, () => {
-  it("应该使用自定义模板", async (t) => {
+  it("Should use custom template", async (t) => {
     const hasApp = await t.browser!.evaluate(() => {
       return document.getElementById("app") !== null;
     });
@@ -490,269 +496,279 @@ describe("自定义模板测试", {
 });
 ```
 
-#### 浏览器资源清理
+#### Browser Resource Cleanup
 
-`@dreamer/test`
-提供了完善的浏览器资源清理机制，确保所有浏览器实例在测试完成后被正确关闭，避免资源泄漏：
+`@dreamer/test` provides a comprehensive browser resource cleanup mechanism to
+ensure all browser instances are properly closed after test completion, avoiding
+resource leaks:
 
-**自动清理机制**：
+**Automatic cleanup mechanism**:
 
-- 每个测试完成后，自动关闭测试使用的页面
-- 浏览器实例保留在缓存中，等待所有测试完成后统一清理
-- 在进程退出时（SIGINT、SIGTERM 信号）自动调用 `cleanupAllBrowsers()`
+- After each test completes, automatically close the page used by the test
+- Browser instances remain in cache, waiting for unified cleanup after all tests
+  complete
+- Automatically calls `cleanupAllBrowsers()` on process exit (SIGINT, SIGTERM
+  signals)
 
-**手动清理**：
+**Manual cleanup**:
 
 ```typescript
 import { afterAll, cleanupAllBrowsers, describe } from "@dreamer/test";
 
-describe("浏览器测试套件", {
+describe("Browser test suite", {
   browser: { enabled: true },
 }, () => {
   afterAll(async () => {
-    // 手动清理所有浏览器实例
-    // 这会在所有测试完成后执行，确保所有浏览器都被关闭
+    // Manually clean up all browser instances
+    // This executes after all tests complete, ensuring all browsers are closed
     await cleanupAllBrowsers();
   });
 
-  it("测试用例 1", async (t) => {
-    // 测试代码
+  it("Test case 1", async (t) => {
+    // Test code
   });
 
-  it("测试用例 2", async (t) => {
-    // 测试代码
+  it("Test case 2", async (t) => {
+    // Test code
   });
 });
 ```
 
-**清理机制说明**：
+**Cleanup mechanism notes**:
 
-- `cleanupAllBrowsers()` 会关闭所有测试套件中创建的浏览器实例
-- 并行关闭所有浏览器，提高清理效率
-- 忽略关闭过程中的错误，确保所有浏览器都能被尝试关闭
-- 建议在测试套件的 `afterAll` 钩子中调用，确保测试完成后清理资源
+- `cleanupAllBrowsers()` closes all browser instances created in test suites
+- Closes all browsers in parallel for efficient cleanup
+- Ignores errors during close process to ensure all browsers are attempted to be
+  closed
+- Recommended to call in test suite's `afterAll` hook to ensure resource cleanup
+  after tests complete
 
 ---
 
-## 📚 API 文档
+## 📚 API Reference
 
-### 测试函数
+### Test Functions
 
-- `describe(name: string, fn: () => void | Promise<void>)`: 创建测试套件
+- `describe(name: string, fn: () => void | Promise<void>)`: Create test suite
 - `describe(name: string, options: DescribeOptions, fn: () => void | Promise<void>)`:
-  创建测试套件（带选项）
-- `it(name: string, fn: () => void | Promise<void>, options?)`: 创建测试用例
-- `test(name: string, fn: () => void | Promise<void>, options?)`:
-  创建测试用例（`it` 的别名）
-- `test.skip(name: string, fn: () => void | Promise<void>)`: 跳过测试
-- `test.only(name: string, fn: () => void | Promise<void>, options?)`:
-  只运行此测试
+  Create test suite (with options)
+- `it(name: string, fn: () => void | Promise<void>, options?)`: Create test case
+- `test(name: string, fn: () => void | Promise<void>, options?)`: Create test
+  case (alias for `it`)
+- `test.skip(name: string, fn: () => void | Promise<void>)`: Skip test
+- `test.only(name: string, fn: () => void | Promise<void>, options?)`: Run only
+  this test
 
-**测试套件选项（DescribeOptions）**：
+**Test suite options (DescribeOptions)**:
 
-- `sanitizeOps?: boolean`: 是否启用操作清理检查（默认：`true`）
-- `sanitizeResources?: boolean`: 是否启用资源清理检查（默认：`true`）
+- `sanitizeOps?: boolean`: Enable operation cleanup check (default: `true`)
+- `sanitizeResources?: boolean`: Enable resource cleanup check (default: `true`)
 
-**测试选项（TestOptions）**：
+**Test options (TestOptions)**:
 
-- `timeout?: number`: 测试超时时间（毫秒）
-- `sanitizeOps?: boolean`: 是否启用操作清理检查（默认：`true`）
-- `sanitizeResources?: boolean`: 是否启用资源清理检查（默认：`true`）
+- `timeout?: number`: Test timeout (milliseconds)
+- `sanitizeOps?: boolean`: Enable operation cleanup check (default: `true`)
+- `sanitizeResources?: boolean`: Enable resource cleanup check (default: `true`)
 
-### Mock 函数
+### Mock Functions
 
-- `mockFn(implementation?: Function)`: 创建 Mock 函数
-- `expectMock(mock: MockFunction)`: 创建 Mock 断言对象（`MockExpect`）
-- `mockFetch(url: string, options?)`: Mock HTTP 请求
+- `mockFn(implementation?: Function)`: Create Mock function
+- `expectMock(mock: MockFunction)`: Create Mock assertion object (`MockExpect`)
+- `mockFetch(url: string, options?)`: Mock HTTP request
 
-**Mock 断言方法（MockExpect）**：
+**Mock assertion methods (MockExpect)**:
 
-- `.toHaveBeenCalled()`: 检查是否被调用
-- `.toHaveBeenCalledTimes(n)`: 检查调用次数
-- `.toHaveBeenCalledWith(...args)`: 检查调用参数
-- `.toHaveBeenLastCalledWith(...args)`: 检查最后一次调用参数
-- `.toHaveBeenNthCalledWith(n, ...args)`: 检查第 N 次调用参数
-- `.toHaveReturned()`: 检查是否返回值
-- `.toHaveReturnedWith(value)`: 检查返回值
-- `.toHaveReturnedTimes(n)`: 检查返回次数
-- `.toHaveLastReturnedWith(value)`: 检查最后一次返回值
-- `.toHaveNthReturnedWith(n, value)`: 检查第 N 次返回值
-- `.not`: 反向断言
+- `.toHaveBeenCalled()`: Check if called
+- `.toHaveBeenCalledTimes(n)`: Check call count
+- `.toHaveBeenCalledWith(...args)`: Check call arguments
+- `.toHaveBeenLastCalledWith(...args)`: Check last call arguments
+- `.toHaveBeenNthCalledWith(n, ...args)`: Check Nth call arguments
+- `.toHaveReturned()`: Check if returned value
+- `.toHaveReturnedWith(value)`: Check return value
+- `.toHaveReturnedTimes(n)`: Check return count
+- `.toHaveLastReturnedWith(value)`: Check last return value
+- `.toHaveNthReturnedWith(n, value)`: Check Nth return value
+- `.not`: Negation assertion
 
-### 断言
+### Assertions
 
-- `expect(actual: unknown)`: 创建断言对象
-  - `.toBe(expected)`: 严格相等
-  - `.toEqual(expected)`: 深度相等
-  - `.toStrictEqual(expected)`: 严格深度相等
-  - `.toBeTruthy()`: 真值
-  - `.toBeFalsy()`: 假值
+- `expect(actual: unknown)`: Create assertion object
+  - `.toBe(expected)`: Strict equality
+  - `.toEqual(expected)`: Deep equality
+  - `.toStrictEqual(expected)`: Strict deep equality
+  - `.toBeTruthy()`: Truthy
+  - `.toBeFalsy()`: Falsy
   - `.toBeNull()`: null
   - `.toBeUndefined()`: undefined
-  - `.toBeDefined()`: 已定义
-  - `.toContain(item)`: 包含（数组或字符串）
-  - `.toMatch(regexp)`: 正则匹配
-  - `.toHaveProperty(path, value?)`: 具有指定属性
-  - `.toHaveLength(expected)`: 具有指定长度
-  - `.toBeCloseTo(expected, numDigits?)`: 浮点数近似相等
-  - `.toBeNaN()`: 是否为 NaN
-  - `.toBeArray()`: 是否为数组
-  - `.toBeString()`: 是否为字符串
-  - `.toBeNumber()`: 是否为数字
-  - `.toBeBoolean()`: 是否为布尔值
-  - `.toBeFunction()`: 是否为函数
-  - `.toBeEmpty()`: 是否为空
-  - `.toBeInstanceOf(expected)`: 为指定类型的实例
-  - `.toBeGreaterThan(expected)`: 大于
-  - `.toBeGreaterThanOrEqual(expected)`: 大于等于
-  - `.toBeLessThan(expected)`: 小于
-  - `.toBeLessThanOrEqual(expected)`: 小于等于
-  - `.toThrow(error?)`: 抛出错误
-  - `.not`: 反向断言
+  - `.toBeDefined()`: Defined
+  - `.toContain(item)`: Contains (array or string)
+  - `.toMatch(regexp)`: Regex match
+  - `.toHaveProperty(path, value?)`: Has specified property
+  - `.toHaveLength(expected)`: Has specified length
+  - `.toBeCloseTo(expected, numDigits?)`: Floating point approximate equality
+  - `.toBeNaN()`: Is NaN
+  - `.toBeArray()`: Is array
+  - `.toBeString()`: Is string
+  - `.toBeNumber()`: Is number
+  - `.toBeBoolean()`: Is boolean
+  - `.toBeFunction()`: Is function
+  - `.toBeEmpty()`: Is empty
+  - `.toBeInstanceOf(expected)`: Is instance of specified type
+  - `.toBeGreaterThan(expected)`: Greater than
+  - `.toBeGreaterThanOrEqual(expected)`: Greater than or equal
+  - `.toBeLessThan(expected)`: Less than
+  - `.toBeLessThanOrEqual(expected)`: Less than or equal
+  - `.toThrow(error?)`: Throws error
+  - `.not`: Negation assertion
 
-### 异步断言
+### Async Assertions
 
-- `assertRejects(fn: () => Promise<any>, ErrorClass?, message?)`:
-  断言异步函数抛出错误
-- `assertResolves(fn: () => Promise<any>, expected?)`: 断言异步函数成功
+- `assertRejects(fn: () => Promise<any>, ErrorClass?, message?)`: Assert async
+  function throws error
+- `assertResolves(fn: () => Promise<any>, expected?)`: Assert async function
+  succeeds
 
-### 对象断言
+### Object Assertions
 
-- `assertDeepEqual(actual, expected)`: 深度相等断言
-- `assertInstanceOf(actual, ExpectedClass)`: 实例类型断言
-- `assertMatch(actual, regexp)`: 正则匹配断言
+- `assertDeepEqual(actual, expected)`: Deep equality assertion
+- `assertInstanceOf(actual, ExpectedClass)`: Instance type assertion
+- `assertMatch(actual, regexp)`: Regex match assertion
 
-### 快照测试
+### Snapshot Tests
 
-- `assertSnapshot(t: TestContext, data: any)`: 快照测试
+- `assertSnapshot(t: TestContext, data: any)`: Snapshot test
 
 ### Setup/Teardown
 
-- `beforeAll(fn: () => void | Promise<void>)`: 所有测试前执行
-- `afterAll(fn: () => void | Promise<void>)`: 所有测试后执行
+- `beforeAll(fn: () => void | Promise<void>)`: Execute before all tests
+- `afterAll(fn: () => void | Promise<void>)`: Execute after all tests
 - `beforeEach(fn: (t?: TestContext) => void | Promise<void>, options?: TestOptions)`:
-  每个测试前执行
+  Execute before each test
 - `afterEach(fn: (t?: TestContext) => void | Promise<void>, options?: TestOptions)`:
-  每个测试后执行
+  Execute after each test
 
-### 参数化测试
+### Parameterized Tests
 
-- `testEach(cases: any[])`: 参数化测试
+- `testEach(cases: any[])`: Parameterized tests
 
-### 性能测试
+### Performance Tests
 
-- `bench(name: string, fn: () => void, options?)`: 性能基准测试
+- `bench(name: string, fn: () => void, options?)`: Performance benchmark test
 
-### 浏览器测试
+### Browser Tests
 
-**浏览器测试配置（BrowserTestConfig）**：
+**Browser test configuration (BrowserTestConfig)**:
 
-- `enabled?: boolean`: 是否启用浏览器测试（默认：`false`）
-- `entryPoint?: string`: 客户端代码入口文件路径
-- `globalName?: string`: 全局变量名（IIFE 格式）
-- `headless?: boolean`: 是否无头模式（默认：`true`）
-- `executablePath?: string`: Chrome 可执行文件路径（可选，自动检测）
-- `args?: string[]`: Chrome 启动参数
-- `htmlTemplate?: string`: HTML 模板（可选）
-- `bodyContent?: string`: 额外的 HTML body 内容（可选）
-- `moduleLoadTimeout?: number`: 等待模块加载的超时时间（毫秒，默认：`10000`）
-- `reuseBrowser?: boolean`: 是否在套件级别复用浏览器实例（默认：`true`）
+- `enabled?: boolean`: Enable browser tests (default: `false`)
+- `entryPoint?: string`: Client code entry file path
+- `globalName?: string`: Global variable name (IIFE format)
+- `headless?: boolean`: Headless mode (default: `true`)
+- `executablePath?: string`: Chrome executable path (optional, auto-detect)
+- `args?: string[]`: Chrome launch arguments
+- `htmlTemplate?: string`: HTML template (optional)
+- `bodyContent?: string`: Additional HTML body content (optional)
+- `moduleLoadTimeout?: number`: Module load timeout (ms, default: `10000`)
+- `reuseBrowser?: boolean`: Reuse browser instance at suite level (default:
+  `true`)
 
-**浏览器上下文（BrowserContext）**：
+**Browser context (BrowserContext)**:
 
-- `browser`: Puppeteer Browser 实例
-- `page`: Puppeteer Page 实例
-- `evaluate<T>(fn: () => T | Promise<T>)`: 在浏览器中执行代码
-- `goto(url: string)`: 导航到指定 URL
-- `waitFor(fn: () => boolean, options?)`: 等待页面中的条件满足
-- `close()`: 关闭浏览器和页面
+- `browser`: Puppeteer Browser instance
+- `page`: Puppeteer Page instance
+- `evaluate<T>(fn: () => T | Promise<T>)`: Execute code in browser
+- `goto(url: string)`: Navigate to specified URL
+- `waitFor(fn: () => boolean, options?)`: Wait for condition in page
+- `close()`: Close browser and page
 
-**独立使用浏览器上下文**：
+**Standalone browser context usage**:
 
-- `createBrowserContext(config: BrowserTestConfig)`: 创建浏览器测试上下文
-- `buildClientBundle(options: BundleOptions)`: 打包客户端代码
-- `createTestPage(options: TestPageOptions)`: 创建测试页面
-- `findChromePath()`: 检测系统 Chrome 路径
-- `cleanupAllBrowsers()`: 清理所有浏览器实例（在所有测试完成后调用）
-- `cleanupSuiteBrowser(suitePath: string)`: 清理指定套件的浏览器实例
-
----
-
-## 📊 测试报告
-
-本库经过全面测试，359 个测试用例通过，2 个按设计跳过（test.skip /
-skipIf），测试覆盖率达到 100%。详细测试报告请查看
-[TEST_REPORT.md](./TEST_REPORT.md)。
-
-**测试统计**：
-
-- **测试文件数**: 18
-- **总测试数**: 361
-- **通过**: 359 ✅
-- **跳过**: 2（test.skip、skipIf 等按设计跳过）
-- **失败**: 0
-- **通过率**: 100% ✅
-- **测试执行时间**: 58秒
-- **测试覆盖**: 所有公共 API、边界情况、错误处理
-- **测试环境**: Deno 最新稳定版
-
-**测试类型**：
-
-- ✅ 单元测试（272 个）
-- ✅ 浏览器测试（89 个）
-
-**测试亮点**：
-
-- ✅ 所有功能、边界情况、错误处理都有完整的测试覆盖
-- ✅ 浏览器测试验证了在真实 Chrome 浏览器环境中的功能
-- ✅ 完整的 Mock 功能测试（函数 Mock、HTTP Mock）
-- ✅ 完善的钩子函数执行测试（27 个测试）
-- ✅ Deno 解析器插件测试（17 个测试）
-- ✅ 浏览器 beforeAll 执行、Socket.IO/Logger 编译等专项测试
-- ✅ 浏览器资源清理机制测试
-
-查看完整测试报告：[TEST_REPORT.md](./TEST_REPORT.md)
+- `createBrowserContext(config: BrowserTestConfig)`: Create browser test context
+- `buildClientBundle(options: BundleOptions)`: Bundle client code
+- `createTestPage(options: TestPageOptions)`: Create test page
+- `findChromePath()`: Detect system Chrome path
+- `cleanupAllBrowsers()`: Clean up all browser instances (call after all tests
+  complete)
+- `cleanupSuiteBrowser(suitePath: string)`: Clean up specified suite's browser
+  instances
 
 ---
 
-## 📝 注意事项
+## 📊 Test Report
 
-- **Bun 环境限制**：在 Bun 环境中，`test()` 必须在 `describe()`
-  执行期间调用，不能在测试执行期间调用
-- **bench() 调用位置**：`bench()` 应该在 `describe()` 执行期间调用，而不是在
-  `it()` 回调中
-- **资源清理**：使用第三方库时，如果遇到定时器或资源泄漏警告，可以使用
-  `sanitizeOps: false` 和 `sanitizeResources: false` 选项禁用检查
-- **浏览器测试依赖**：
-  - 需要安装 Chrome/Chromium 浏览器
-  - 自动使用 Puppeteer 和 @dreamer/esbuild 进行打包
-  - 支持自动检测系统 Chrome 路径（macOS、Linux、Windows）
-- **浏览器测试性能**：
-  - 启用 `reuseBrowser: true`（默认）可显著提升性能
-  - 每个测试会创建新页面，但共享浏览器实例
-  - 测试结束后自动清理浏览器资源
-- **浏览器资源清理**：
-  - 每个测试完成后自动关闭页面
-  - 浏览器实例保留在缓存中，等待所有测试完成后统一清理
-  - 在进程退出时（SIGINT、SIGTERM）自动调用 `cleanupAllBrowsers()`
-  - 建议在测试套件的 `afterAll` 钩子中手动调用 `cleanupAllBrowsers()`
-    确保资源清理
-- **客户端代码打包**：
-  - 使用 @dreamer/esbuild 进行快速打包
-  - 支持 TypeScript 代码
-  - 打包结果缓存在内存中
+This library has undergone comprehensive testing. 359 test cases passed, 2
+skipped by design (test.skip / skipIf), achieving 100% test coverage. See
+[TEST_REPORT.md](./TEST_REPORT.md) for detailed report.
+
+**Test statistics**:
+
+- **Test files**: 18
+- **Total tests**: 361
+- **Passed**: 359 ✅
+- **Skipped**: 2 (test.skip, skipIf, etc. skipped by design)
+- **Failed**: 0
+- **Pass rate**: 100% ✅
+- **Execution time**: 58 seconds
+- **Coverage**: All public APIs, edge cases, error handling
+- **Environment**: Deno latest stable
+
+**Test types**:
+
+- ✅ Unit tests (272)
+- ✅ Browser tests (89)
+
+**Highlights**:
+
+- ✅ All functionality, edge cases, error handling have full test coverage
+- ✅ Browser tests verify functionality in real Chrome environment
+- ✅ Complete Mock functionality tests (function Mock, HTTP Mock)
+- ✅ Comprehensive hook function execution tests (27 tests)
+- ✅ Deno resolver plugin tests (17 tests)
+- ✅ Browser beforeAll execution, Socket.IO/Logger compilation dedicated tests
+- ✅ Browser resource cleanup mechanism tests
+
+Full test report: [TEST_REPORT.md](./TEST_REPORT.md)
 
 ---
 
-## 🤝 贡献
+## 📝 Notes
 
-欢迎提交 Issue 和 Pull Request！
+- **Bun environment limitation**: In Bun, `test()` must be called during
+  `describe()` execution, not during test execution
+- **bench() call location**: `bench()` should be called during `describe()`
+  execution, not inside `it()` callback
+- **Resource cleanup**: When using third-party libraries, if you encounter timer
+  or resource leak warnings, use `sanitizeOps: false` and
+  `sanitizeResources: false` to disable checks
+- **Browser test dependencies**:
+  - Requires Chrome/Chromium browser installed
+  - Auto-uses Puppeteer and @dreamer/esbuild for bundling
+  - Supports auto-detect system Chrome path (macOS, Linux, Windows)
+- **Browser test performance**:
+  - Enabling `reuseBrowser: true` (default) significantly improves performance
+  - Each test creates new page but shares browser instance
+  - Auto cleanup browser resources after tests
+- **Browser resource cleanup**:
+  - Auto close page after each test
+  - Browser instances remain in cache, unified cleanup after all tests complete
+  - Auto calls `cleanupAllBrowsers()` on process exit (SIGINT, SIGTERM)
+  - Recommended to manually call `cleanupAllBrowsers()` in suite's `afterAll`
+    hook to ensure cleanup
+- **Client code bundling**:
+  - Uses @dreamer/esbuild for fast bundling
+  - Supports TypeScript
+  - Bundle result cached in memory
 
 ---
 
-## 📄 许可证
+## 🤝 Contributing
 
-MIT License - 详见 [LICENSE.md](./LICENSE.md)
+Issues and Pull Requests welcome!
+
+---
+
+## 📄 License
+
+MIT License - see [LICENSE.md](./LICENSE.md)
 
 ---
 

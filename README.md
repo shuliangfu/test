@@ -730,6 +730,18 @@ Full test report: [TEST_REPORT.md](./TEST_REPORT.md)
 
 ---
 
+## 📋 Changelog
+
+### [1.0.1] - 2026-02-08
+
+- **Fixed**: Linux CI compatibility (headless mode in config override test)
+- **Changed**: All error messages in English
+- **Removed**: Socket.IO tests and related documentation
+
+See [CHANGELOG.md](./CHANGELOG.md) for full history.
+
+---
+
 ## 📝 Notes
 
 - **Bun environment limitation**: In Bun, `test()` must be called during

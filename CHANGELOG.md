@@ -8,6 +8,22 @@ and this project adheres to
 
 ---
 
+## [1.0.1] - 2026-02-08
+
+### Fixed
+
+- **Linux CI compatibility**: Use headless mode in config override test to avoid "Missing X server" on Linux CI runners
+
+### Changed
+
+- **Error messages**: All error output in the test library is now in English
+
+### Removed
+
+- **Socket.IO tests**: Removed all socket-io integration tests and related documentation
+
+---
+
 ## [1.0.0] - 2026-02-06
 
 ### Added

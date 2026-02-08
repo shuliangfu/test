@@ -7,7 +7,7 @@
 
 [![JSR](https://jsr.io/badges/@dreamer/test)](https://jsr.io/@dreamer/test)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE.md)
-[![Tests](https://img.shields.io/badge/tests-359%20passed-brightgreen)](./TEST_REPORT.md)
+[![Tests](https://img.shields.io/badge/tests-354%20passed-brightgreen)](./TEST_REPORT.md)
 
 ---
 
@@ -682,15 +682,15 @@ describe("浏览器测试套件", {
 
 ## 📊 测试报告
 
-本库经过全面测试，359 个测试用例通过，2 个按设计跳过（test.skip /
+本库经过全面测试，354 个测试用例通过，2 个按设计跳过（test.skip /
 skipIf），测试覆盖率达到 100%。详细测试报告请查看
 [TEST_REPORT.md](./TEST_REPORT.md)。
 
 **测试统计**：
 
-- **测试文件数**: 18
-- **总测试数**: 361
-- **通过**: 359 ✅
+- **测试文件数**: 17
+- **总测试数**: 356
+- **通过**: 354 ✅
 - **跳过**: 2（test.skip、skipIf 等按设计跳过）
 - **失败**: 0
 - **通过率**: 100% ✅
@@ -701,7 +701,7 @@ skipIf），测试覆盖率达到 100%。详细测试报告请查看
 **测试类型**：
 
 - ✅ 单元测试（272 个）
-- ✅ 浏览器测试（89 个）
+- ✅ 浏览器测试（84 个）
 
 **测试亮点**：
 
@@ -710,7 +710,7 @@ skipIf），测试覆盖率达到 100%。详细测试报告请查看
 - ✅ 完整的 Mock 功能测试（函数 Mock、HTTP Mock）
 - ✅ 完善的钩子函数执行测试（27 个测试）
 - ✅ Deno 解析器插件测试（17 个测试）
-- ✅ 浏览器 beforeAll 执行、Socket.IO/Logger 编译等专项测试
+- ✅ 浏览器 beforeAll 执行等专项测试
 - ✅ 浏览器资源清理机制测试
 
 查看完整测试报告：[TEST_REPORT.md](./TEST_REPORT.md)

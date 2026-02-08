@@ -49,7 +49,7 @@ export interface BrowserTestConfig {
    * 是否将 JSR/npm 标为 external（仅影响打包格式，浏览器绝不生成 require）。
    * - true（默认）：输出 ESM，用 <script type="module"> 加载，external 为 import，不生成 require。
    * - false：输出 IIFE，把 JSR 等打进 bundle，用普通 script 也可；不生成 require。
-   * 入口含 @dreamer/socket-io 等 JSR 时，设为 false 可省去“入口自挂 window[globalName]”的约定。
+   * 入口含 JSR 时，设为 false 可省去“入口自挂 window[globalName]”的约定。
    */
   browserMode?: boolean;
   /**

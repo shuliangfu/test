@@ -34,7 +34,7 @@ export interface BundleOptions {
   minify?: boolean;
   /**
    * 是否将 JSR/npm 标为 external（仅 browser 有效）。
-   * false 时会把 JSR 打进去，适合入口含 @dreamer/socket-io 等 JSR 的浏览器测试。
+   * false 时会把 JSR 打进去，适合入口含 JSR 的浏览器测试。
    */
   browserMode?: boolean;
 }

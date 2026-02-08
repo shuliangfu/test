@@ -8,7 +8,7 @@ English | [中文 (Chinese)](./README-zh.md)
 
 [![JSR](https://jsr.io/badges/@dreamer/test)](https://jsr.io/@dreamer/test)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE.md)
-[![Tests](https://img.shields.io/badge/tests-359%20passed-brightgreen)](./TEST_REPORT.md)
+[![Tests](https://img.shields.io/badge/tests-354%20passed-brightgreen)](./TEST_REPORT.md)
 
 ---
 
@@ -695,15 +695,15 @@ describe("Browser test suite", {
 
 ## 📊 Test Report
 
-This library has undergone comprehensive testing. 359 test cases passed, 2
+This library has undergone comprehensive testing. 354 test cases passed, 2
 skipped by design (test.skip / skipIf), achieving 100% test coverage. See
 [TEST_REPORT.md](./TEST_REPORT.md) for detailed report.
 
 **Test statistics**:
 
-- **Test files**: 18
-- **Total tests**: 361
-- **Passed**: 359 ✅
+- **Test files**: 17
+- **Total tests**: 356
+- **Passed**: 354 ✅
 - **Skipped**: 2 (test.skip, skipIf, etc. skipped by design)
 - **Failed**: 0
 - **Pass rate**: 100% ✅
@@ -714,7 +714,7 @@ skipped by design (test.skip / skipIf), achieving 100% test coverage. See
 **Test types**:
 
 - ✅ Unit tests (272)
-- ✅ Browser tests (89)
+- ✅ Browser tests (84)
 
 **Highlights**:
 
@@ -723,7 +723,7 @@ skipped by design (test.skip / skipIf), achieving 100% test coverage. See
 - ✅ Complete Mock functionality tests (function Mock, HTTP Mock)
 - ✅ Comprehensive hook function execution tests (27 tests)
 - ✅ Deno resolver plugin tests (17 tests)
-- ✅ Browser beforeAll execution, Socket.IO/Logger compilation dedicated tests
+- ✅ Browser beforeAll execution dedicated tests
 - ✅ Browser resource cleanup mechanism tests
 
 Full test report: [TEST_REPORT.md](./TEST_REPORT.md)

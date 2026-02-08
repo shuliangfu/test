@@ -29,9 +29,9 @@ Deno built-in test framework + Bun test framework
 
 | Metric               | Value                  |
 | -------------------- | ---------------------- |
-| Number of test files | 18                     |
-| Total test cases     | 361                    |
-| Passed cases         | 359                    |
+| Number of test files | 17                     |
+| Total test cases     | 356                    |
+| Passed cases         | 354                    |
 | Skipped cases        | 2                      |
 | Failed cases         | 0                      |
 | Pass rate            | 100%                   |
@@ -44,7 +44,6 @@ Deno built-in test framework + Bun test framework
 | ------------------------------------------- | ---------- | ------------------------- | ----------------------------------------------------- |
 | `assertions-comprehensive.test.ts`          | 25         | ✅ All passed             | Comprehensive assertion utility function tests        |
 | `browser/beforeall-execution.test.ts`       | 6          | ✅ All passed             | Browser test beforeAll execution tests                |
-| `browser/browser-compile-socket-io.test.ts` | 5          | ✅ All passed             | Browser compilation Socket.IO/Logger dependency tests |
 | `browser/browser-context.test.ts`           | 13         | ✅ All passed             | Browser test context management                       |
 | `browser/browser-integration.test.ts`       | 8          | ✅ All passed             | Browser test integration                              |
 | `browser/bundle.test.ts`                    | 7          | ✅ All passed             | Client-side code bundling tests                       |
@@ -71,20 +70,9 @@ Deno built-in test framework + Bun test framework
 - ✅ Nested suite 2: Verify beforeAll executes only once (tests 4, 5)
 - ✅ afterAll closes the server
 
-### 2. Browser Compilation Socket.IO/Logger Tests (5 tests)
+### 2. Browser Test Context Management (13 tests)
 
-#### 2.1 Compilation and Dependency Transformation
-
-- ✅ Should create test files and directories
-- ✅ Should successfully compile code containing socket-io client and logger
-  client
-- ✅ Should correctly handle external dependencies
-- ✅ Should compile code containing relative path imports
-- ✅ Should successfully compile code containing logger client
-
-### 3. Browser Test Context Management (13 tests)
-
-#### 3.1 createBrowserContext
+#### 2.1 createBrowserContext
 
 - ✅ Should create browser context (without entryPoint)
 - ✅ Should support headless mode
@@ -100,31 +88,31 @@ Deno built-in test framework + Bun test framework
 - ✅ Should support custom moduleLoadTimeout
 - ✅ Should correctly close the browser
 
-### 4. Browser Test Integration (8 tests)
+### 3. Browser Test Integration (8 tests)
 
-#### 4.1 Test Runner Integration
+#### 3.1 Test Runner Integration
 
 - ✅ Should provide browser property in TestContext
 - ✅ Should support suite-level browser configuration
 - ✅ Should support test-level browser configuration
 
-#### 4.2 Browser Test Configuration Inheritance
+#### 3.2 Browser Test Configuration Inheritance
 
 - ✅ Should inherit suite's browser configuration
 
-#### 4.3 Browser Context API
+#### 3.3 Browser Context API
 
 - ✅ Should support evaluate method
 - ✅ Should support goto method
 - ✅ Should support waitFor method
 
-#### 4.4 Complete Browser Test Flow
+#### 3.4 Complete Browser Test Flow
 
 - ✅ Should be able to execute complete browser test flow
 
-### 5. Client-Side Code Bundling (7 tests)
+### 4. Client-Side Code Bundling (7 tests)
 
-#### 5.1 buildClientBundle
+#### 4.1 buildClientBundle
 
 - ✅ Should be able to bundle simple JavaScript code
 - ✅ Should support globalName option
@@ -781,7 +769,7 @@ resource leaks:
 
 | Environment | Execution time | Test cases | Average per test |
 | ----------- | -------------- | ---------- | ---------------- |
-| Deno        | 58 seconds     | 359        | ~162ms           |
+| Deno        | 58 seconds     | 354        | ~162ms           |
 
 **Note**: The long test execution time is mainly because browser tests need to
 launch real Chrome browser instances. Each browser test case requires creating,
@@ -821,7 +809,7 @@ demonstrate:
 
 1. ✅ **Functional Completeness**: All declared functionality is correctly
    implemented
-2. ✅ **Stability**: 359 test cases passed, 2 skipped by design (test.skip /
+2. ✅ **Stability**: 354 test cases passed, 2 skipped by design (test.skip /
    skipIf), no failed cases
 3. ✅ **Compatibility**: Works correctly in both Deno and Bun environments
 4. ✅ **Reliability**: Edge cases and error handling have been verified
@@ -842,4 +830,4 @@ testing.
 - Puppeteer: v24.35.0
 - @dreamer/esbuild: v1.0.0-beta.4 **Test Framework**:
   @dreamer/test@^1.0.0-beta.14 **This Execution**: `deno test -A tests/` → ok |
-  359 passed | 0 failed | 2 ignored (58s)
+  354 passed | 0 failed | 2 ignored (58s)

@@ -76,7 +76,7 @@ export async function assertSnapshot(
     // 对比快照
     if (existingSnapshot !== serialized) {
       throw new Error(
-        `快照不匹配\n期望:\n${existingSnapshot}\n实际:\n${serialized}`,
+        `Snapshot mismatch\nExpected:\n${existingSnapshot}\nReceived:\n${serialized}`,
       );
     }
   } else if (IS_BUN) {
@@ -110,11 +110,11 @@ export async function assertSnapshot(
     // 对比快照
     if (existingSnapshot !== serialized) {
       throw new Error(
-        `快照不匹配\n期望:\n${existingSnapshot}\n实际:\n${serialized}`,
+        `Snapshot mismatch\nExpected:\n${existingSnapshot}\nReceived:\n${serialized}`,
       );
     }
   } else {
     // 其他环境：不支持快照测试
-    throw new Error("快照测试在当前环境下不支持");
+    throw new Error("Snapshot testing is not supported in the current environment");
   }
 }

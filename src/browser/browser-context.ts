@@ -137,11 +137,11 @@ export async function createBrowserContext(
           } catch (_retryError) {
             // 如果仍然失败，抛出更详细的错误信息
             const errorDetails = consoleErrors.length > 0
-              ? `\n浏览器控制台错误: ${consoleErrors.join("\n")}`
+              ? `\nBrowser console errors: ${consoleErrors.join("\n")}`
               : "";
             throw new Error(
-              `模块加载超时：无法找到全局变量 "${globalName}" 或 testReady 标记未设置。` +
-                `入口文件: ${config.entryPoint}${errorDetails}`,
+              `Module load timeout: cannot find global "${globalName}" or testReady not set. ` +
+                `Entry file: ${config.entryPoint}${errorDetails}`,
             );
           }
         }
@@ -154,11 +154,11 @@ export async function createBrowserContext(
           );
         } catch (_error) {
           const errorDetails = consoleErrors.length > 0
-            ? `\n浏览器控制台错误: ${consoleErrors.join("\n")}`
+            ? `\nBrowser console errors: ${consoleErrors.join("\n")}`
             : "";
           throw new Error(
-            `模块加载超时：testReady 标记未设置。` +
-              `入口文件: ${config.entryPoint}${errorDetails}`,
+            `Module load timeout: testReady not set. ` +
+              `Entry file: ${config.entryPoint}${errorDetails}`,
           );
         }
       }

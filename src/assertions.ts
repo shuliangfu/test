@@ -65,11 +65,11 @@ export async function assertRejects(
 ): Promise<void> {
   try {
     await fn();
-    throw new Error("期望函数抛出错误，但函数成功执行");
+    throw new Error("Expected function to throw, but it succeeded");
   } catch (error) {
     if (ErrorClass && !(error instanceof ErrorClass)) {
       throw new Error(
-        `期望抛出 ${ErrorClass.name}，实际抛出: ${
+        `Expected to throw ${ErrorClass.name}, threw: ${
           error instanceof Error ? error.constructor.name : typeof error
         }`,
       );
@@ -80,13 +80,13 @@ export async function assertRejects(
       if (typeof msgIncludes === "string") {
         if (!errorMsg.includes(msgIncludes)) {
           throw new Error(
-            `期望错误消息包含 "${msgIncludes}"，实际消息: ${errorMsg}`,
+            `Expected error message to contain "${msgIncludes}", received: ${errorMsg}`,
           );
         }
       } else if (msgIncludes instanceof RegExp) {
         if (!msgIncludes.test(errorMsg)) {
           throw new Error(
-            `期望错误消息匹配 ${msgIncludes}，实际消息: ${errorMsg}`,
+            `Expected error message to match ${msgIncludes}, received: ${errorMsg}`,
           );
         }
       }
@@ -108,7 +108,7 @@ export async function assertResolves(
     if (expected !== undefined) {
       if (!deepEqual(result, expected)) {
         throw new Error(
-          `期望返回值: ${JSON.stringify(expected)}, 实际值: ${
+          `Expected return: ${JSON.stringify(expected)}, received: ${
             JSON.stringify(result)
           }`,
         );
@@ -116,7 +116,7 @@ export async function assertResolves(
     }
   } catch (error) {
     throw new Error(
-      `期望函数成功执行，但抛出错误: ${
+      `Expected function to succeed, but threw: ${
         error instanceof Error ? error.message : String(error)
       }`,
     );
@@ -137,7 +137,7 @@ export function assertDeepEqual(
   if (!deepEqual(actual, expected)) {
     throw new Error(
       msg ||
-        `期望值: ${JSON.stringify(expected)}, 实际值: ${
+        `Expected: ${JSON.stringify(expected)}, received: ${
           JSON.stringify(actual)
         }`,
     );
@@ -158,7 +158,7 @@ export function assertInstanceOf(
   if (!(actual instanceof expected)) {
     throw new Error(
       msg ||
-        `期望值为 ${expected.name} 的实例，实际值: ${JSON.stringify(actual)}`,
+        `Expected ${expected.name} instance, received: ${JSON.stringify(actual)}`,
     );
   }
 }
@@ -178,7 +178,7 @@ export function assertMatch(
   const pattern = typeof regex === "string" ? new RegExp(regex) : regex;
   if (!pattern.test(str)) {
     throw new Error(
-      msg || `期望值匹配 ${pattern}，实际值: ${JSON.stringify(actual)}`,
+      msg || `Expected to match ${pattern}, received: ${JSON.stringify(actual)}`,
     );
   }
 }

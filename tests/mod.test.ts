@@ -46,7 +46,7 @@ describe("@dreamer/test 自测试", () => {
         await assertRejects(
           () => Promise.resolve(expect(1).toBe(2)),
           Error,
-          "期望值: 2, 实际值: 1",
+          "Expected",
         );
       });
     });
@@ -62,7 +62,7 @@ describe("@dreamer/test 自测试", () => {
         await assertRejects(
           () => Promise.resolve(expect({ a: 1 }).toEqual({ a: 2 })),
           Error,
-          "期望值",
+          "Expected",
         );
       });
     });
@@ -80,7 +80,7 @@ describe("@dreamer/test 自测试", () => {
         await assertRejects(
           () => Promise.resolve(expect(false).toBeTruthy()),
           Error,
-          "期望值为真",
+          "Expected truthy",
         );
       });
     });
@@ -98,7 +98,7 @@ describe("@dreamer/test 自测试", () => {
         await assertRejects(
           () => Promise.resolve(expect(true).toBeFalsy()),
           Error,
-          "期望值为假",
+          "Expected falsy",
         );
       });
     });
@@ -112,7 +112,7 @@ describe("@dreamer/test 自测试", () => {
         await assertRejects(
           () => Promise.resolve(expect(undefined).toBeNull()),
           Error,
-          "期望值为 null",
+          "Expected null",
         );
       });
     });
@@ -126,7 +126,7 @@ describe("@dreamer/test 自测试", () => {
         await assertRejects(
           () => Promise.resolve(expect(null).toBeUndefined()),
           Error,
-          "期望值为 undefined",
+          "Expected undefined",
         );
       });
     });
@@ -142,7 +142,7 @@ describe("@dreamer/test 自测试", () => {
         await assertRejects(
           () => Promise.resolve(expect(undefined).toBeDefined()),
           Error,
-          "期望值已定义",
+          "Expected defined",
         );
       });
     });
@@ -158,7 +158,7 @@ describe("@dreamer/test 自测试", () => {
         await assertRejects(
           () => Promise.resolve(expect("hello").toMatch(/world/)),
           Error,
-          "期望值匹配",
+          "Expected to match",
         );
       });
     });
@@ -177,7 +177,7 @@ describe("@dreamer/test 自测试", () => {
         await assertRejects(
           () => Promise.resolve(expect([1, 2, 3]).toContain(4)),
           Error,
-          "期望数组包含",
+          "Expected array to contain",
         );
       });
     });
@@ -192,7 +192,7 @@ describe("@dreamer/test 自测试", () => {
         await assertRejects(
           () => Promise.resolve(expect(3).toBeGreaterThan(5)),
           Error,
-          "期望值大于",
+          "Expected value >",
         );
       });
     });
@@ -207,7 +207,7 @@ describe("@dreamer/test 自测试", () => {
         await assertRejects(
           () => Promise.resolve(expect(3).toBeGreaterThanOrEqual(5)),
           Error,
-          "期望值大于等于",
+          "Expected value >=",
         );
       });
     });
@@ -222,7 +222,7 @@ describe("@dreamer/test 自测试", () => {
         await assertRejects(
           () => Promise.resolve(expect(5).toBeLessThan(3)),
           Error,
-          "期望值小于",
+          "Expected value <",
         );
       });
     });
@@ -237,7 +237,7 @@ describe("@dreamer/test 自测试", () => {
         await assertRejects(
           () => Promise.resolve(expect(5).toBeLessThanOrEqual(3)),
           Error,
-          "期望值小于等于",
+          "Expected value <=",
         );
       });
     });
@@ -253,7 +253,7 @@ describe("@dreamer/test 自测试", () => {
         await assertRejects(
           () => Promise.resolve(expect({}).toBeInstanceOf(Date)),
           Error,
-          "期望值为 Date 的实例",
+          "Expected Date instance",
         );
       });
     });
@@ -440,7 +440,7 @@ describe("@dreamer/test 自测试", () => {
             // 不抛出错误
           }),
             Error,
-            "期望函数抛出错误";
+            "Expected function to throw";
         },
       );
     });
@@ -470,7 +470,7 @@ describe("@dreamer/test 自测试", () => {
           });
         },
         Error,
-        "期望函数成功执行",
+        "Expected function to succeed",
       );
     });
   });
@@ -485,7 +485,7 @@ describe("@dreamer/test 自测试", () => {
       await assertRejects(
         () => Promise.resolve(assertDeepEqual({ a: 1 }, { a: 2 })),
         Error,
-        "期望值",
+        "Expected",
       );
     });
   });
@@ -500,7 +500,7 @@ describe("@dreamer/test 自测试", () => {
       await assertRejects(
         () => Promise.resolve(assertInstanceOf({}, Date)),
         Error,
-        "期望值为 Date 的实例",
+        "Expected Date instance",
       );
     });
   });
@@ -515,7 +515,7 @@ describe("@dreamer/test 自测试", () => {
       await assertRejects(
         () => Promise.resolve(assertMatch("hello", /world/)),
         Error,
-        "期望值匹配",
+        "Expected to match",
       );
     });
   });

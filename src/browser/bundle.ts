@@ -177,7 +177,7 @@ export async function buildClientBundle(
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     throw new Error(
-      `打包失败：${errorMessage}。入口文件: ${options.entryPoint}`,
+      `Bundle failed: ${errorMessage}. Entry file: ${options.entryPoint}`,
     );
   }
 }

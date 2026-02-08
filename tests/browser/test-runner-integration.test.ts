@@ -302,10 +302,10 @@ describe("测试运行器浏览器集成", () => {
 
         // 验证错误信息包含关键信息
         const errorMessage = setupError!.message;
-        expect(errorMessage).toContain("创建浏览器上下文失败");
+        expect(errorMessage).toContain("Failed to create browser context");
         expect(errorMessage).toContain("executablePath");
         expect(errorMessage).toContain("/nonexistent/chrome/path");
-        expect(errorMessage).toContain("请检查 Chrome 是否已安装");
+        expect(errorMessage).toContain("Please check if Chrome is installed");
 
         // 浏览器上下文应该是 undefined
         expect(t.browser).toBeUndefined();

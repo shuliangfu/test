@@ -58,7 +58,7 @@ describe("断言工具函数全面测试", () => {
           });
         },
         Error,
-        "期望函数抛出错误",
+        "Expected function to throw",
       );
     });
 
@@ -73,7 +73,7 @@ describe("断言工具函数全面测试", () => {
           );
         },
         Error,
-        "期望抛出 TypeError",
+        "Expected to throw TypeError",
       );
     });
 
@@ -89,7 +89,7 @@ describe("断言工具函数全面测试", () => {
           );
         },
         Error,
-        "期望错误消息包含",
+        "Expected error message to contain",
       );
     });
   });
@@ -127,7 +127,7 @@ describe("断言工具函数全面测试", () => {
           });
         },
         Error,
-        "期望函数成功执行",
+        "Expected function to succeed",
       );
     });
 
@@ -142,7 +142,7 @@ describe("断言工具函数全面测试", () => {
           );
         },
         Error,
-        "期望返回值",
+        "Expected return",
       );
     });
   });
@@ -200,7 +200,7 @@ describe("断言工具函数全面测试", () => {
       await assertRejects(
         () => Promise.resolve(assertInstanceOf({}, Date)),
         Error,
-        "期望值为 Date 的实例",
+        "Expected Date instance",
       );
     });
 
@@ -228,7 +228,7 @@ describe("断言工具函数全面测试", () => {
       await assertRejects(
         () => Promise.resolve(assertMatch("hello", /world/)),
         Error,
-        "期望值匹配",
+        "Expected to match",
       );
     });
 

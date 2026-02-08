@@ -195,8 +195,8 @@ async function setupBrowserTest(
         ? error.message
         : String(error);
       throw new Error(
-        `创建浏览器上下文失败: ${errorMessage}。` +
-          `请检查 Chrome 是否已安装，或设置 executablePath 配置。`,
+        `Failed to create browser context: ${errorMessage}. ` +
+          `Please check if Chrome is installed, or set executablePath config.`,
       );
     }
   } else {
@@ -242,8 +242,8 @@ async function setupBrowserTest(
           if (!response || !response.ok()) {
             const status = response?.status() || "unknown";
             throw new Error(
-              `页面加载失败：HTTP 状态码 ${status}。` +
-                `HTML 文件路径: ${htmlPath}`,
+              `Page load failed: HTTP status ${status}. ` +
+                `HTML file path: ${htmlPath}`,
             );
           }
 
@@ -251,8 +251,8 @@ async function setupBrowserTest(
           const actualUrl = newPage.url();
           if (!actualUrl.startsWith("file://")) {
             throw new Error(
-              `页面加载后 URL 不正确：期望 file:// 协议，实际: ${actualUrl}。` +
-                `HTML 文件路径: ${htmlPath}`,
+              `Page URL after load is incorrect: expected file:// protocol, got: ${actualUrl}. ` +
+                `HTML file path: ${htmlPath}`,
             );
           }
         } catch (error) {
@@ -262,11 +262,11 @@ async function setupBrowserTest(
             ? error.message
             : String(error);
           const errorDetails = consoleErrors.length > 0
-            ? `\n浏览器控制台错误: ${consoleErrors.join("\n")}`
+            ? `\nBrowser console errors: ${consoleErrors.join("\n")}`
             : "";
           throw new Error(
-            `页面加载失败: ${errorMessage}。` +
-              `HTML 文件路径: ${htmlPath}${errorDetails}`,
+            `Page load failed: ${errorMessage}. ` +
+              `HTML file path: ${htmlPath}${errorDetails}`,
           );
         }
 
@@ -294,11 +294,11 @@ async function setupBrowserTest(
             } catch (_retryError) {
               // 如果仍然失败，抛出更详细的错误信息
               const errorDetails = consoleErrors.length > 0
-                ? `\n浏览器控制台错误: ${consoleErrors.join("\n")}`
+                ? `\nBrowser console errors: ${consoleErrors.join("\n")}`
                 : "";
               throw new Error(
-                `模块加载超时：无法找到全局变量 "${globalName}" 或 testReady 标记未设置。` +
-                  `入口文件: ${config.entryPoint}${errorDetails}`,
+                `Module load timeout: cannot find global "${globalName}" or testReady not set. ` +
+                  `Entry file: ${config.entryPoint}${errorDetails}`,
               );
             }
           }
@@ -311,11 +311,11 @@ async function setupBrowserTest(
             );
           } catch (_error) {
             const errorDetails = consoleErrors.length > 0
-              ? `\n浏览器控制台错误: ${consoleErrors.join("\n")}`
+              ? `\nBrowser console errors: ${consoleErrors.join("\n")}`
               : "";
             throw new Error(
-              `模块加载超时：testReady 标记未设置。` +
-                `入口文件: ${config.entryPoint}${errorDetails}`,
+              `Module load timeout: testReady not set. ` +
+                `Entry file: ${config.entryPoint}${errorDetails}`,
             );
           }
         }
@@ -437,7 +437,7 @@ export function describe(
   // 确保 fn 是函数
   if (typeof fn !== "function") {
     throw new Error(
-      `describe: 第二个参数必须是函数，但得到: ${typeof fn}。请使用 describe(name, fn, options?) 形式。`,
+      `describe: second argument must be a function, got: ${typeof fn}. Use describe(name, fn, options?) form.`,
     );
   }
 
@@ -913,9 +913,9 @@ export function test(
       // 不在 describe 块内（可能在测试执行期间），在 Bun 中这是不允许的
       // 抛出友好的错误提示
       throw new Error(
-        `在 Bun 环境中，test() 必须在 describe() 执行期间调用，不能在测试执行期间调用。` +
-          `请将 test("${name}", ...) 移到 describe() 块内，而不是在 it() 或 test() 回调中调用。` +
-          `\n提示：testEach() 和 bench() 应该在 describe() 执行期间调用，而不是在 it() 回调中。`,
+        `In Bun, test() must be called during describe() execution, not during test execution. ` +
+          `Move test("${name}", ...) inside a describe() block, not inside it() or test() callback. ` +
+          `\nNote: testEach() and bench() should be called during describe() execution, not inside it() callback.`,
       );
     }
   }

@@ -56,7 +56,7 @@ export class MockExpect {
    */
   toHaveBeenCalled(): void {
     if (this.mock.calls.length === 0) {
-      throw new Error("期望 Mock 函数被调用，但未被调用");
+      throw new Error("Expected mock function to be called, but it was not");
     }
   }
 
@@ -66,7 +66,7 @@ export class MockExpect {
   toHaveBeenCalledTimes(times: number): void {
     if (this.mock.calls.length !== times) {
       throw new Error(
-        `期望 Mock 函数被调用 ${times} 次，实际调用 ${this.mock.calls.length} 次`,
+        `Expected mock to be called ${times} times, but was called ${this.mock.calls.length} times`,
       );
     }
   }
@@ -81,9 +81,7 @@ export class MockExpect {
 
     if (!found) {
       throw new Error(
-        `期望 Mock 函数使用参数 ${
-          JSON.stringify(args)
-        } 被调用，但未找到匹配的调用`,
+        `Expected mock to be called with ${JSON.stringify(args)}, but no matching call found`,
       );
     }
   }
@@ -93,18 +91,16 @@ export class MockExpect {
    */
   toHaveBeenLastCalledWith(...args: unknown[]): void {
     if (this.mock.calls.length === 0) {
-      throw new Error("期望 Mock 函数被调用，但未被调用");
+      throw new Error("Expected mock function to be called, but it was not");
     }
 
     const lastCall = this.mock.calls[this.mock.calls.length - 1];
     if (!lastCall) {
-      throw new Error("无法获取最后一次调用");
+      throw new Error("Cannot get last call");
     }
     if (!this.deepEqual(lastCall.args, args)) {
       throw new Error(
-        `期望最后一次调用使用参数 ${JSON.stringify(args)}，实际参数: ${
-          JSON.stringify(lastCall.args)
-        }`,
+        `Expected last call with args ${JSON.stringify(args)}, actual: ${JSON.stringify(lastCall.args)}`,
       );
     }
   }
@@ -115,19 +111,17 @@ export class MockExpect {
   toHaveBeenNthCalledWith(n: number, ...args: unknown[]): void {
     if (n < 1 || n > this.mock.calls.length) {
       throw new Error(
-        `期望第 ${n} 次调用，但只有 ${this.mock.calls.length} 次调用`,
+        `Expected call #${n}, but only ${this.mock.calls.length} calls`,
       );
     }
 
     const nthCall = this.mock.calls[n - 1];
     if (!nthCall) {
-      throw new Error(`无法获取第 ${n} 次调用`);
+      throw new Error(`Cannot get call #${n}`);
     }
     if (!this.deepEqual(nthCall.args, args)) {
       throw new Error(
-        `期望第 ${n} 次调用使用参数 ${JSON.stringify(args)}，实际参数: ${
-          JSON.stringify(nthCall.args)
-        }`,
+        `Expected call #${n} with args ${JSON.stringify(args)}, actual: ${JSON.stringify(nthCall.args)}`,
       );
     }
   }
@@ -142,7 +136,7 @@ export class MockExpect {
 
     if (!found) {
       throw new Error(
-        `期望 Mock 函数返回 ${JSON.stringify(expected)}，但未找到匹配的返回值`,
+        `Expected mock to return ${JSON.stringify(expected)}, but no matching return found`,
       );
     }
   }
@@ -156,7 +150,7 @@ export class MockExpect {
     });
 
     if (!hasReturned) {
-      throw new Error("期望 Mock 函数返回值，但未返回值");
+      throw new Error("Expected mock to return a value, but it did not");
     }
   }
 
@@ -168,7 +162,7 @@ export class MockExpect {
     // 这个方法主要用于检查函数是否应该抛出错误
     // 实际实现可能需要特殊处理
     throw new Error(
-      "toHaveThrown 需要特殊实现，当前版本暂不支持",
+      "toHaveThrown requires special implementation, not supported in current version",
     );
   }
 
@@ -243,7 +237,7 @@ class MockNotExpect extends MockExpect {
   override toHaveBeenCalled(): void {
     if (this.mock.calls.length > 0) {
       throw new Error(
-        `期望 Mock 函数不被调用，但被调用了 ${this.mock.calls.length} 次`,
+        `Expected mock not to be called, but was called ${this.mock.calls.length} times`,
       );
     }
   }
@@ -254,7 +248,7 @@ class MockNotExpect extends MockExpect {
   override toHaveBeenCalledTimes(times: number): void {
     if (this.mock.calls.length === times) {
       throw new Error(
-        `期望 Mock 函数不被调用 ${times} 次，但实际调用 ${this.mock.calls.length} 次`,
+        `Expected mock not to be called ${times} times, but was called ${this.mock.calls.length} times`,
       );
     }
   }
@@ -269,9 +263,7 @@ class MockNotExpect extends MockExpect {
 
     if (found) {
       throw new Error(
-        `期望 Mock 函数不使用参数 ${
-          JSON.stringify(args)
-        } 被调用，但找到了匹配的调用`,
+        `Expected mock not to be called with ${JSON.stringify(args)}, but matching call found`,
       );
     }
   }
@@ -284,9 +276,7 @@ class MockNotExpect extends MockExpect {
       const lastCall = this.mock.calls[this.mock.calls.length - 1];
       if (lastCall && this.deepEqual(lastCall.args, args)) {
         throw new Error(
-          `期望最后一次调用不使用参数 ${
-            JSON.stringify(args)
-          }，但实际使用了该参数`,
+          `Expected last call not to use args ${JSON.stringify(args)}, but it did`,
         );
       }
     }
@@ -300,9 +290,7 @@ class MockNotExpect extends MockExpect {
       const nthCall = this.mock.calls[n - 1];
       if (nthCall && this.deepEqual(nthCall.args, args)) {
         throw new Error(
-          `期望第 ${n} 次调用不使用参数 ${
-            JSON.stringify(args)
-          }，但实际使用了该参数`,
+          `Expected call #${n} not to use args ${JSON.stringify(args)}, but it did`,
         );
       }
     }
@@ -318,9 +306,7 @@ class MockNotExpect extends MockExpect {
 
     if (found) {
       throw new Error(
-        `期望 Mock 函数不返回 ${
-          JSON.stringify(expected)
-        }，但找到了匹配的返回值`,
+        `Expected mock not to return ${JSON.stringify(expected)}, but matching return found`,
       );
     }
   }
@@ -334,7 +320,7 @@ class MockNotExpect extends MockExpect {
     });
 
     if (hasReturned) {
-      throw new Error("期望 Mock 函数不返回值，但返回了值");
+      throw new Error("Expected mock not to return a value, but it did");
     }
   }
 }

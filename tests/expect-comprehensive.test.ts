@@ -35,7 +35,7 @@ describe("Expect 断言全面测试", () => {
       await assertRejects(
         () => Promise.resolve(expect(obj).toHaveProperty("age")),
         Error,
-        "期望对象具有属性",
+        "Expected object to have property",
       );
     });
 
@@ -44,7 +44,7 @@ describe("Expect 断言全面测试", () => {
       await assertRejects(
         () => Promise.resolve(expect(obj).toHaveProperty("name", "Jane")),
         Error,
-        "期望对象属性",
+        "Expected property",
       );
     });
 
@@ -53,7 +53,7 @@ describe("Expect 断言全面测试", () => {
       await assertRejects(
         () => Promise.resolve(expect(obj).toHaveProperty("user.email")),
         Error,
-        "期望对象具有属性",
+        "Expected object to have property",
       );
     });
 
@@ -83,7 +83,7 @@ describe("Expect 断言全面测试", () => {
       await assertRejects(
         () => Promise.resolve(expect(0.1).toBeCloseTo(0.2)),
         Error,
-        "期望值约等于",
+        "Expected ≈",
       );
     });
 
@@ -91,7 +91,7 @@ describe("Expect 断言全面测试", () => {
       await assertRejects(
         () => Promise.resolve(expect("0.1").toBeCloseTo(0.2)),
         Error,
-        "toBeCloseTo 只能用于数字",
+        "toBeCloseTo can only be used with numbers",
       );
     });
 
@@ -111,7 +111,7 @@ describe("Expect 断言全面测试", () => {
       await assertRejects(
         () => Promise.resolve(expect(0).toBeNaN()),
         Error,
-        "期望值为 NaN",
+        "Expected NaN",
       );
     });
 
@@ -142,7 +142,7 @@ describe("Expect 断言全面测试", () => {
       await assertRejects(
         () => Promise.resolve(expect([1, 2, 3]).toHaveLength(5)),
         Error,
-        "期望长度为 5，实际长度: 3",
+        "Expected length",
       );
     });
 
@@ -150,7 +150,7 @@ describe("Expect 断言全面测试", () => {
       await assertRejects(
         () => Promise.resolve(expect({}).toHaveLength(0)),
         Error,
-        "toHaveLength 只能用于数组、字符串或具有 length 属性的对象",
+        "toHaveLength can only be used",
       );
     });
 
@@ -171,7 +171,7 @@ describe("Expect 断言全面测试", () => {
       await assertRejects(
         () => Promise.resolve(expect({}).toBeArray()),
         Error,
-        "期望值为数组",
+        "Expected array",
       );
     });
 
@@ -192,7 +192,7 @@ describe("Expect 断言全面测试", () => {
       await assertRejects(
         () => Promise.resolve(expect(123).toBeString()),
         Error,
-        "期望值为字符串",
+        "Expected string",
       );
     });
 
@@ -214,7 +214,7 @@ describe("Expect 断言全面测试", () => {
       await assertRejects(
         () => Promise.resolve(expect(NaN).toBeNumber()),
         Error,
-        "期望值为数字",
+        "Expected number",
       );
     });
 
@@ -222,7 +222,7 @@ describe("Expect 断言全面测试", () => {
       await assertRejects(
         () => Promise.resolve(expect("123").toBeNumber()),
         Error,
-        "期望值为数字",
+        "Expected number",
       );
     });
 
@@ -243,7 +243,7 @@ describe("Expect 断言全面测试", () => {
       await assertRejects(
         () => Promise.resolve(expect(1).toBeBoolean()),
         Error,
-        "期望值为布尔值",
+        "Expected boolean",
       );
     });
 
@@ -264,7 +264,7 @@ describe("Expect 断言全面测试", () => {
       await assertRejects(
         () => Promise.resolve(expect({}).toBeFunction()),
         Error,
-        "期望值为函数",
+        "Expected function",
       );
     });
 
@@ -291,7 +291,7 @@ describe("Expect 断言全面测试", () => {
       await assertRejects(
         () => Promise.resolve(expect([1]).toBeEmpty()),
         Error,
-        "期望数组为空",
+        "Expected empty array",
       );
     });
 
@@ -299,7 +299,7 @@ describe("Expect 断言全面测试", () => {
       await assertRejects(
         () => Promise.resolve(expect("hello").toBeEmpty()),
         Error,
-        "期望字符串为空",
+        "Expected empty string",
       );
     });
 
@@ -307,7 +307,7 @@ describe("Expect 断言全面测试", () => {
       await assertRejects(
         () => Promise.resolve(expect({ a: 1 }).toBeEmpty()),
         Error,
-        "期望对象为空",
+        "Expected empty object",
       );
     });
 
@@ -315,7 +315,7 @@ describe("Expect 断言全面测试", () => {
       await assertRejects(
         () => Promise.resolve(expect(123).toBeEmpty()),
         Error,
-        "toBeEmpty 只能用于数组、字符串或对象",
+        "toBeEmpty can only be used",
       );
     });
 
@@ -348,7 +348,7 @@ describe("Expect 断言全面测试", () => {
       await assertRejects(
         () => Promise.resolve(expect({ a: 1 }).toStrictEqual({ a: 2 })),
         Error,
-        "期望值（严格相等）",
+        "Expected (strict)",
       );
     });
 
@@ -407,7 +407,7 @@ describe("Expect 断言全面测试", () => {
       await assertRejects(
         () => Promise.resolve(expect(1).not.toBe(1)),
         Error,
-        "期望值不等于",
+        "Expected value not equal",
       );
     });
   });
@@ -489,8 +489,8 @@ describe("Expect 断言全面测试", () => {
         expect(1).toBe(2);
       } catch (error) {
         expect(error instanceof Error).toBe(true);
-        expect((error as Error).message).toContain("期望值");
-        expect((error as Error).message).toContain("实际值");
+        expect((error as Error).message).toContain("Expected");
+        expect((error as Error).message).toContain("received");
       }
     });
 
@@ -499,7 +499,7 @@ describe("Expect 断言全面测试", () => {
         expect({ a: 1 }).toHaveProperty("b");
       } catch (error) {
         expect(error instanceof Error).toBe(true);
-        expect((error as Error).message).toContain("期望对象具有属性");
+        expect((error as Error).message).toContain("Expected object to have property");
       }
     });
   });

@@ -24,8 +24,8 @@ import {
   writeTextFile,
   writeTextFileSync,
 } from "@dreamer/runtime-adapter";
-import { describe, expect, it } from "@dreamer/test";
-import { cleanupDir, getTestDataDir } from "./test-utils.ts";
+import { afterAll, describe, expect, it } from "@dreamer/test";
+import { cleanupTestData, getTestDataDir } from "./test-utils.ts";
 
 if (IS_DENO) {
   // Deno 环境测试：使用 denoResolverPlugin
@@ -723,15 +723,9 @@ export { result };
       }, { sanitizeOps: false, sanitizeResources: false });
     });
 
-    // 清理测试输出目录
-    it("应该清理测试输出目录", async () => {
-      if (testDataDir) {
-        try {
-          await cleanupDir(testDataDir);
-        } catch {
-          // 忽略错误
-        }
-      }
+    // 测试完成后清空 tests/data 测试输出
+    afterAll(async () => {
+      await cleanupTestData();
     });
   });
 } else {
@@ -1201,15 +1195,9 @@ export { result };
       });
     });
 
-    // 清理测试输出目录
-    it("应该清理测试输出目录", async () => {
-      if (testDataDir) {
-        try {
-          await cleanupDir(testDataDir);
-        } catch {
-          // 忽略错误
-        }
-      }
+    // 测试完成后清空 tests/data 测试输出
+    afterAll(async () => {
+      await cleanupTestData();
     });
   });
 }

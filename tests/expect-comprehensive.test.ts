@@ -499,7 +499,9 @@ describe("Expect 断言全面测试", () => {
         expect({ a: 1 }).toHaveProperty("b");
       } catch (error) {
         expect(error instanceof Error).toBe(true);
-        expect((error as Error).message).toContain("Expected object to have property");
+        expect((error as Error).message).toContain(
+          "Expected object to have property",
+        );
       }
     });
   });

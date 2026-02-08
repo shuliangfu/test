@@ -158,7 +158,9 @@ export function assertInstanceOf(
   if (!(actual instanceof expected)) {
     throw new Error(
       msg ||
-        `Expected ${expected.name} instance, received: ${JSON.stringify(actual)}`,
+        `Expected ${expected.name} instance, received: ${
+          JSON.stringify(actual)
+        }`,
     );
   }
 }
@@ -178,7 +180,8 @@ export function assertMatch(
   const pattern = typeof regex === "string" ? new RegExp(regex) : regex;
   if (!pattern.test(str)) {
     throw new Error(
-      msg || `Expected to match ${pattern}, received: ${JSON.stringify(actual)}`,
+      msg ||
+        `Expected to match ${pattern}, received: ${JSON.stringify(actual)}`,
     );
   }
 }

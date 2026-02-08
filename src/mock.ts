@@ -81,7 +81,9 @@ export class MockExpect {
 
     if (!found) {
       throw new Error(
-        `Expected mock to be called with ${JSON.stringify(args)}, but no matching call found`,
+        `Expected mock to be called with ${
+          JSON.stringify(args)
+        }, but no matching call found`,
       );
     }
   }
@@ -100,7 +102,9 @@ export class MockExpect {
     }
     if (!this.deepEqual(lastCall.args, args)) {
       throw new Error(
-        `Expected last call with args ${JSON.stringify(args)}, actual: ${JSON.stringify(lastCall.args)}`,
+        `Expected last call with args ${JSON.stringify(args)}, actual: ${
+          JSON.stringify(lastCall.args)
+        }`,
       );
     }
   }
@@ -121,7 +125,9 @@ export class MockExpect {
     }
     if (!this.deepEqual(nthCall.args, args)) {
       throw new Error(
-        `Expected call #${n} with args ${JSON.stringify(args)}, actual: ${JSON.stringify(nthCall.args)}`,
+        `Expected call #${n} with args ${JSON.stringify(args)}, actual: ${
+          JSON.stringify(nthCall.args)
+        }`,
       );
     }
   }
@@ -136,7 +142,9 @@ export class MockExpect {
 
     if (!found) {
       throw new Error(
-        `Expected mock to return ${JSON.stringify(expected)}, but no matching return found`,
+        `Expected mock to return ${
+          JSON.stringify(expected)
+        }, but no matching return found`,
       );
     }
   }
@@ -263,7 +271,9 @@ class MockNotExpect extends MockExpect {
 
     if (found) {
       throw new Error(
-        `Expected mock not to be called with ${JSON.stringify(args)}, but matching call found`,
+        `Expected mock not to be called with ${
+          JSON.stringify(args)
+        }, but matching call found`,
       );
     }
   }
@@ -276,7 +286,9 @@ class MockNotExpect extends MockExpect {
       const lastCall = this.mock.calls[this.mock.calls.length - 1];
       if (lastCall && this.deepEqual(lastCall.args, args)) {
         throw new Error(
-          `Expected last call not to use args ${JSON.stringify(args)}, but it did`,
+          `Expected last call not to use args ${
+            JSON.stringify(args)
+          }, but it did`,
         );
       }
     }
@@ -290,7 +302,9 @@ class MockNotExpect extends MockExpect {
       const nthCall = this.mock.calls[n - 1];
       if (nthCall && this.deepEqual(nthCall.args, args)) {
         throw new Error(
-          `Expected call #${n} not to use args ${JSON.stringify(args)}, but it did`,
+          `Expected call #${n} not to use args ${
+            JSON.stringify(args)
+          }, but it did`,
         );
       }
     }
@@ -306,7 +320,9 @@ class MockNotExpect extends MockExpect {
 
     if (found) {
       throw new Error(
-        `Expected mock not to return ${JSON.stringify(expected)}, but matching return found`,
+        `Expected mock not to return ${
+          JSON.stringify(expected)
+        }, but matching return found`,
       );
     }
   }

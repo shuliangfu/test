@@ -12,7 +12,8 @@ and this project adheres to
 
 ### Fixed
 
-- **Linux CI compatibility**: Use headless mode in config override test to avoid "Missing X server" on Linux CI runners
+- **Linux CI compatibility**: Use headless mode in config override test to avoid
+  "Missing X server" on Linux CI runners
 
 ### Changed
 
@@ -20,7 +21,8 @@ and this project adheres to
 
 ### Removed
 
-- **Socket.IO tests**: Removed all socket-io integration tests and related documentation
+- **Socket.IO tests**: Removed all socket-io integration tests and related
+  documentation
 
 ---
 

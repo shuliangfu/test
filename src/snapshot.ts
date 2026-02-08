@@ -3,6 +3,13 @@
  * 提供快照测试功能
  */
 
+import {
+  join,
+  mkdir,
+  readTextFile,
+  resolve,
+  writeTextFile,
+} from "@dreamer/runtime-adapter";
 import type { TestContext } from "./types.ts";
 
 /**
@@ -10,6 +17,18 @@ import type { TestContext } from "./types.ts";
  */
 const IS_DENO = typeof (globalThis as any).Deno !== "undefined";
 const IS_BUN = typeof (globalThis as any).Bun !== "undefined";
+
+/**
+ * 将测试名称转为安全的文件名（Windows 兼容）
+ * 移除或替换 Windows 不允许的字符: \ / : * ? " < > |
+ */
+function sanitizeSnapshotFilename(name: string): string {
+  return name
+    .replace(/\s+/g, "-")
+    .replace(/[\\/:*?"<>|]/g, "-")
+    .replace(/-+/g, "-") // 合并连续连字符
+    .replace(/^-|-$/g, "") || "snapshot";
+}
 
 /**
  * 快照测试
@@ -22,12 +41,12 @@ export async function assertSnapshot(
   value: unknown,
   hint?: string,
 ): Promise<void> {
-  const snapshotDir = ".snapshots";
+  const snapshotDir = resolve(".snapshots");
   // 如果没有提供测试上下文，使用默认名称
   const testName = t?.name || "unknown-test";
-  const testFile = testName.replace(/\s+/g, "-");
+  const testFile = sanitizeSnapshotFilename(testName);
   const snapshotFile = hint ? `${testFile}-${hint}.snap` : `${testFile}.snap`;
-  const snapshotPath = `${snapshotDir}/${snapshotFile}`;
+  const snapshotPath = join(snapshotDir, snapshotFile);
 
   const serialized = JSON.stringify(value, null, 2);
 
@@ -35,7 +54,7 @@ export async function assertSnapshot(
   if (IS_DENO) {
     // Deno 环境
     try {
-      await (globalThis as any).Deno.mkdir(snapshotDir, { recursive: true });
+      await mkdir(snapshotDir, { recursive: true });
     } catch {
       // 目录可能已存在
     }
@@ -43,16 +62,14 @@ export async function assertSnapshot(
     // 读取现有快照
     let existingSnapshot: string | undefined;
     try {
-      existingSnapshot = await (globalThis as any).Deno.readTextFile(
-        snapshotPath,
-      );
+      existingSnapshot = await readTextFile(snapshotPath);
     } catch {
       // 快照文件不存在，创建新快照
     }
 
     if (existingSnapshot === undefined) {
       // 首次运行，创建快照
-      await (globalThis as any).Deno.writeTextFile(snapshotPath, serialized);
+      await writeTextFile(snapshotPath, serialized);
       return;
     }
 
@@ -63,8 +80,14 @@ export async function assertSnapshot(
       );
     }
   } else if (IS_BUN) {
-    // 确保快照目录存在（Bun.write 会自动创建目录）
-    // 先尝试读取文件来检查目录是否存在
+    // 确保快照目录存在
+    try {
+      await mkdir(snapshotDir, { recursive: true });
+    } catch {
+      // 目录可能已存在
+    }
+
+    // 先尝试读取文件来检查快照是否存在
     const file = (globalThis as any).Bun.file(snapshotPath);
     const exists = await file.exists();
 

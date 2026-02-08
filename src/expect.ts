@@ -42,7 +42,9 @@ export class Expect {
    */
   toBeTruthy(): void {
     if (!this.actual) {
-      throw new Error(`Expected truthy value, received: ${JSON.stringify(this.actual)}`);
+      throw new Error(
+        `Expected truthy value, received: ${JSON.stringify(this.actual)}`,
+      );
     }
   }
 
@@ -51,7 +53,9 @@ export class Expect {
    */
   toBeFalsy(): void {
     if (this.actual) {
-      throw new Error(`Expected falsy value, received: ${JSON.stringify(this.actual)}`);
+      throw new Error(
+        `Expected falsy value, received: ${JSON.stringify(this.actual)}`,
+      );
     }
   }
 
@@ -60,7 +64,9 @@ export class Expect {
    */
   toBeNull(): void {
     if (this.actual !== null) {
-      throw new Error(`Expected null, received: ${JSON.stringify(this.actual)}`);
+      throw new Error(
+        `Expected null, received: ${JSON.stringify(this.actual)}`,
+      );
     }
   }
 
@@ -92,7 +98,9 @@ export class Expect {
     const pattern = typeof regex === "string" ? new RegExp(regex) : regex;
     if (!pattern.test(str)) {
       throw new Error(
-        `Expected to match ${pattern}, received: ${JSON.stringify(this.actual)}`,
+        `Expected to match ${pattern}, received: ${
+          JSON.stringify(this.actual)
+        }`,
       );
     }
   }
@@ -128,7 +136,9 @@ export class Expect {
   toBeGreaterThan(expected: number): void {
     if (typeof this.actual !== "number" || this.actual <= expected) {
       throw new Error(
-        `Expected value > ${expected}, received: ${JSON.stringify(this.actual)}`,
+        `Expected value > ${expected}, received: ${
+          JSON.stringify(this.actual)
+        }`,
       );
     }
   }
@@ -139,7 +149,9 @@ export class Expect {
   toBeGreaterThanOrEqual(expected: number): void {
     if (typeof this.actual !== "number" || this.actual < expected) {
       throw new Error(
-        `Expected value >= ${expected}, received: ${JSON.stringify(this.actual)}`,
+        `Expected value >= ${expected}, received: ${
+          JSON.stringify(this.actual)
+        }`,
       );
     }
   }
@@ -150,7 +162,9 @@ export class Expect {
   toBeLessThan(expected: number): void {
     if (typeof this.actual !== "number" || this.actual >= expected) {
       throw new Error(
-        `Expected value < ${expected}, received: ${JSON.stringify(this.actual)}`,
+        `Expected value < ${expected}, received: ${
+          JSON.stringify(this.actual)
+        }`,
       );
     }
   }
@@ -161,7 +175,9 @@ export class Expect {
   toBeLessThanOrEqual(expected: number): void {
     if (typeof this.actual !== "number" || this.actual > expected) {
       throw new Error(
-        `Expected value <= ${expected}, received: ${JSON.stringify(this.actual)}`,
+        `Expected value <= ${expected}, received: ${
+          JSON.stringify(this.actual)
+        }`,
       );
     }
   }
@@ -241,7 +257,9 @@ export class Expect {
   toBeCloseTo(expected: number, numDigits: number = 2): void {
     if (typeof this.actual !== "number" || typeof expected !== "number") {
       throw new Error(
-        `toBeCloseTo can only be used with numbers, received: ${JSON.stringify(this.actual)}`,
+        `toBeCloseTo can only be used with numbers, received: ${
+          JSON.stringify(this.actual)
+        }`,
       );
     }
 
@@ -434,9 +452,9 @@ export class Expect {
       } else if (typeof expectedError === "function") {
         if (!(error instanceof expectedError)) {
           throw new Error(
-`Expected to throw ${expectedError.name}, threw: ${
-            error instanceof Error ? error.constructor.name : typeof error
-          }`,
+            `Expected to throw ${expectedError.name}, threw: ${
+              error instanceof Error ? error.constructor.name : typeof error
+            }`,
           );
         }
       }
@@ -576,7 +594,9 @@ class NotExpect extends Expect {
   override toBe(expected: unknown): void {
     if (this.actual === expected) {
       throw new Error(
-        `Expected value not equal to ${JSON.stringify(expected)}, but values are equal`,
+        `Expected value not equal to ${
+          JSON.stringify(expected)
+        }, but values are equal`,
       );
     }
   }
@@ -587,7 +607,9 @@ class NotExpect extends Expect {
   override toEqual(expected: unknown): void {
     if (this.deepEqual(this.actual, expected)) {
       throw new Error(
-        `Expected value not equal to ${JSON.stringify(expected)}, but values are equal`,
+        `Expected value not equal to ${
+          JSON.stringify(expected)
+        }, but values are equal`,
       );
     }
   }
@@ -597,7 +619,9 @@ class NotExpect extends Expect {
    */
   override toBeTruthy(): void {
     if (this.actual) {
-      throw new Error(`Expected falsy value, received: ${JSON.stringify(this.actual)}`);
+      throw new Error(
+        `Expected falsy value, received: ${JSON.stringify(this.actual)}`,
+      );
     }
   }
 
@@ -647,7 +671,9 @@ class NotExpect extends Expect {
     const pattern = typeof regex === "string" ? new RegExp(regex) : regex;
     if (pattern.test(str)) {
       throw new Error(
-        `Expected not to match ${pattern}, but received: ${JSON.stringify(this.actual)}`,
+        `Expected not to match ${pattern}, but received: ${
+          JSON.stringify(this.actual)
+        }`,
       );
     }
   }
@@ -855,7 +881,9 @@ class NotExpect extends Expect {
   override toStrictEqual(expected: unknown): void {
     if (this.strictDeepEqual(this.actual, expected)) {
       throw new Error(
-        `Expected (strict) not equal to ${JSON.stringify(expected)}, but values are equal`,
+        `Expected (strict) not equal to ${
+          JSON.stringify(expected)
+        }, but values are equal`,
       );
     }
   }
@@ -866,7 +894,9 @@ class NotExpect extends Expect {
   override toBeGreaterThan(expected: number): void {
     if (typeof this.actual === "number" && this.actual > expected) {
       throw new Error(
-        `Expected value not > ${expected}, received: ${JSON.stringify(this.actual)}`,
+        `Expected value not > ${expected}, received: ${
+          JSON.stringify(this.actual)
+        }`,
       );
     }
   }
@@ -890,7 +920,9 @@ class NotExpect extends Expect {
   override toBeLessThan(expected: number): void {
     if (typeof this.actual === "number" && this.actual < expected) {
       throw new Error(
-        `Expected value not < ${expected}, received: ${JSON.stringify(this.actual)}`,
+        `Expected value not < ${expected}, received: ${
+          JSON.stringify(this.actual)
+        }`,
       );
     }
   }
@@ -940,9 +972,9 @@ class NotExpect extends Expect {
       if (expectedError === undefined) {
         // 没有指定错误类型，任何错误都应该报错
         throw new Error(
-`Expected function not to throw, but threw: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
+          `Expected function not to throw, but threw: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
         );
       }
 

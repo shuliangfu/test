@@ -11,7 +11,8 @@
 
 ### 修复
 
-- **Linux CI 兼容性**：在配置覆盖测试中使用 headless 模式，避免 Linux CI 运行器出现 "Missing X server" 错误
+- **Linux CI 兼容性**：在配置覆盖测试中使用 headless 模式，避免 Linux CI
+  运行器出现 "Missing X server" 错误
 
 ### 变更
 

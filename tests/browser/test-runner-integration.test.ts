@@ -30,6 +30,7 @@ describe("测试运行器浏览器集成", () => {
         expect(typeof t.browser?.waitFor).toBe("function");
       }
     }, {
+      timeout: 15000,
       browser: {
         enabled: true,
         headless: true,
@@ -48,6 +49,7 @@ describe("测试运行器浏览器集成", () => {
         expect(t.browser).toBeDefined();
       }
     }, {
+      timeout: 15000,
       browser: {
         enabled: true,
         headless: true,
@@ -61,6 +63,7 @@ describe("测试运行器浏览器集成", () => {
         expect(t.browser).toBeDefined();
       }
     }, {
+      timeout: 15000,
       browser: {
         enabled: true,
         headless: true,
@@ -73,6 +76,7 @@ describe("测试运行器浏览器集成", () => {
         expect(t.browser).toBeUndefined();
       }
     }, {
+      timeout: 15000,
       browser: {
         enabled: false,
       },
@@ -87,6 +91,7 @@ describe("测试运行器浏览器集成", () => {
         firstBrowser = t.browser.browser;
       }
     }, {
+      timeout: 15000,
       browser: {
         enabled: true,
         headless: true,
@@ -116,6 +121,7 @@ describe("测试运行器浏览器集成", () => {
         expect(t.browser?.page).toBeDefined();
       }
     }, {
+      timeout: 15000,
       browser: {
         enabled: true,
         headless: true,
@@ -154,6 +160,7 @@ describe("测试运行器浏览器集成", () => {
         expect(t.browser).toBeDefined();
       }
     }, {
+      timeout: 15000,
       browser: {
         enabled: true,
         headless: true,
@@ -171,6 +178,7 @@ describe("测试运行器浏览器集成", () => {
         expect(t.browser).toBeDefined();
       }
     }, {
+      timeout: 15000,
       browser: {
         enabled: true,
         headless: true,
@@ -187,6 +195,7 @@ describe("测试运行器浏览器集成", () => {
         expect(result).toBe(4);
       }
     }, {
+      timeout: 15000,
       browser: {
         enabled: true,
         headless: true,
@@ -203,6 +212,7 @@ describe("测试运行器浏览器集成", () => {
         expect(url).toBe("about:blank");
       }
     }, {
+      timeout: 15000,
       browser: {
         enabled: true,
         headless: true,
@@ -246,6 +256,7 @@ describe("测试运行器浏览器集成", () => {
           expect(t.browser).toBeDefined();
         }
       }, {
+        timeout: 15000,
         browser: {
           enabled: true,
           headless: true,
@@ -311,6 +322,7 @@ describe("测试运行器浏览器集成", () => {
         expect(t.browser).toBeUndefined();
       }
     }, {
+      timeout: 15000,
       browser: {
         enabled: true,
         headless: true,

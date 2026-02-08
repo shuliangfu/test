@@ -115,6 +115,8 @@ export async function assertSnapshot(
     }
   } else {
     // 其他环境：不支持快照测试
-    throw new Error("Snapshot testing is not supported in the current environment");
+    throw new Error(
+      "Snapshot testing is not supported in the current environment",
+    );
   }
 }

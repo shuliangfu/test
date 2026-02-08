@@ -40,25 +40,25 @@ Deno built-in test framework + Bun test framework
 
 ### Test File List
 
-| File name                                   | Test cases | Status                    | Description                                           |
-| ------------------------------------------- | ---------- | ------------------------- | ----------------------------------------------------- |
-| `assertions-comprehensive.test.ts`          | 25         | ✅ All passed             | Comprehensive assertion utility function tests        |
-| `browser/beforeall-execution.test.ts`       | 6          | ✅ All passed             | Browser test beforeAll execution tests                |
-| `browser/browser-context.test.ts`           | 13         | ✅ All passed             | Browser test context management                       |
-| `browser/browser-integration.test.ts`       | 8          | ✅ All passed             | Browser test integration                              |
-| `browser/bundle.test.ts`                    | 7          | ✅ All passed             | Client-side code bundling tests                       |
-| `browser/chrome.test.ts`                    | 3          | ✅ All passed             | Chrome path detection tests                           |
-| `browser/dependencies.test.ts`              | 4          | ✅ All passed             | Browser test dependency management                    |
-| `browser/page.test.ts`                      | 7          | ✅ All passed             | Test page creation tests                              |
-| `browser/resolver.test.ts`                  | 17         | ✅ All passed             | Deno resolver plugin tests                            |
-| `browser/test-runner-integration.test.ts`   | 19         | ✅ All passed (1 skipped) | Test runner browser integration                       |
-| `expect-comprehensive.test.ts`              | 63         | ✅ All passed             | Expect assertion comprehensive tests                  |
-| `hooks-execution.test.ts`                   | 27         | ✅ All passed             | Hook function execution tests                         |
-| `mock-comprehensive.test.ts`                | 19         | ✅ All passed             | Mock functionality comprehensive tests                |
-| `mock-fetch-comprehensive.test.ts`          | 13         | ✅ All passed             | HTTP Mock comprehensive tests                         |
-| `mod.test.ts`                               | 83         | ✅ All passed (1 skipped) | Basic functionality tests (includes skipIf tests)     |
-| `test-options.test.ts`                      | 17         | ✅ All passed             | Test suite options and hook options tests             |
-| `test-utils-comprehensive.test.ts`          | 25         | ✅ All passed             | Test utility function comprehensive tests             |
+| File name                                 | Test cases | Status                    | Description                                       |
+| ----------------------------------------- | ---------- | ------------------------- | ------------------------------------------------- |
+| `assertions-comprehensive.test.ts`        | 25         | ✅ All passed             | Comprehensive assertion utility function tests    |
+| `browser/beforeall-execution.test.ts`     | 6          | ✅ All passed             | Browser test beforeAll execution tests            |
+| `browser/browser-context.test.ts`         | 13         | ✅ All passed             | Browser test context management                   |
+| `browser/browser-integration.test.ts`     | 8          | ✅ All passed             | Browser test integration                          |
+| `browser/bundle.test.ts`                  | 7          | ✅ All passed             | Client-side code bundling tests                   |
+| `browser/chrome.test.ts`                  | 3          | ✅ All passed             | Chrome path detection tests                       |
+| `browser/dependencies.test.ts`            | 4          | ✅ All passed             | Browser test dependency management                |
+| `browser/page.test.ts`                    | 7          | ✅ All passed             | Test page creation tests                          |
+| `browser/resolver.test.ts`                | 17         | ✅ All passed             | Deno resolver plugin tests                        |
+| `browser/test-runner-integration.test.ts` | 19         | ✅ All passed (1 skipped) | Test runner browser integration                   |
+| `expect-comprehensive.test.ts`            | 63         | ✅ All passed             | Expect assertion comprehensive tests              |
+| `hooks-execution.test.ts`                 | 27         | ✅ All passed             | Hook function execution tests                     |
+| `mock-comprehensive.test.ts`              | 19         | ✅ All passed             | Mock functionality comprehensive tests            |
+| `mock-fetch-comprehensive.test.ts`        | 13         | ✅ All passed             | HTTP Mock comprehensive tests                     |
+| `mod.test.ts`                             | 83         | ✅ All passed (1 skipped) | Basic functionality tests (includes skipIf tests) |
+| `test-options.test.ts`                    | 17         | ✅ All passed             | Test suite options and hook options tests         |
+| `test-utils-comprehensive.test.ts`        | 25         | ✅ All passed             | Test utility function comprehensive tests         |
 
 ## 🔍 Functional Module Test Coverage
 

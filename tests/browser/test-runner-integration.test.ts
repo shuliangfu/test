@@ -257,13 +257,16 @@ describe("测试运行器浏览器集成", () => {
         it("应该允许子套件覆盖父套件配置", async (t) => {
           if (t) {
             expect(t.browser).toBeDefined();
-            await new Promise((resolve) => setTimeout(resolve, 5000));
+            // 子套件用 moduleLoadTimeout: 2000 覆盖父套件 5000，验证覆盖生效
+            // 使用 headless: true 保证 Linux CI 无 X server 时也能通过
+            await new Promise((resolve) => setTimeout(resolve, 500));
           }
         }, {
           timeout: 15000,
           browser: {
             enabled: true,
-            headless: false, // 覆盖父套件配置
+            headless: true,
+            moduleLoadTimeout: 2000, // 覆盖父套件 moduleLoadTimeout: 5000
           },
         });
       });

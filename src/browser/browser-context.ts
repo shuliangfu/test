@@ -5,10 +5,22 @@
  * 创建和管理 Puppeteer 浏览器实例和页面
  */
 
-import { removeSync } from "@dreamer/runtime-adapter";
+import {
+  existsSync,
+  getEnv,
+  join,
+  removeSync,
+  writeStderrSync,
+} from "@dreamer/runtime-adapter";
+import {
+  Browser,
+  computeExecutablePath,
+  detectBrowserPlatform,
+  getDownloadUrl,
+  install,
+} from "@puppeteer/browsers";
 import type { BrowserTestConfig } from "../types.ts";
 import { buildClientBundle } from "./bundle.ts";
-import { findChromePath } from "./chrome.ts";
 import { getPuppeteer } from "./dependencies.ts";
 import { createTestPage } from "./page.ts";
 
@@ -45,6 +57,117 @@ export interface BrowserContext {
   close(): Promise<void>;
 }
 
+/** ANSI 绿色 */
+const GREEN = "\x1b[32m";
+/** ANSI 黄色 */
+const YELLOW = "\x1b[33m";
+/** ANSI 红色 */
+const RED = "\x1b[31m";
+/** ANSI 重置 */
+const RESET = "\x1b[0m";
+
+/**
+ * 下载进度引用，用于 install 的 downloadProgressCallback 与 spinner 共享
+ */
+interface ProgressRef {
+  downloaded: number;
+  total: number;
+}
+
+/**
+ * 在终端中显示旋转的 loading 动画并执行异步任务
+ * 使用 stderr 输出，test 仅于命令行运行
+ * @param message - 显示文案
+ * @param fn - 要执行的异步函数
+ * @param progressRef - 可选，install 下载进度引用，有值时显示下载百分比
+ */
+async function runWithSpinner<T>(
+  message: string,
+  fn: () => Promise<T>,
+  progressRef?: ProgressRef,
+): Promise<T> {
+  const encoder = new TextEncoder();
+  const frames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
+  let i = 0;
+  const interval = setInterval(() => {
+    const frame = frames[i % frames.length];
+    let text = message;
+    if (progressRef && progressRef.total > 0) {
+      const pct = Math.round(
+        (100 * progressRef.downloaded) / progressRef.total,
+      );
+      text = `${message} ${pct}%`;
+    }
+    writeStderrSync(
+      encoder.encode(
+        `\r[dreamer/test] ${GREEN}${frame}${RESET} ${YELLOW}${text}${RESET}    `,
+      ),
+    );
+    i += 1;
+  }, 50);
+  try {
+    const result = await fn();
+    clearInterval(interval);
+    const finalMsg = progressRef && progressRef.total > 0
+      ? `${message} 100%`
+      : message;
+    writeStderrSync(
+      encoder.encode(
+        `\r[dreamer/test] ${GREEN}✓${RESET} ${YELLOW}${finalMsg}${RESET}\n`,
+      ),
+    );
+    return result;
+  } catch (e) {
+    clearInterval(interval);
+    writeStderrSync(
+      encoder.encode(
+        `\r[dreamer/test] ${RED}✗${RESET} ${YELLOW}${message}${RESET}\n`,
+      ),
+    );
+    throw e;
+  }
+}
+
+/**
+ * 格式化 Chrome 安装失败/超时时的提示信息
+ * 包含下载链接、版本号、缓存目录，便于用户手动下载或排查
+ * @param buildId - Chrome 版本（如 131.0.6778.85 或 stable）
+ * @param cacheDir - 缓存目录路径
+ * @returns 多行提示文本
+ */
+function formatChromeInstallHint(buildId: string, cacheDir: string): string {
+  const lines: string[] = [
+    "Chrome for Testing download failed or timed out.",
+    `  Version: ${buildId}`,
+    `  Cache dir: ${cacheDir}`,
+    "  Manual install: npx @puppeteer/browsers install chrome@" + buildId,
+  ];
+  // 仅当 buildId 为具体版本号时能生成下载 URL（stable 需 resolve，无法直接给 URL）
+  const isVersion = /^\d+\.\d+\.\d+\.\d+$/.test(buildId);
+  if (isVersion) {
+    try {
+      const platform = detectBrowserPlatform();
+      if (platform) {
+        const url = getDownloadUrl(Browser.CHROME, platform, buildId);
+        lines.splice(2, 0, `  Download: ${url.toString()}`);
+      }
+    } catch {
+      // 忽略 getDownloadUrl 失败
+    }
+  }
+  return lines.join("\n");
+}
+
+/**
+ * 输出 Chrome 安装失败/超时提示到 stderr
+ */
+function outputChromeInstallHint(buildId: string, cacheDir: string): void {
+  const hint = formatChromeInstallHint(buildId, cacheDir);
+  writeStderrSync(
+    new TextEncoder().encode(`\n[dreamer/test] ${GREEN}${hint}${RESET}\n\n`),
+  );
+}
+
 /**
  * 创建浏览器测试上下文
  *
@@ -59,19 +182,128 @@ export async function createBrowserContext(
 ): Promise<BrowserContext> {
   const puppeteer = getPuppeteer();
 
-  // 检测 Chrome 路径
-  const executablePath = config.executablePath || findChromePath();
+  // 优先使用 config.executablePath；不传则用 Puppeteer 自带的 Chrome for Testing
+  const executablePath = config.executablePath;
 
-  // 启动浏览器
-  const browser = await puppeteer.launch({
-    headless: config.headless !== false,
-    executablePath,
-    args: config.args || [
-      "--no-sandbox",
-      "--disable-setuid-sandbox",
-      "--disable-dev-shm-usage",
-    ],
-  });
+  const defaultArgs = [
+    "--no-sandbox",
+    "--disable-setuid-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    "--disable-software-rasterizer",
+    "--disable-extensions",
+  ];
+
+  let browser;
+  try {
+    browser = await puppeteer.launch({
+      headless: config.headless !== false,
+      ...(executablePath ? { executablePath } : {}),
+      args: config.args || defaultArgs,
+      timeout: 60000,
+    });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    const needAutoInstall = !executablePath &&
+      (msg.includes("Could not find Chrome") ||
+        msg.includes("executable is missing"));
+    if (needAutoInstall) {
+      const home = getEnv("HOME") ?? getEnv("USERPROFILE") ?? "";
+      const cacheDir = getEnv("PUPPETEER_CACHE_DIR") ??
+        (home ? join(home, ".cache", "puppeteer") : "");
+      const verMatch = msg.match(/ver\.\s*([\d.]+)/);
+      const buildId = verMatch ? verMatch[1] : "stable";
+      try {
+        if (cacheDir) {
+          const chromeDir = join(cacheDir, "chrome");
+          const exePath = computeExecutablePath({
+            browser: Browser.CHROME,
+            buildId,
+            cacheDir,
+          });
+          if (existsSync(exePath)) {
+            // Chrome 已安装（解压完成），直接 launch，避免 install() 卡住不退出
+            browser = await puppeteer.launch({
+              headless: config.headless !== false,
+              args: config.args || defaultArgs,
+              timeout: 60000,
+            });
+          } else {
+            try {
+              removeSync(chromeDir, { recursive: true });
+            } catch {
+              // 忽略删除失败（可能不存在）
+            }
+            const progressRef: ProgressRef = { downloaded: 0, total: 0 };
+            const INSTALL_TIMEOUT_MS = 5 * 60 * 1000; // 5 分钟，install 解压阶段可能卡住
+            await runWithSpinner(
+              `Installing Chrome for Testing (${buildId})`,
+              async () => {
+                const installPromise = install({
+                  browser: Browser.CHROME,
+                  buildId,
+                  cacheDir,
+                  downloadProgressCallback: (downloaded, total) => {
+                    progressRef.downloaded = downloaded;
+                    progressRef.total = total;
+                  },
+                });
+                const timeoutPromise = new Promise<never>((_, reject) =>
+                  setTimeout(
+                    () => reject(new Error("Install timeout (5min)...")),
+                    INSTALL_TIMEOUT_MS,
+                  )
+                );
+                try {
+                  await Promise.race([installPromise, timeoutPromise]);
+                } catch (e) {
+                  outputChromeInstallHint(buildId, cacheDir);
+                  if (
+                    e instanceof Error &&
+                    e.message.includes("Install timeout")
+                  ) {
+                    // 解压阶段可能卡住但 chrome 已就绪，继续尝试 launch
+                    writeStderrSync(
+                      new TextEncoder().encode(
+                        `\r[dreamer/test] Install timeout, trying launch anyway...\n`,
+                      ),
+                    );
+                  } else {
+                    throw e;
+                  }
+                }
+              },
+              progressRef,
+            );
+            browser = await puppeteer.launch({
+              headless: config.headless !== false,
+              args: config.args || defaultArgs,
+              timeout: 60000,
+            });
+          }
+        } else {
+          throw new Error(
+            `${msg}\n\nFix: Run \`npx puppeteer browsers install chrome\` or set HOME.`,
+          );
+        }
+      } catch (installErr) {
+        outputChromeInstallHint(buildId, cacheDir);
+        const hint = "\n\nFix: Run `npx @puppeteer/browsers install chrome@" +
+          buildId +
+          "` or see the hint above.";
+        throw new Error(
+          `${msg}${
+            installErr instanceof Error ? ` (${installErr.message})` : ""
+          }${hint}`,
+        );
+      }
+    } else {
+      const hint = msg.includes("Could not find Chrome")
+        ? "\n\nFix: Run `npx puppeteer browsers install chrome`."
+        : "";
+      throw new Error(`${msg}${hint}`);
+    }
+  }
 
   let page;
   let htmlPath: string = "";

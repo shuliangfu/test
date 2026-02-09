@@ -7,6 +7,25 @@
 
 ---
 
+## [1.0.2] - 2026-02-09
+
+### 新增
+
+- **`@dreamer/test/browser` 子路径导出**：浏览器 API（`createBrowserContext`、
+  `findChromePath`、`buildClientBundle` 等）现可通过
+  `import { findChromePath } from "@dreamer/test/browser"` 或
+  `jsr:@dreamer/test/browser` 导入
+- **`findChromePath()`**：用于检测系统 Chrome 路径的辅助函数，在需要可视调试
+  （`headless: false`）时传入 `executablePath` 使用
+
+### 变更
+
+- **默认 Chrome**：未传入 `executablePath` 时，使用 Puppeteer 自带的 Chrome for
+  Testing，不再自动检测系统 Chrome
+- **文档**：在 README 中新增导入路径说明及 `findChromePath` 使用示例
+
+---
+
 ## [1.0.1] - 2026-02-08
 
 ### 修复

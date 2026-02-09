@@ -8,6 +8,26 @@ and this project adheres to
 
 ---
 
+## [1.0.2] - 2026-02-09
+
+### Added
+
+- **`@dreamer/test/browser` subpath export**: Browser APIs
+  (`createBrowserContext`, `findChromePath`, `buildClientBundle`, etc.) now
+  available via `import { findChromePath } from "@dreamer/test/browser"` or
+  `jsr:@dreamer/test/browser`
+- **`findChromePath()`**: Helper to detect system Chrome path for passing
+  `executablePath` when using visible debugging (`headless: false`)
+
+### Changed
+
+- **Default Chrome**: When `executablePath` is not passed, uses Puppeteer's
+  bundled Chrome for Testing instead of auto-detecting system Chrome
+- **Documentation**: Added import paths section and `findChromePath` usage
+  examples in README
+
+---
+
 ## [1.0.1] - 2026-02-08
 
 ### Fixed

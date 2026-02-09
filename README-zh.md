@@ -32,6 +32,17 @@ deno add jsr:@dreamer/test
 bunx jsr add -D @dreamer/test
 ```
 
+**导入路径**：
+
+- 主入口：`@dreamer/test` 或 `jsr:@dreamer/test` — 测试运行器、Mock、断言等
+- 浏览器：`@dreamer/test/browser` 或 `jsr:@dreamer/test/browser` — 浏览器 API
+  （`createBrowserContext`、`findChromePath`、`buildClientBundle` 等）
+
+```typescript
+import { describe, expect, it } from "@dreamer/test";
+import { createBrowserContext, findChromePath } from "@dreamer/test/browser";
+```
+
 ---
 
 ## 🌍 环境兼容性
@@ -344,6 +355,24 @@ describe("Redis 测试", () => {
 ### 浏览器测试集成
 
 浏览器测试允许你在真实的 Chrome 浏览器环境中测试前端代码。
+
+如需使用系统 Chrome 做可视化调试（`headless: false`），可从
+`@dreamer/test/browser` 导入 `findChromePath()`：
+
+```typescript
+import { describe, expect, it } from "@dreamer/test";
+import { findChromePath } from "@dreamer/test/browser";
+
+describe("可视化浏览器", {
+  browser: {
+    enabled: true,
+    headless: false,
+    executablePath: findChromePath(), // 找不到路径时使用系统 Chrome
+  },
+}, () => {
+  it("显示页面", async (t) => {/* ... */});
+});
+```
 
 #### 基础浏览器测试
 
@@ -669,12 +698,13 @@ describe("浏览器测试套件", {
 - `waitFor(fn: () => boolean, options?)`: 等待页面中的条件满足
 - `close()`: 关闭浏览器和页面
 
-**独立使用浏览器上下文**：
+**独立使用浏览器上下文**（来自 `@dreamer/test/browser`）：
 
 - `createBrowserContext(config: BrowserTestConfig)`: 创建浏览器测试上下文
 - `buildClientBundle(options: BundleOptions)`: 打包客户端代码
 - `createTestPage(options: TestPageOptions)`: 创建测试页面
-- `findChromePath()`: 检测系统 Chrome 路径
+- `findChromePath()`: 检测系统 Chrome 路径（需传入 `executablePath`
+  做可视化调试时使用）
 - `cleanupAllBrowsers()`: 清理所有浏览器实例（在所有测试完成后调用）
 - `cleanupSuiteBrowser(suitePath: string)`: 清理指定套件的浏览器实例
 
@@ -719,11 +749,11 @@ skipIf），测试覆盖率达到 100%。详细测试报告请查看
 
 ## 📋 变更日志
 
-### [1.0.1] - 2026-02-08
+### [1.0.2] - 2026-02-09
 
-- **修复**：Linux CI 兼容性（配置覆盖测试使用 headless 模式）
-- **变更**：所有错误信息改为英文
-- **移除**：Socket.IO 测试及相关文档
+- **新增**：`@dreamer/test/browser` 子路径导出（`findChromePath` 等）
+- **变更**：未传 `executablePath` 时默认使用 Puppeteer 自带的 Chrome for Testing
+- **文档**：导入路径说明及 `findChromePath` 使用示例
 
 完整历史请查看 [CHANGELOG-zh.md](./CHANGELOG-zh.md)。
 

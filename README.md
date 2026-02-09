@@ -34,6 +34,18 @@ deno add jsr:@dreamer/test
 bunx jsr add -D @dreamer/test
 ```
 
+**Import paths**:
+
+- Main: `@dreamer/test` or `jsr:@dreamer/test` — test runner, mock, assertions,
+  etc.
+- Browser: `@dreamer/test/browser` or `jsr:@dreamer/test/browser` — browser APIs
+  (`createBrowserContext`, `findChromePath`, `buildClientBundle`, etc.)
+
+```typescript
+import { describe, expect, it } from "@dreamer/test";
+import { createBrowserContext, findChromePath } from "@dreamer/test/browser";
+```
+
 ---
 
 ## 🌍 Compatibility
@@ -348,6 +360,36 @@ describe("Redis tests", () => {
 
 Browser tests allow you to test frontend code in a real Chrome browser
 environment.
+
+#### Browser Requirements
+
+Browser tests use Puppeteer with **Chrome for Testing** by default (cached at
+`~/.cache/puppeteer`). If you see `Could not find Chrome`, run:
+
+```bash
+npx puppeteer browsers install chrome
+```
+
+Alternatively, set `browser.executablePath` to your system Chrome path (e.g. CI
+with `CHROME_PATH`).
+
+To use system Chrome for visible debugging (`headless: false`), use
+`findChromePath()` from `@dreamer/test/browser`:
+
+```typescript
+import { describe, expect, it } from "@dreamer/test";
+import { findChromePath } from "@dreamer/test/browser";
+
+describe("Visible browser", {
+  browser: {
+    enabled: true,
+    headless: false,
+    executablePath: findChromePath(), // Use system Chrome when path not found
+  },
+}, () => {
+  it("shows the page", async (t) => {/* ... */});
+});
+```
 
 #### Basic Browser Tests
 
@@ -680,12 +722,13 @@ describe("Browser test suite", {
 - `waitFor(fn: () => boolean, options?)`: Wait for condition in page
 - `close()`: Close browser and page
 
-**Standalone browser context usage**:
+**Standalone browser context usage** (from `@dreamer/test/browser`):
 
 - `createBrowserContext(config: BrowserTestConfig)`: Create browser test context
 - `buildClientBundle(options: BundleOptions)`: Bundle client code
 - `createTestPage(options: TestPageOptions)`: Create test page
-- `findChromePath()`: Detect system Chrome path
+- `findChromePath()`: Detect system Chrome path (use when passing
+  `executablePath` for visible debugging)
 - `cleanupAllBrowsers()`: Clean up all browser instances (call after all tests
   complete)
 - `cleanupSuiteBrowser(suitePath: string)`: Clean up specified suite's browser
@@ -732,11 +775,12 @@ Full test report: [TEST_REPORT.md](./TEST_REPORT.md)
 
 ## 📋 Changelog
 
-### [1.0.1] - 2026-02-08
+### [1.0.2] - 2026-02-09
 
-- **Fixed**: Linux CI compatibility (headless mode in config override test)
-- **Changed**: All error messages in English
-- **Removed**: Socket.IO tests and related documentation
+- **Added**: `@dreamer/test/browser` subpath export (`findChromePath`, etc.)
+- **Changed**: Default to Puppeteer's Chrome for Testing when `executablePath`
+  not passed
+- **Docs**: Import paths and `findChromePath` usage examples
 
 See [CHANGELOG.md](./CHANGELOG.md) for full history.
 

@@ -8,7 +8,7 @@ import { afterAll, beforeAll, describe, expect, it } from "../../src/mod.ts";
 
 // 用于跟踪 beforeAll 执行次数
 let beforeAllCallCount = 0;
-let testPort = 30000;
+let testPort = 30001;
 
 describe(`浏览器测试 - beforeAll 执行测试 (${RUNTIME})`, () => {
   // 在所有测试前执行
@@ -36,6 +36,7 @@ describe(`浏览器测试 - beforeAll 执行测试 (${RUNTIME})`, () => {
     it("测试 1: 验证 beforeAll 只执行一次", async (t) => {
       expect(beforeAllCallCount).toBe(1);
     }, {
+      timeout: 10000,
       browser: {
         enabled: true,
         headless: true,
@@ -45,6 +46,7 @@ describe(`浏览器测试 - beforeAll 执行测试 (${RUNTIME})`, () => {
     it("测试 2: 验证 beforeAll 只执行一次", async (t) => {
       expect(beforeAllCallCount).toBe(1);
     }, {
+      timeout: 10000,
       browser: {
         enabled: true,
         headless: true,
@@ -54,6 +56,7 @@ describe(`浏览器测试 - beforeAll 执行测试 (${RUNTIME})`, () => {
     it("测试 3: 验证 beforeAll 只执行一次", async (t) => {
       expect(beforeAllCallCount).toBe(1);
     }, {
+      timeout: 10000,
       browser: {
         enabled: true,
         headless: true,
@@ -65,6 +68,7 @@ describe(`浏览器测试 - beforeAll 执行测试 (${RUNTIME})`, () => {
     it("测试 4: 验证 beforeAll 只执行一次", async (t) => {
       expect(beforeAllCallCount).toBe(1);
     }, {
+      timeout: 10000,
       browser: {
         enabled: true,
         headless: true,
@@ -74,6 +78,7 @@ describe(`浏览器测试 - beforeAll 执行测试 (${RUNTIME})`, () => {
     it("测试 5: 验证 beforeAll 只执行一次", async (t) => {
       expect(beforeAllCallCount).toBe(1);
     }, {
+      timeout: 10000,
       browser: {
         enabled: true,
         headless: true,

@@ -4,11 +4,11 @@
 > assertion enhancements, test utility functions, browser test integration, and
 > other advanced features
 
-English | [中文 (Chinese)](./README-zh.md)
+English | [中文 (Chinese)](./docs/zh-CN/README.md)
 
 [![JSR](https://jsr.io/badges/@dreamer/test)](https://jsr.io/@dreamer/test)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE.md)
-[![Tests](https://img.shields.io/badge/tests-354%20passed-brightgreen)](./TEST_REPORT.md)
+[![Tests](https://img.shields.io/badge/tests-376%20passed-brightgreen)](./docs/en-US/TEST_REPORT.md)
 
 ---
 
@@ -50,12 +50,12 @@ import { createBrowserContext, findChromePath } from "@dreamer/test/browser";
 
 ## 🌍 Compatibility
 
-| Environment       | Version | Status                                   |
-| ----------------- | ------- | ---------------------------------------- |
-| **Deno**          | 2.5+    | ✅ Fully supported                       |
-| **Bun**           | 1.0+    | ✅ Fully supported                       |
-| **Server**        | -       | ✅ Supported (Deno/Bun runtime)          |
-| **Browser tests** | -       | ✅ Supported (via Puppeteer integration) |
+| Environment       | Version | Status                                    |
+| ----------------- | ------- | ----------------------------------------- |
+| **Deno**          | 2.5+    | ✅ Fully supported                        |
+| **Bun**           | 1.0+    | ✅ Fully supported                        |
+| **Server**        | -       | ✅ Supported (Deno/Bun runtime)           |
+| **Browser tests** | -       | ✅ Supported (via Playwright integration) |
 
 ---
 
@@ -363,15 +363,22 @@ environment.
 
 #### Browser Requirements
 
-Browser tests use Puppeteer with **Chrome for Testing** by default (cached at
-`~/.cache/puppeteer`). If you see `Could not find Chrome`, run:
+Browser tests use **Playwright** with Chromium. If you see
+`Executable doesn't exist`, run:
 
 ```bash
-npx puppeteer browsers install chrome
+npx playwright install chromium
 ```
 
 Alternatively, set `browser.executablePath` to your system Chrome path (e.g. CI
-with `CHROME_PATH`).
+with `CHROME_PATH`), or use `browserSource: "system"` to auto-detect.
+
+**Running this package's browser tests** (`tests/browser/`): run with
+`--no-parallel` to avoid multiple Chrome instances launching at once (which can
+cause hangs or "Network service crashed"). Example:
+`deno test -A --no-parallel
+tests/browser`. If a run hangs, kill any leftover
+Chrome processes and retry.
 
 To use system Chrome for visible debugging (`headless: false`), use
 `findChromePath()` from `@dreamer/test/browser`:
@@ -715,8 +722,8 @@ describe("Browser test suite", {
 
 **Browser context (BrowserContext)**:
 
-- `browser`: Puppeteer Browser instance
-- `page`: Puppeteer Page instance
+- `browser`: Playwright Browser instance
+- `page`: Playwright Page instance
 - `evaluate<T>(fn: () => T | Promise<T>)`: Execute code in browser
 - `goto(url: string)`: Navigate to specified URL
 - `waitFor(fn: () => boolean, options?)`: Wait for condition in page
@@ -740,7 +747,7 @@ describe("Browser test suite", {
 
 This library has undergone comprehensive testing. 354 test cases passed, 2
 skipped by design (test.skip / skipIf), achieving 100% test coverage. See
-[TEST_REPORT.md](./TEST_REPORT.md) for detailed report.
+[TEST_REPORT.md](./docs/en-US/TEST_REPORT.md) for detailed report.
 
 **Test statistics**:
 
@@ -769,20 +776,23 @@ skipped by design (test.skip / skipIf), achieving 100% test coverage. See
 - ✅ Browser beforeAll execution dedicated tests
 - ✅ Browser resource cleanup mechanism tests
 
-Full test report: [TEST_REPORT.md](./TEST_REPORT.md)
+Full test report: [TEST_REPORT.md](./docs/en-US/TEST_REPORT.md)
 
 ---
 
 ## 📋 Changelog
 
-### [1.0.2] - 2026-02-09
+### [1.0.3] - 2026-02-10
 
-- **Added**: `@dreamer/test/browser` subpath export (`findChromePath`, etc.)
-- **Changed**: Default to Puppeteer's Chrome for Testing when `executablePath`
-  not passed
-- **Docs**: Import paths and `findChromePath` usage examples
+- **Added**: Playwright for browser tests; `browserType` option
+  (chromium/firefox/webkit); `clearBundleCache()` tests; docs in `docs/en-US`
+  and `docs/zh-CN`
+- **Changed**: Replaced Puppeteer with Playwright; `browserSource` now
+  `"system"` | `"test"` only
+- **Removed**: `getPuppeteer`; use `getPlaywright()` and `getChromium()` from
+  `@dreamer/test/browser`
 
-See [CHANGELOG.md](./CHANGELOG.md) for full history.
+See [CHANGELOG.md](./docs/en-US/CHANGELOG.md) for full history.
 
 ---
 
@@ -796,8 +806,8 @@ See [CHANGELOG.md](./CHANGELOG.md) for full history.
   or resource leak warnings, use `sanitizeOps: false` and
   `sanitizeResources: false` to disable checks
 - **Browser test dependencies**:
-  - Requires Chrome/Chromium browser installed
-  - Auto-uses Puppeteer and @dreamer/esbuild for bundling
+  - Uses Playwright (run `npx playwright install chromium` if needed)
+  - Auto-uses Playwright and @dreamer/esbuild for bundling
   - Supports auto-detect system Chrome path (macOS, Linux, Windows)
 - **Browser test performance**:
   - Enabling `reuseBrowser: true` (default) significantly improves performance

@@ -4,14 +4,26 @@
 
 import { makeTempFile, writeTextFileSync } from "@dreamer/runtime-adapter";
 import { createBrowserContext } from "../../src/browser/browser-context.ts";
-import { describe, expect, it } from "../../src/mod.ts";
+import {
+  afterAll,
+  cleanupAllBrowsers,
+  describe,
+  expect,
+  it,
+} from "../../src/mod.ts";
 
 describe("浏览器测试上下文管理", () => {
+  afterAll(async () => {
+    await cleanupAllBrowsers();
+  });
+
   describe("createBrowserContext", () => {
     it("应该创建浏览器上下文（无 entryPoint）", async () => {
       const ctx = await createBrowserContext({
         enabled: true,
         headless: true,
+        dumpio: false, // 设为 true 可输出 Chrome 日志便于调试，默认 false 减少 Updater/Crashpad 刷屏
+        browserSource: "test",
       });
 
       expect(ctx).toBeDefined();
@@ -27,6 +39,8 @@ describe("浏览器测试上下文管理", () => {
       const ctx = await createBrowserContext({
         enabled: true,
         headless: true,
+        dumpio: false, // 设为 true 可输出 Chrome 日志便于调试，默认 false 减少 Updater/Crashpad 刷屏
+        browserSource: "test",
       });
 
       expect(ctx.browser).toBeDefined();
@@ -43,6 +57,8 @@ describe("浏览器测试上下文管理", () => {
           enabled: true,
           headless: true,
           executablePath: "/nonexistent/path",
+          dumpio: false, // 设为 true 可输出 Chrome 日志便于调试，默认 false 减少 Updater/Crashpad 刷屏
+          browserSource: "test",
         });
 
         // 如果成功创建，清理
@@ -58,6 +74,8 @@ describe("浏览器测试上下文管理", () => {
         enabled: true,
         headless: true,
         args: ["--no-sandbox", "--disable-setuid-sandbox"],
+        dumpio: false, // 设为 true 可输出 Chrome 日志便于调试，默认 false 减少 Updater/Crashpad 刷屏
+        browserSource: "test",
       });
 
       expect(ctx.browser).toBeDefined();
@@ -70,6 +88,8 @@ describe("浏览器测试上下文管理", () => {
       const ctx = await createBrowserContext({
         enabled: true,
         headless: true,
+        dumpio: false, // 设为 true 可输出 Chrome 日志便于调试，默认 false 减少 Updater/Crashpad 刷屏
+        browserSource: "test",
       });
 
       const result = await ctx.evaluate(() => {
@@ -85,6 +105,8 @@ describe("浏览器测试上下文管理", () => {
       const ctx = await createBrowserContext({
         enabled: true,
         headless: true,
+        dumpio: false, // 设为 true 可输出 Chrome 日志便于调试，默认 false 减少 Updater/Crashpad 刷屏
+        browserSource: "test",
       });
 
       await ctx.goto("about:blank");
@@ -98,6 +120,8 @@ describe("浏览器测试上下文管理", () => {
       const ctx = await createBrowserContext({
         enabled: true,
         headless: true,
+        dumpio: false, // 设为 true 可输出 Chrome 日志便于调试，默认 false 减少 Updater/Crashpad 刷屏
+        browserSource: "test",
       });
 
       await ctx.goto("about:blank");
@@ -135,6 +159,8 @@ describe("浏览器测试上下文管理", () => {
         headless: true,
         entryPoint: entryFile,
         globalName: "testModule",
+        dumpio: false, // 设为 true 可输出 Chrome 日志便于调试，默认 false 减少 Updater/Crashpad 刷屏
+        browserSource: "test",
       });
 
       expect(ctx).toBeDefined();
@@ -163,6 +189,8 @@ describe("浏览器测试上下文管理", () => {
         headless: true,
         entryPoint: entryFile,
         globalName: "MyCustomModule",
+        dumpio: false, // 设为 true 可输出 Chrome 日志便于调试，默认 false 减少 Updater/Crashpad 刷屏
+        browserSource: "test",
       });
 
       const value = await ctx.evaluate(() => {
@@ -182,6 +210,8 @@ describe("浏览器测试上下文管理", () => {
         headless: true,
         entryPoint: entryFile,
         bodyContent: '<div id="custom">Custom</div>',
+        dumpio: false, // 设为 true 可输出 Chrome 日志便于调试，默认 false 减少 Updater/Crashpad 刷屏
+        browserSource: "test",
       });
 
       const hasCustom = await ctx.evaluate(() => {
@@ -217,6 +247,8 @@ describe("浏览器测试上下文管理", () => {
         headless: true,
         entryPoint: entryFile,
         htmlTemplate: customTemplate,
+        dumpio: false, // 设为 true 可输出 Chrome 日志便于调试，默认 false 减少 Updater/Crashpad 刷屏
+        browserSource: "test",
       });
 
       const title = await ctx.evaluate(() => {
@@ -237,6 +269,8 @@ describe("浏览器测试上下文管理", () => {
         entryPoint: entryFile,
         globalName: "testModule",
         moduleLoadTimeout: 5000,
+        dumpio: false, // 设为 true 可输出 Chrome 日志便于调试，默认 false 减少 Updater/Crashpad 刷屏
+        browserSource: "test",
       });
 
       expect(ctx).toBeDefined();
@@ -252,6 +286,8 @@ describe("浏览器测试上下文管理", () => {
       const ctx = await createBrowserContext({
         enabled: true,
         headless: true,
+        dumpio: false, // 设为 true 可输出 Chrome 日志便于调试，默认 false 减少 Updater/Crashpad 刷屏
+        browserSource: "test",
       });
 
       expect(ctx.browser).toBeDefined();

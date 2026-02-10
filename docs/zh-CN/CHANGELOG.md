@@ -7,6 +7,26 @@
 
 ---
 
+## [1.0.3] - 2026-02-10
+
+### 新增
+
+- **Playwright**：浏览器测试改为使用 Playwright（需执行
+  `npx playwright install chromium`）。新增配置项 `browserType` （`"chromium"` |
+  `"firefox"` | `"webkit"`）。
+- **`clearBundleCache()`**：已纳入文档并补充测试。
+- **文档结构**：文档迁至 `docs/en-US` 与 `docs/zh-CN`，根目录 README
+  链接至各语言 README 与测试报告。
+
+### 变更
+
+- **浏览器引擎**：由 Puppeteer 切换为 Playwright（默认 Chromium）。
+- **`browserSource`**：仅保留 `"system"` | `"test"`（移除 `"chromium"`）。
+- **依赖**：移除 `getPuppeteer`，请使用 `getPlaywright()` 与 `getChromium()`（从
+  `@dreamer/test/browser` 导入）。
+
+---
+
 ## [1.0.2] - 2026-02-09
 
 ### 新增
@@ -35,7 +55,7 @@
 
 ### 变更
 
-- **错误信息**：测试库中所有错误输出已改为英文
+- **错误信息**：测试包中所有错误输出已改为英文
 
 ### 移除
 

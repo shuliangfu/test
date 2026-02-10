@@ -3,7 +3,10 @@
  */
 
 import { makeTempFile, writeTextFileSync } from "@dreamer/runtime-adapter";
-import { buildClientBundle } from "../../src/browser/bundle.ts";
+import {
+  buildClientBundle,
+  clearBundleCache,
+} from "../../src/browser/bundle.ts";
 import { describe, expect, it } from "../../src/mod.ts";
 
 describe("客户端代码打包", () => {
@@ -135,6 +138,25 @@ export function sum(x, y) { return x + y; }`,
 
       expect(bundle).toBeDefined();
       expect(bundle).toContain("TestModule");
+    }, { timeout: 10000 });
+  }, {
+    sanitizeOps: false,
+    sanitizeResources: false,
+  });
+
+  describe("clearBundleCache", () => {
+    it("应该可调用且不抛错", () => {
+      expect(() => clearBundleCache()).not.toThrow();
+    });
+
+    it("清除后 buildClientBundle 仍能正常打包", async () => {
+      clearBundleCache();
+      const entryFile = await makeTempFile({ suffix: ".js" });
+      writeTextFileSync(entryFile, `export const x = 1;`);
+      const bundle = await buildClientBundle({ entryPoint: entryFile });
+      expect(bundle).toBeDefined();
+      expect(typeof bundle).toBe("string");
+      expect(bundle.length).toBeGreaterThan(0);
     }, { timeout: 10000 });
   }, {
     sanitizeOps: false,

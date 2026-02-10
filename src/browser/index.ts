@@ -10,6 +10,6 @@ export type { BrowserContext } from "./browser-context.ts";
 export { buildClientBundle, clearBundleCache } from "./bundle.ts";
 export type { BundleOptions } from "./bundle.ts";
 export { findChromePath } from "./chrome.ts";
-export { getBuildBundle, getPuppeteer } from "./dependencies.ts";
+export { getBuildBundle, getChromium, getPlaywright } from "./dependencies.ts";
 export { createTestPage } from "./page.ts";
 export type { TestPageOptions } from "./page.ts";

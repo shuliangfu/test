@@ -34,6 +34,8 @@ describe("测试运行器浏览器集成", () => {
       browser: {
         enabled: true,
         headless: true,
+        dumpio: false, // 设为 true 可输出 Chrome 日志便于调试，默认 false 减少 Updater/Crashpad 刷屏
+        browserSource: "test",
       },
     });
 
@@ -53,6 +55,8 @@ describe("测试运行器浏览器集成", () => {
       browser: {
         enabled: true,
         headless: true,
+        dumpio: false, // 设为 true 可输出 Chrome 日志便于调试，默认 false 减少 Updater/Crashpad 刷屏
+        browserSource: "test",
       },
     });
   });
@@ -67,6 +71,8 @@ describe("测试运行器浏览器集成", () => {
       browser: {
         enabled: true,
         headless: true,
+        dumpio: false, // 设为 true 可输出 Chrome 日志便于调试，默认 false 减少 Updater/Crashpad 刷屏
+        browserSource: "test",
       },
     });
 
@@ -96,6 +102,8 @@ describe("测试运行器浏览器集成", () => {
         enabled: true,
         headless: true,
         reuseBrowser: true,
+        dumpio: false, // 设为 true 可输出 Chrome 日志便于调试，默认 false 减少 Updater/Crashpad 刷屏
+        browserSource: "test",
       },
     });
 
@@ -112,6 +120,8 @@ describe("测试运行器浏览器集成", () => {
         enabled: true,
         headless: true,
         reuseBrowser: true,
+        dumpio: false, // 设为 true 可输出 Chrome 日志便于调试，默认 false 减少 Updater/Crashpad 刷屏
+        browserSource: "test",
       },
     });
 
@@ -126,6 +136,8 @@ describe("测试运行器浏览器集成", () => {
         enabled: true,
         headless: true,
         reuseBrowser: true,
+        dumpio: false, // 设为 true 可输出 Chrome 日志便于调试，默认 false 减少 Updater/Crashpad 刷屏
+        browserSource: "test",
       },
     });
   });
@@ -143,6 +155,8 @@ describe("测试运行器浏览器集成", () => {
         enabled: true,
         headless: true,
         reuseBrowser: false,
+        dumpio: false, // 设为 true 可输出 Chrome 日志便于调试，默认 false 减少 Updater/Crashpad 刷屏
+        browserSource: "test",
       },
     });
   });
@@ -164,6 +178,8 @@ describe("测试运行器浏览器集成", () => {
       browser: {
         enabled: true,
         headless: true,
+        dumpio: false, // 设为 true 可输出 Chrome 日志便于调试，默认 false 减少 Updater/Crashpad 刷屏
+        browserSource: "test",
       },
     });
 
@@ -182,6 +198,8 @@ describe("测试运行器浏览器集成", () => {
       browser: {
         enabled: true,
         headless: true,
+        dumpio: false, // 设为 true 可输出 Chrome 日志便于调试，默认 false 减少 Updater/Crashpad 刷屏
+        browserSource: "test",
       },
     });
   });
@@ -200,6 +218,8 @@ describe("测试运行器浏览器集成", () => {
         enabled: true,
         headless: true,
         reuseBrowser: false,
+        dumpio: false, // 设为 true 可输出 Chrome 日志便于调试，默认 false 减少 Updater/Crashpad 刷屏
+        browserSource: "test",
       },
     });
 
@@ -217,6 +237,8 @@ describe("测试运行器浏览器集成", () => {
         enabled: true,
         headless: true,
         reuseBrowser: false,
+        dumpio: false, // 设为 true 可输出 Chrome 日志便于调试，默认 false 减少 Updater/Crashpad 刷屏
+        browserSource: "test",
       },
     });
 
@@ -245,6 +267,8 @@ describe("测试运行器浏览器集成", () => {
         enabled: true,
         headless: true,
         reuseBrowser: false,
+        dumpio: false, // 设为 true 可输出 Chrome 日志便于调试，默认 false 减少 Updater/Crashpad 刷屏
+        browserSource: "test",
       },
     });
   });
@@ -261,6 +285,8 @@ describe("测试运行器浏览器集成", () => {
           enabled: true,
           headless: true,
           moduleLoadTimeout: 5000,
+          dumpio: false, // 设为 true 可输出 Chrome 日志便于调试，默认 false 减少 Updater/Crashpad 刷屏
+          browserSource: "test",
         },
       });
 
@@ -278,6 +304,8 @@ describe("测试运行器浏览器集成", () => {
             enabled: true,
             headless: true,
             moduleLoadTimeout: 2000, // 覆盖父套件 moduleLoadTimeout: 5000
+            dumpio: false, // 设为 true 可输出 Chrome 日志便于调试，默认 false 减少 Updater/Crashpad 刷屏
+            browserSource: "test",
           },
         });
       });
@@ -297,6 +325,8 @@ describe("测试运行器浏览器集成", () => {
       browser: {
         enabled: true,
         headless: true,
+        dumpio: false, // 设为 true 可输出 Chrome 日志便于调试，默认 false 减少 Updater/Crashpad 刷屏
+        browserSource: "test",
       },
     });
   });
@@ -328,6 +358,8 @@ describe("测试运行器浏览器集成", () => {
         headless: true,
         executablePath: "/nonexistent/chrome/path",
         onSetupError: "pass", // 需在测试内通过 _browserSetupError 断言错误内容，故不在此处抛出
+        dumpio: false, // 设为 true 可输出 Chrome 日志便于调试，默认 false 减少 Updater/Crashpad 刷屏
+        browserSource: "test",
       },
     });
   });

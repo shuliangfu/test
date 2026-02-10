@@ -4,7 +4,12 @@
  * 兼容 Deno 和 Bun 环境
  */
 
-import { addSignalListener, IS_BUN, IS_DENO } from "@dreamer/runtime-adapter";
+import {
+  addSignalListener,
+  exit,
+  IS_BUN,
+  IS_DENO,
+} from "@dreamer/runtime-adapter";
 import type { BrowserContext } from "./browser/browser-context.ts";
 import { createBrowserContext } from "./browser/browser-context.ts";
 import { buildClientBundle } from "./browser/bundle.ts";
@@ -391,25 +396,63 @@ export async function cleanupAllBrowsers(): Promise<void> {
   const closePromises: Promise<void>[] = [];
   for (const [suitePath, browserCtx] of suiteBrowserCache.entries()) {
     suiteBrowserCache.delete(suitePath);
+    console.log("cleanupSuiteBrowser", suitePath);
     closePromises.push(
-      browserCtx.close().catch(() => {
-        // 忽略关闭错误
+      browserCtx.close().then(() => {
+        console.log("cleanupSuiteBrowser success", suitePath);
+      }).catch(() => {
+        console.error("cleanupSuiteBrowser error", suitePath);
       }),
     );
   }
   await Promise.all(closePromises);
 }
 
-// 使用 runtime-adapter 提供的 API 注册进程退出时的清理钩子
-// 确保在所有测试完成后清理浏览器
+// 使用 runtime-adapter 注册 SIGINT/SIGTERM：关闭所有浏览器后退出，与 browser-context 的 activeBrowsers 清理互补
+// 手动终止进程（Ctrl+C）时确保关闭打开的浏览器
 try {
-  const handleAsyncCleanup = async () => {
-    await cleanupAllBrowsers();
+  const handleSignalCleanup = () => {
+    void cleanupAllBrowsers().then(() => {
+      exit(130); // 130 = 被 SIGINT 终止
+    });
   };
-  addSignalListener("SIGINT", handleAsyncCleanup);
-  addSignalListener("SIGTERM", handleAsyncCleanup);
+  addSignalListener("SIGINT", handleSignalCleanup);
+  addSignalListener("SIGTERM", handleSignalCleanup);
 } catch {
   // 忽略信号监听错误（可能在某些环境下不支持）
+}
+
+// 注册“最终清理”测试：在 Deno/Bun 中尽量作为最后执行的测试，正常测试完成后关闭所有浏览器
+const registerFinalCleanupTest = (): void => {
+  if (IS_DENO) {
+    const g = globalThis as any;
+    if (g.Deno?.test) {
+      g.Deno.test({
+        name: "\uFFFF@dreamer/test cleanup browsers",
+        fn: async () => {
+          await cleanupAllBrowsers();
+        },
+        ignore: false,
+        sanitizeOps: false,
+        sanitizeResources: false,
+      });
+    }
+  } else if (IS_BUN) {
+    (async () => {
+      const bunTest = await getBunTest();
+      if (bunTest) {
+        bunTest("\uFFFF@dreamer/test cleanup browsers", async () => {
+          await cleanupAllBrowsers();
+        });
+      }
+    })();
+  }
+};
+// 延迟注册，使该测试在用户 describe/test 之后注册，尽量最后执行
+if (typeof setTimeout !== "undefined") {
+  setTimeout(registerFinalCleanupTest, 0);
+} else {
+  queueMicrotask(registerFinalCleanupTest);
 }
 
 /**

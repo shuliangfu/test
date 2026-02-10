@@ -4,23 +4,38 @@
 
 import {
   getBuildBundle,
-  getPuppeteer,
+  getChromium,
+  getPlaywright,
 } from "../../src/browser/dependencies.ts";
 import { describe, expect, it } from "../../src/mod.ts";
 
 describe("浏览器测试依赖管理", () => {
-  describe("getPuppeteer", () => {
-    it("应该返回 Puppeteer 模块", () => {
-      const puppeteer = getPuppeteer();
-      expect(puppeteer).toBeDefined();
-      expect(typeof puppeteer.launch).toBe("function");
-      expect(typeof puppeteer.connect).toBe("function");
+  describe("getPlaywright", () => {
+    it("应该返回 Playwright 模块", () => {
+      const pw = getPlaywright();
+      expect(pw).toBeDefined();
+      expect(pw.chromium).toBeDefined();
+      expect(typeof pw.chromium.launch).toBe("function");
     });
 
-    it("应该返回相同的 Puppeteer 实例", () => {
-      const puppeteer1 = getPuppeteer();
-      const puppeteer2 = getPuppeteer();
-      expect(puppeteer1).toBe(puppeteer2);
+    it("应该返回相同的 Playwright 实例", () => {
+      const pw1 = getPlaywright();
+      const pw2 = getPlaywright();
+      expect(pw1).toBe(pw2);
+    });
+  });
+
+  describe("getChromium", () => {
+    it("应该返回 Chromium 对象且可 launch", () => {
+      const chromium = getChromium();
+      expect(chromium).toBeDefined();
+      expect(typeof chromium.launch).toBe("function");
+    });
+
+    it("应该返回相同的 Chromium 实例", () => {
+      const c1 = getChromium();
+      const c2 = getChromium();
+      expect(c1).toBe(c2);
     });
   });
 

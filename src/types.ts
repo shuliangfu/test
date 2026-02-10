@@ -35,8 +35,37 @@ export interface BrowserTestConfig {
   headless?: boolean;
   /** Chrome 可执行文件路径（可选，自动检测） */
   executablePath?: string;
-  /** Chrome 启动参数 */
+  /**
+   * 使用哪种浏览器引擎（默认：chromium）。
+   * - "chromium"：Playwright Chromium；需先执行 npx playwright install chromium
+   * - "firefox"：Playwright Firefox；需先执行 npx playwright install firefox
+   * - "webkit"：Playwright WebKit；需先执行 npx playwright install webkit
+   */
+  browserType?: "chromium" | "firefox" | "webkit";
+  /**
+   * 使用系统浏览器还是 Playwright 自带浏览器（仅当 browserType 为 chromium 时有效）。
+   * Playwright 不会自动下载浏览器，需先执行 npx playwright install <browserType>。
+   * - 未传：先尝试系统 Chrome（findChromePath），没有则用 Playwright 对应引擎（需已安装）
+   * - "system"：仅用系统 Chrome/Chromium；若未找到则抛错
+   * - "test"：仅用 Playwright 自带浏览器（不尝试系统浏览器）
+   */
+  browserSource?: "system" | "test";
+  /**
+   * 是否优先使用系统 Chrome（默认：true）。为 false 时不调用 findChromePath，仅用 executablePath 或 Playwright 浏览器。当 browserSource 有值时本项被覆盖。
+   */
+  preferSystemChrome?: boolean;
+  /**
+   * Chromium 启动参数。注意：不要传 --single-process，可能导致连接异常。
+   */
   args?: string[];
+  /**
+   * 为 true 时将 Chromium 的 stdio 设为 pipe，并打印 "[dreamer/test] Launching Chromium (...)" 等调试行（Playwright）。
+   */
+  dumpio?: boolean;
+  /**
+   * CDP 协议命令超时（毫秒）。若未设置，使用 120000（2 分钟），避免无响应时无限卡死。
+   */
+  protocolTimeout?: number;
   /** HTML 模板（可选） */
   htmlTemplate?: string;
   /** 额外的 HTML body 内容（可选） */
@@ -72,9 +101,9 @@ export interface TestContext {
   step<T>(name: string, fn: (t: TestContext) => Promise<T> | T): Promise<T>;
   /** 浏览器测试上下文（仅在 browser.enabled 为 true 时可用） */
   browser?: {
-    /** Puppeteer Browser 实例 */
+    /** Playwright Browser 实例 */
     browser: any;
-    /** Puppeteer Page 实例 */
+    /** Playwright Page 实例 */
     page: any;
     /**
      * 在浏览器中执行代码

@@ -2,13 +2,13 @@
  * @module @dreamer/test/browser/dependencies
  *
  * @fileoverview 浏览器测试依赖管理
- * 提供 Puppeteer 和 @dreamer/esbuild 的静态导入
+ * 提供 Playwright 和 @dreamer/esbuild 的静态导入
  */
 
 /**
- * 导入 Puppeteer（静态导入）
+ * 导入 Playwright（静态导入）
  */
-import puppeteer from "puppeteer";
+import playwright from "playwright";
 
 /**
  * 导入 @dreamer/esbuild 的 buildBundle 函数
@@ -20,12 +20,21 @@ import {
 } from "@dreamer/esbuild";
 
 /**
- * 获取 Puppeteer 模块
+ * 获取 Playwright 模块（含 chromium / firefox / webkit）
  *
- * @returns Puppeteer 模块
+ * @returns Playwright 模块
  */
-export function getPuppeteer(): typeof puppeteer {
-  return puppeteer;
+export function getPlaywright(): typeof playwright {
+  return playwright;
+}
+
+/**
+ * 获取 Playwright 的 Chromium 浏览器对象，用于 launch
+ *
+ * @returns Playwright Chromium 对象
+ */
+export function getChromium(): typeof playwright.chromium {
+  return playwright.chromium;
 }
 
 /**

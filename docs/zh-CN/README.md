@@ -1,19 +1,19 @@
 # @dreamer/test
 
-> 一个兼容 Deno 和 Bun 的测试工具库，提供 Mock
+> 一个兼容 Deno 和 Bun 的测试工具包，提供 Mock
 > 工具、断言增强、测试工具函数、浏览器测试集成等高级功能
 
-[English](./README.md) | 中文 (Chinese)
+[English](../../README.md) | 中文 (Chinese)
 
 [![JSR](https://jsr.io/badges/@dreamer/test)](https://jsr.io/@dreamer/test)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE.md)
-[![Tests](https://img.shields.io/badge/tests-354%20passed-brightgreen)](./TEST_REPORT.md)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](../../LICENSE.md)
+[![Tests](https://img.shields.io/badge/tests-376%20passed-brightgreen)](./TEST_REPORT.md)
 
 ---
 
 ## 🎯 功能
 
-测试工具库，基于 Deno 内置测试框架，提供
+测试工具包，基于 Deno 内置测试框架，提供
 Mock、断言增强、测试工具函数、浏览器测试集成等高级功能，让测试更简单、更强大。
 
 ---
@@ -47,12 +47,12 @@ import { createBrowserContext, findChromePath } from "@dreamer/test/browser";
 
 ## 🌍 环境兼容性
 
-| 环境           | 版本要求 | 状态                           |
-| -------------- | -------- | ------------------------------ |
-| **Deno**       | 2.5+     | ✅ 完全支持                    |
-| **Bun**        | 1.0+     | ✅ 完全支持                    |
-| **服务端**     | -        | ✅ 支持（Deno/Bun 运行时）     |
-| **浏览器测试** | -        | ✅ 支持（通过 Puppeteer 集成） |
+| 环境           | 版本要求 | 状态                            |
+| -------------- | -------- | ------------------------------- |
+| **Deno**       | 2.5+     | ✅ 完全支持                     |
+| **Bun**        | 1.0+     | ✅ 完全支持                     |
+| **服务端**     | -        | ✅ 支持（Deno/Bun 运行时）      |
+| **浏览器测试** | -        | ✅ 支持（通过 Playwright 集成） |
 
 ---
 
@@ -356,6 +356,14 @@ describe("Redis 测试", () => {
 
 浏览器测试允许你在真实的 Chrome 浏览器环境中测试前端代码。
 
+**运行本包的浏览器测试**（`tests/browser/`）：请使用
+`--no-parallel`，避免多进程同时启动多个 Chrome 导致卡死或 “Network service
+crashed”。示例：`deno test -A --no-parallel tests/browser`。若某次运行卡住，可先结束残留
+Chrome 进程再重试。若出现「卡过一次后 Chrome
+一直打不开、只能重启电脑」的情况，**无需重启**，可按
+[tests/browser/README.md](../../tests/browser/README.md) 中的恢复步骤操作（结束
+Chrome 进程、可选清理缓存后重跑）。
+
 如需使用系统 Chrome 做可视化调试（`headless: false`），可从
 `@dreamer/test/browser` 导入 `findChromePath()`：
 
@@ -407,14 +415,14 @@ describe("浏览器测试", {
 ```typescript
 import { describe, expect, it } from "@dreamer/test";
 
-describe("客户端库测试", {
+describe("客户端包测试", {
   browser: {
     enabled: true,
     entryPoint: "./src/client/mod.ts", // 客户端代码入口
     globalName: "MyLib", // 全局变量名
   },
 }, () => {
-  it("应该能够使用打包后的库", async (t) => {
+  it("应该能够使用打包后的包", async (t) => {
     const result = await t.browser!.evaluate(() => {
       // MyLib 是打包后暴露的全局变量
       return typeof (globalThis as any).MyLib;
@@ -691,8 +699,8 @@ describe("浏览器测试套件", {
 
 **浏览器上下文（BrowserContext）**：
 
-- `browser`: Puppeteer Browser 实例
-- `page`: Puppeteer Page 实例
+- `browser`: Playwright Browser 实例
+- `page`: Playwright Page 实例
 - `evaluate<T>(fn: () => T | Promise<T>)`: 在浏览器中执行代码
 - `goto(url: string)`: 导航到指定 URL
 - `waitFor(fn: () => boolean, options?)`: 等待页面中的条件满足
@@ -712,7 +720,7 @@ describe("浏览器测试套件", {
 
 ## 📊 测试报告
 
-本库经过全面测试，354 个测试用例通过，2 个按设计跳过（test.skip /
+本包经过全面测试，354 个测试用例通过，2 个按设计跳过（test.skip /
 skipIf），测试覆盖率达到 100%。详细测试报告请查看
 [TEST_REPORT.md](./TEST_REPORT.md)。
 
@@ -749,13 +757,17 @@ skipIf），测试覆盖率达到 100%。详细测试报告请查看
 
 ## 📋 变更日志
 
-### [1.0.2] - 2026-02-09
+### [1.0.3] - 2026-02-10
 
-- **新增**：`@dreamer/test/browser` 子路径导出（`findChromePath` 等）
-- **变更**：未传 `executablePath` 时默认使用 Puppeteer 自带的 Chrome for Testing
-- **文档**：导入路径说明及 `findChromePath` 使用示例
+- **新增**：浏览器测试改用 Playwright；`browserType`
+  选项（chromium/firefox/webkit）；`clearBundleCache()` 测试；文档迁至
+  `docs/en-US` 与 `docs/zh-CN`
+- **变更**：Puppeteer 改为 Playwright；`browserSource` 仅保留 `"system"` |
+  `"test"`
+- **移除**：`getPuppeteer`，请使用 `getPlaywright()` 与 `getChromium()`（从
+  `@dreamer/test/browser` 导入）
 
-完整历史请查看 [CHANGELOG-zh.md](./CHANGELOG-zh.md)。
+完整历史请查看 [CHANGELOG.md](./CHANGELOG.md)。
 
 ---
 
@@ -765,11 +777,11 @@ skipIf），测试覆盖率达到 100%。详细测试报告请查看
   执行期间调用，不能在测试执行期间调用
 - **bench() 调用位置**：`bench()` 应该在 `describe()` 执行期间调用，而不是在
   `it()` 回调中
-- **资源清理**：使用第三方库时，如果遇到定时器或资源泄漏警告，可以使用
+- **资源清理**：使用第三方包时，如果遇到定时器或资源泄漏警告，可以使用
   `sanitizeOps: false` 和 `sanitizeResources: false` 选项禁用检查
 - **浏览器测试依赖**：
-  - 需要安装 Chrome/Chromium 浏览器
-  - 自动使用 Puppeteer 和 @dreamer/esbuild 进行打包
+  - 使用 Playwright（需执行 `npx playwright install chromium`）
+  - 自动使用 Playwright 和 @dreamer/esbuild 进行打包
   - 支持自动检测系统 Chrome 路径（macOS、Linux、Windows）
 - **浏览器测试性能**：
   - 启用 `reuseBrowser: true`（默认）可显著提升性能
@@ -796,7 +808,7 @@ skipIf），测试覆盖率达到 100%。详细测试报告请查看
 
 ## 📄 许可证
 
-MIT License - 详见 [LICENSE.md](./LICENSE.md)
+MIT License - 详见 [LICENSE.md](../../LICENSE.md)
 
 ---
 

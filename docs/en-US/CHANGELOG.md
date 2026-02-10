@@ -8,6 +8,26 @@ and this project adheres to
 
 ---
 
+## [1.0.3] - 2026-02-10
+
+### Added
+
+- **Playwright**: Browser tests now use Playwright instead of Puppeteer
+  (`npx playwright install chromium`). Added `browserType` option (`"chromium"`
+  | `"firefox"` | `"webkit"`).
+- **`clearBundleCache()`**: Documented and covered by tests.
+- **Docs layout**: Documentation moved to `docs/en-US` and `docs/zh-CN`; root
+  README links to locale-specific README and TEST_REPORT.
+
+### Changed
+
+- **Browser engine**: Replaced Puppeteer with Playwright (Chromium by default).
+- **`browserSource`**: Now only `"system"` | `"test"` (removed `"chromium"`).
+- **Dependencies**: `getPuppeteer` removed; use `getPlaywright()` and
+  `getChromium()` from `@dreamer/test/browser`.
+
+---
+
 ## [1.0.2] - 2026-02-09
 
 ### Added

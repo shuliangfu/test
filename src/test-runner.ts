@@ -179,11 +179,16 @@ async function setupBrowserTest(
   suitePath?: string,
 ): Promise<void> {
   // 如果配置了共享浏览器实例，尝试从缓存获取
+  // 复用且为根级 key 时，同一顶层 describe 下所有用例共用一个浏览器，减少 Windows CI 上多次启动导致的超时
+  // 若配置了 executablePath（如错误处理用例），必须用完整 suitePath 以真正执行创建并得到预期错误，不复用
   let browserCtx: BrowserContext | undefined;
   const shouldReuse = config.reuseBrowser !== false && suitePath;
+  const cacheKey = shouldReuse && suitePath
+    ? (config.executablePath ? suitePath : suitePath.split(" > ")[0])
+    : suitePath;
 
-  if (shouldReuse && suitePath) {
-    browserCtx = suiteBrowserCache.get(suitePath);
+  if (cacheKey) {
+    browserCtx = suiteBrowserCache.get(cacheKey);
   }
 
   // 如果缓存中没有或不应该复用，创建新的浏览器实例
@@ -192,8 +197,8 @@ async function setupBrowserTest(
       browserCtx = await createBrowserContext(config);
 
       // 无论是否复用，都保存到缓存，以便在所有测试完成后统一清理
-      if (suitePath) {
-        suiteBrowserCache.set(suitePath, browserCtx);
+      if (cacheKey) {
+        suiteBrowserCache.set(cacheKey, browserCtx);
       }
     } catch (error) {
       const errorMessage = error instanceof Error
@@ -377,12 +382,14 @@ async function cleanupBrowserTest(testContext: TestContext): Promise<void> {
 
 /**
  * 清理套件级别的浏览器缓存
- * @param suitePath 套件路径
+ * @param suitePath 套件路径（支持完整路径或根 describe 名；复用时浏览器可能以根 key 存储）
  */
 export function cleanupSuiteBrowser(suitePath: string): Promise<void> {
-  const browserCtx = suiteBrowserCache.get(suitePath);
+  const rootKey = suitePath.split(" > ")[0];
+  const browserCtx = suiteBrowserCache.get(suitePath) ?? suiteBrowserCache.get(rootKey);
   if (browserCtx) {
-    suiteBrowserCache.delete(suitePath);
+    const key = suiteBrowserCache.has(suitePath) ? suitePath : rootKey;
+    suiteBrowserCache.delete(key);
     return browserCtx.close();
   }
   return Promise.resolve();

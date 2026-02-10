@@ -757,15 +757,10 @@ skipIf），测试覆盖率达到 100%。详细测试报告请查看
 
 ## 📋 变更日志
 
-### [1.0.3] - 2026-02-10
+### [1.0.4] - 2026-02-10
 
-- **新增**：浏览器测试改用 Playwright；`browserType`
-  选项（chromium/firefox/webkit）；`clearBundleCache()` 测试；文档迁至
-  `docs/en-US` 与 `docs/zh-CN`
-- **变更**：Puppeteer 改为 Playwright；`browserSource` 仅保留 `"system"` |
-  `"test"`
-- **移除**：`getPuppeteer`，请使用 `getPlaywright()` 与 `getChromium()`（从
-  `@dreamer/test/browser` 导入）
+- **新增**：CI 中安装 Playwright Chromium；Windows 可选 `PLAYWRIGHT_BROWSERS_PATH`
+- **修复**：executablePath 启动前检查（立即报「Chrome 未找到」）；根级浏览器复用以通过 CI；cleanupSuiteBrowser 根 key 支持
 
 完整历史请查看 [CHANGELOG.md](./CHANGELOG.md)。
 

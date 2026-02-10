@@ -7,6 +7,25 @@
 
 ---
 
+## [1.0.4] - 2026-02-10
+
+### 新增
+
+- **CI**：在 Linux/Windows/macOS 中增加 Playwright Chromium 安装步骤；Windows
+  可选设置 `PLAYWRIGHT_BROWSERS_PATH`（如 `github.workspace`）。
+
+### 修复
+
+- **浏览器上下文**：启动前用 `existsSync` 检查 `executablePath`，在任意平台立即
+  报「Chrome 未找到」错误（避免 Windows 上 60s 超时）。CI 下延长启动超时至 120s。
+- **测试运行器**：根级浏览器复用（每个顶层 describe 共用一个浏览器），避免 Windows
+  CI 多次启动/关闭后超时。当设置 `executablePath` 时使用完整 suite 路径作为缓存
+  key，保证错误处理用例能正确拿到 `_browserSetupError`。
+- **cleanupSuiteBrowser**：完整路径未命中时按根 describe 名解析缓存（与根级复用
+  一致）。
+
+---
+
 ## [1.0.3] - 2026-02-10
 
 ### 新增

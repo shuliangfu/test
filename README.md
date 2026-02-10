@@ -782,15 +782,10 @@ Full test report: [TEST_REPORT.md](./docs/en-US/TEST_REPORT.md)
 
 ## 📋 Changelog
 
-### [1.0.3] - 2026-02-10
+### [1.0.4] - 2026-02-10
 
-- **Added**: Playwright for browser tests; `browserType` option
-  (chromium/firefox/webkit); `clearBundleCache()` tests; docs in `docs/en-US`
-  and `docs/zh-CN`
-- **Changed**: Replaced Puppeteer with Playwright; `browserSource` now
-  `"system"` | `"test"` only
-- **Removed**: `getPuppeteer`; use `getPlaywright()` and `getChromium()` from
-  `@dreamer/test/browser`
+- **Added**: CI Playwright Chromium install; optional `PLAYWRIGHT_BROWSERS_PATH` on Windows
+- **Fixed**: executablePath pre-check (instant "Chrome not found"); root-level browser reuse for CI; cleanupSuiteBrowser root key
 
 See [CHANGELOG.md](./docs/en-US/CHANGELOG.md) for full history.
 

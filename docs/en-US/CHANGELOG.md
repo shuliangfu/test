@@ -8,6 +8,27 @@ and this project adheres to
 
 ---
 
+## [1.0.4] - 2026-02-10
+
+### Added
+
+- **CI**: Playwright Chromium install step (Linux/Windows/macOS); optional
+  `PLAYWRIGHT_BROWSERS_PATH` on Windows (e.g. `github.workspace`).
+
+### Fixed
+
+- **Browser context**: Pre-check `executablePath` with `existsSync` before launch
+  so "Chrome not found" error is immediate on all platforms (avoids 60s timeout
+  on Windows). Longer launch timeout in CI (120s).
+- **Test runner**: Root-level browser reuse (one browser per top-level describe)
+  to avoid Windows CI timeouts after many launch/close cycles. When
+  `executablePath` is set, use full suite path as cache key so error-handling
+  test receives `_browserSetupError` correctly.
+- **cleanupSuiteBrowser**: Resolve cache by root describe name when full path
+  not found (aligns with root-level reuse).
+
+---
+
 ## [1.0.3] - 2026-02-10
 
 ### Added

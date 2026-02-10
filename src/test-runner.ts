@@ -386,7 +386,8 @@ async function cleanupBrowserTest(testContext: TestContext): Promise<void> {
  */
 export function cleanupSuiteBrowser(suitePath: string): Promise<void> {
   const rootKey = suitePath.split(" > ")[0];
-  const browserCtx = suiteBrowserCache.get(suitePath) ?? suiteBrowserCache.get(rootKey);
+  const browserCtx = suiteBrowserCache.get(suitePath) ??
+    suiteBrowserCache.get(rootKey);
   if (browserCtx) {
     const key = suiteBrowserCache.has(suitePath) ? suitePath : rootKey;
     suiteBrowserCache.delete(key);

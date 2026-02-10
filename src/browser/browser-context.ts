@@ -5,7 +5,12 @@
  * 创建和管理 Playwright 浏览器实例和页面
  */
 
-import { removeSync, writeStderrSync } from "@dreamer/runtime-adapter";
+import {
+  existsSync,
+  getEnv,
+  removeSync,
+  writeStderrSync,
+} from "@dreamer/runtime-adapter";
 import type { BrowserTestConfig } from "../types.ts";
 import { buildClientBundle } from "./bundle.ts";
 import { getPlaywright } from "./dependencies.ts";
@@ -106,8 +111,20 @@ export async function createBrowserContext(
     );
   }
 
+  // 显式指定 executablePath 时先检查文件是否存在，避免 Windows 上长时间超时后才报错
+  if (executablePath && !existsSync(executablePath)) {
+    throw new Error(
+      `Executable not found at ${executablePath}. ` +
+        `Please check executablePath or run \`npx playwright install ${engine}\`.`,
+    );
+  }
+
   const launchTimeout = config.protocolTimeout ?? 120000;
   const dumpio = config.dumpio === true;
+  // CI 下（尤其 Windows）启动较慢，允许更长超时
+  const effectiveLaunchTimeout = getEnv("CI") === "true"
+    ? Math.max(120000, launchTimeout)
+    : Math.min(90000, launchTimeout);
 
   let launchOptions: Parameters<typeof playwright.chromium.launch>[0];
   if (engine === "chromium") {
@@ -140,13 +157,13 @@ export async function createBrowserContext(
       headless: config.headless !== false,
       ...(executablePath ? { executablePath } : {}),
       args,
-      timeout: Math.min(90000, launchTimeout),
+      timeout: effectiveLaunchTimeout,
       ...(dumpio ? { stdio: "pipe" as const } : {}),
     };
   } else {
     launchOptions = {
       headless: config.headless !== false,
-      timeout: Math.min(90000, launchTimeout),
+      timeout: effectiveLaunchTimeout,
       ...(dumpio ? { stdio: "pipe" as const } : {}),
     };
   }
@@ -162,9 +179,13 @@ export async function createBrowserContext(
     );
   }
 
-  const launchTimeoutMs = engine === "chromium"
+  // CI（尤其 Windows runner）下启动较慢，延长超时避免误报
+  const baseTimeoutMs = engine === "chromium"
     ? (config.browserSource === "test" ? 60000 : 45000)
     : 60000;
+  const launchTimeoutMs = getEnv("CI") === "true"
+    ? Math.max(baseTimeoutMs, 120000)
+    : baseTimeoutMs;
 
   const launcher = engine === "chromium"
     ? playwright.chromium

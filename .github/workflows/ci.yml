@@ -38,6 +38,9 @@ jobs:
 
   test-windows:
     runs-on: windows-latest
+    env:
+      # 统一浏览器安装路径，确保 npx 安装与 deno test 使用同一目录，避免 Windows 上找不到
+      PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.playwright-browsers
     steps:
       - uses: actions/checkout@v4
 

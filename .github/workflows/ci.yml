@@ -17,6 +17,13 @@ jobs:
         with:
           deno-version: v2.5
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Playwright Chromium
+        run: npx playwright@1.58.2 install chromium
+
       - name: Cache dependencies
         run: deno cache src/mod.ts tests/ 2>/dev/null || true
 
@@ -38,6 +45,13 @@ jobs:
         with:
           deno-version: v2.5
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Playwright Chromium
+        run: npx playwright@1.58.2 install chromium
+
       - name: Cache dependencies
         run: deno cache src/mod.ts tests/
 
@@ -58,6 +72,13 @@ jobs:
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.5
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Playwright Chromium
+        run: npx playwright@1.58.2 install chromium
 
       - name: Cache dependencies
         run: deno cache src/mod.ts tests/ 2>/dev/null || true

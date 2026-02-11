@@ -8,7 +8,7 @@ utilities, assertion enhancements, test utility functions, browser test
 integration, and other features, and is compatible with both Deno and Bun
 runtimes.
 
-**Test Date**: 2026-02-10 **Test Version**: 1.0.2 **Test Framework**: Deno
+**Test Date**: 2026-02-11 **Test Version**: 1.0.4 **Test Framework**: Deno
 built-in test framework + Bun test framework
 
 ## 🎯 Test Objectives
@@ -29,13 +29,13 @@ built-in test framework + Bun test framework
 
 | Metric               | Value                  |
 | -------------------- | ---------------------- |
-| Number of test files | 17                     |
-| Total test cases     | 378                    |
-| Passed cases         | 376                    |
+| Number of test files | 18                     |
+| Total test cases     | 390                    |
+| Passed cases         | 388                    |
 | Skipped cases        | 2                      |
 | Failed cases         | 0                      |
 | Pass rate            | 100%                   |
-| Test execution time  | 17 seconds (Deno)      |
+| Test execution time  | 12 seconds (Deno)      |
 | Code coverage        | Comprehensive coverage |
 
 ### Test File List
@@ -52,6 +52,7 @@ built-in test framework + Bun test framework
 | `browser/page.test.ts`                    | 8          | ✅ All passed             | Test page creation tests                           |
 | `browser/resolver.test.ts`                | 18         | ✅ All passed             | Deno resolver plugin tests                         |
 | `browser/test-runner-integration.test.ts` | 20         | ✅ All passed (1 skipped) | Test runner browser integration                    |
+| `browser/full-suite-browser.test.ts`       | 12         | ✅ All passed             | Full-suite browser tests (sequential reuse, entryPoint + globalName) |
 | `expect-comprehensive.test.ts`            | 64         | ✅ All passed             | Expect assertion comprehensive tests               |
 | `hooks-execution.test.ts`                 | 28         | ✅ All passed             | Hook function execution tests                      |
 | `mock-comprehensive.test.ts`              | 20         | ✅ All passed             | Mock functionality comprehensive tests             |
@@ -109,6 +110,12 @@ built-in test framework + Bun test framework
 #### 3.4 Complete Browser Test Flow
 
 - ✅ Should be able to execute complete browser test flow
+
+#### 3.5 Full-Suite Browser Tests (12 tests)
+
+- ✅ Sequential reuse of browser context across multiple tests
+- ✅ entryPoint + globalName: bundle and load client entry, verify global
+- ✅ Multiple sequential cases in one describe with shared browser
 
 ### 4. Client-Side Code Bundling (10 tests)
 

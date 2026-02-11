@@ -7,7 +7,7 @@
 
 [![JSR](https://jsr.io/badges/@dreamer/test)](https://jsr.io/@dreamer/test)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](../../LICENSE.md)
-[![Tests](https://img.shields.io/badge/tests-376%20passed-brightgreen)](./TEST_REPORT.md)
+[![Tests](https://img.shields.io/badge/tests-388%20passed-brightgreen)](./TEST_REPORT.md)
 
 ---
 
@@ -757,10 +757,13 @@ skipIf），测试覆盖率达到 100%。详细测试报告请查看
 
 ## 📋 变更日志
 
-### [1.0.4] - 2026-02-10
+### [1.0.5] - 2026-02-11
 
-- **新增**：CI 中安装 Playwright Chromium；Windows 可选 `PLAYWRIGHT_BROWSERS_PATH`
-- **修复**：executablePath 启动前检查（立即报「Chrome 未找到」）；根级浏览器复用以通过 CI；cleanupSuiteBrowser 根 key 支持
+- **新增**：全量浏览器测试（顺序复用、entryPoint + globalName）。
+- **变更**：测试报告移至 docs/en-US、docs/zh-CN；JSR 发布中移除 TEST_REPORT.md。
+- **修复**：cleanupAllBrowsers 中清空 beforeAllExecutedMap，避免 Map 增长。
+- **性能**：缓存 getBunTest、collectParentSuites 优化为 O(n)、精简清理日志。
+- **安全**：快照路径清理（..）、mock-fetch 安全序列化 requestBody。
 
 完整历史请查看 [CHANGELOG.md](./CHANGELOG.md)。
 

@@ -8,7 +8,7 @@ English | [中文 (Chinese)](./docs/zh-CN/README.md)
 
 [![JSR](https://jsr.io/badges/@dreamer/test)](https://jsr.io/@dreamer/test)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE.md)
-[![Tests](https://img.shields.io/badge/tests-376%20passed-brightgreen)](./docs/en-US/TEST_REPORT.md)
+[![Tests](https://img.shields.io/badge/tests-388%20passed-brightgreen)](./docs/en-US/TEST_REPORT.md)
 
 ---
 
@@ -782,10 +782,13 @@ Full test report: [TEST_REPORT.md](./docs/en-US/TEST_REPORT.md)
 
 ## 📋 Changelog
 
-### [1.0.4] - 2026-02-10
+### [1.0.5] - 2026-02-11
 
-- **Added**: CI Playwright Chromium install; optional `PLAYWRIGHT_BROWSERS_PATH` on Windows
-- **Fixed**: executablePath pre-check (instant "Chrome not found"); root-level browser reuse for CI; cleanupSuiteBrowser root key
+- **Added**: Full-suite browser test (sequential reuse, entryPoint + globalName).
+- **Changed**: Test reports moved to docs/en-US and docs/zh-CN; removed TEST_REPORT.md from JSR publish.
+- **Fixed**: Clear beforeAllExecutedMap in cleanupAllBrowsers to avoid map growth.
+- **Performance**: Cache getBunTest, optimize collectParentSuites to O(n), reduce cleanup logging.
+- **Security**: Snapshot path sanitize (..), mock-fetch safe requestBody serialization.
 
 See [CHANGELOG.md](./docs/en-US/CHANGELOG.md) for full history.
 

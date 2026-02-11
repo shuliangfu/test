@@ -1,10 +1,10 @@
 {
   "name": "@dreamer/test",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "license": "MIT",
   "exports": { ".": "./src/mod.ts", "./browser": "./src/browser/index.ts" },
   "publish": {
-    "include": ["src/**/*.ts", "LICENSE.md", "README.md", "TEST_REPORT.md"],
+    "include": ["src/**/*.ts", "LICENSE.md", "README.md"],
     "exclude": [
       "**/*.test.ts",
       "**/*.spec.ts",

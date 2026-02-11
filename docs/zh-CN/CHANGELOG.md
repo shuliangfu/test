@@ -7,6 +7,39 @@
 
 ---
 
+## [1.0.5] - 2026-02-11
+
+### 新增
+
+- **浏览器测试**：全量浏览器测试（`full-suite-browser.test.ts`），支持顺序复用、
+  `entryPoint` + `globalName`、共享浏览器上下文。
+
+### 变更
+
+- **测试报告**：正式测试报告移至 `docs/en-US/TEST_REPORT.md` 与
+  `docs/zh-CN/TEST_REPORT.md`；根目录 `TEST_REPORT.md` 已移除。
+- **JSR 发布**：从 `deno.json` 的 `publish.include` 中移除 `TEST_REPORT.md`。
+
+### 修复
+
+- **测试运行器**：在 `cleanupAllBrowsers()` 中清空 `beforeAllExecutedMap`，避免
+  watch 或重复运行下 Map 无限增长。
+
+### 性能
+
+- **测试运行器**：缓存 `getBunTest()` 结果，避免重复动态 `import("bun:test")`；
+  将 `collectParentSuites()` 从 O(n²) 优化为 O(n)（push + reverse 替代 unshift）；
+  精简清理日志（仅在失败时使用 `logger.error`）。
+
+### 安全
+
+- **快照**：使用 `@dreamer/runtime-adapter` 的 `IS_DENO`/`IS_BUN`；对快照文件名中的
+  `..` 做清理，防止路径穿越。
+- **mock-fetch**：安全序列化 `requestBody`（对不可序列化 body 如 ReadableStream
+  的 `JSON.stringify` 使用 try/catch）。
+
+---
+
 ## [1.0.4] - 2026-02-10
 
 ### 新增
@@ -17,10 +50,11 @@
 ### 修复
 
 - **浏览器上下文**：启动前用 `existsSync` 检查 `executablePath`，在任意平台立即
-  报「Chrome 未找到」错误（避免 Windows 上 60s 超时）。CI 下延长启动超时至 120s。
-- **测试运行器**：根级浏览器复用（每个顶层 describe 共用一个浏览器），避免 Windows
-  CI 多次启动/关闭后超时。当设置 `executablePath` 时使用完整 suite 路径作为缓存
-  key，保证错误处理用例能正确拿到 `_browserSetupError`。
+  报「Chrome 未找到」错误（避免 Windows 上 60s 超时）。CI 下延长启动超时至
+  120s。
+- **测试运行器**：根级浏览器复用（每个顶层 describe 共用一个浏览器），避免
+  Windows CI 多次启动/关闭后超时。当设置 `executablePath` 时使用完整 suite
+  路径作为缓存 key，保证错误处理用例能正确拿到 `_browserSetupError`。
 - **cleanupSuiteBrowser**：完整路径未命中时按根 describe 名解析缓存（与根级复用
   一致）。
 

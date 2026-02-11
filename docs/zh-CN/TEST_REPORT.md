@@ -37,26 +37,26 @@ Bun 测试框架
 
 ### 测试文件列表
 
-| 文件名                                    | 用例数 | 状态                  | 说明                                  |
-| ----------------------------------------- | ------ | --------------------- | ------------------------------------- |
-| `assertions-comprehensive.test.ts`        | 26     | ✅ 全部通过           | 断言工具函数全面测试                  |
-| `browser/beforeall-execution.test.ts`     | 7      | ✅ 全部通过           | 浏览器 beforeAll 执行测试             |
-| `browser/browser-context.test.ts`         | 15     | ✅ 全部通过           | 浏览器测试上下文管理                  |
-| `browser/browser-integration.test.ts`     | 9      | ✅ 全部通过           | 浏览器测试集成                        |
-| `browser/bundle.test.ts`                  | 10     | ✅ 全部通过           | 客户端代码打包（含 clearBundleCache） |
-| `browser/chrome.test.ts`                  | 4      | ✅ 全部通过           | Chrome 路径检测                       |
-| `browser/dependencies.test.ts`            | 7      | ✅ 全部通过           | 浏览器依赖管理（Playwright）          |
-| `browser/page.test.ts`                    | 8      | ✅ 全部通过           | 测试页面创建                          |
-| `browser/resolver.test.ts`                | 18     | ✅ 全部通过           | Deno 解析器插件                       |
-| `browser/test-runner-integration.test.ts` | 20     | ✅ 全部通过（1 跳过） | 测试运行器浏览器集成                  |
-| `browser/full-suite-browser.test.ts`       | 12     | ✅ 全部通过           | 全量浏览器测试（顺序复用、entryPoint + globalName） |
-| `expect-comprehensive.test.ts`            | 64     | ✅ 全部通过           | Expect 断言全面测试                   |
-| `hooks-execution.test.ts`                 | 28     | ✅ 全部通过           | 钩子函数执行测试                      |
-| `mock-comprehensive.test.ts`              | 20     | ✅ 全部通过           | Mock 功能全面测试                     |
-| `mock-fetch-comprehensive.test.ts`        | 14     | ✅ 全部通过           | HTTP Mock 全面测试                    |
-| `mod.test.ts`                             | 84     | ✅ 全部通过（1 跳过） | 基础功能测试（含 skipIf）             |
-| `test-options.test.ts`                    | 18     | ✅ 全部通过           | 测试套件选项与钩子选项                |
-| `test-utils-comprehensive.test.ts`        | 26     | ✅ 全部通过           | 测试工具函数全面测试                  |
+| 文件名                                    | 用例数 | 状态                  | 说明                                                |
+| ----------------------------------------- | ------ | --------------------- | --------------------------------------------------- |
+| `assertions-comprehensive.test.ts`        | 26     | ✅ 全部通过           | 断言工具函数全面测试                                |
+| `browser/beforeall-execution.test.ts`     | 7      | ✅ 全部通过           | 浏览器 beforeAll 执行测试                           |
+| `browser/browser-context.test.ts`         | 15     | ✅ 全部通过           | 浏览器测试上下文管理                                |
+| `browser/browser-integration.test.ts`     | 9      | ✅ 全部通过           | 浏览器测试集成                                      |
+| `browser/bundle.test.ts`                  | 10     | ✅ 全部通过           | 客户端代码打包（含 clearBundleCache）               |
+| `browser/chrome.test.ts`                  | 4      | ✅ 全部通过           | Chrome 路径检测                                     |
+| `browser/dependencies.test.ts`            | 7      | ✅ 全部通过           | 浏览器依赖管理（Playwright）                        |
+| `browser/page.test.ts`                    | 8      | ✅ 全部通过           | 测试页面创建                                        |
+| `browser/resolver.test.ts`                | 18     | ✅ 全部通过           | Deno 解析器插件                                     |
+| `browser/test-runner-integration.test.ts` | 20     | ✅ 全部通过（1 跳过） | 测试运行器浏览器集成                                |
+| `browser/full-suite-browser.test.ts`      | 12     | ✅ 全部通过           | 全量浏览器测试（顺序复用、entryPoint + globalName） |
+| `expect-comprehensive.test.ts`            | 64     | ✅ 全部通过           | Expect 断言全面测试                                 |
+| `hooks-execution.test.ts`                 | 28     | ✅ 全部通过           | 钩子函数执行测试                                    |
+| `mock-comprehensive.test.ts`              | 20     | ✅ 全部通过           | Mock 功能全面测试                                   |
+| `mock-fetch-comprehensive.test.ts`        | 14     | ✅ 全部通过           | HTTP Mock 全面测试                                  |
+| `mod.test.ts`                             | 84     | ✅ 全部通过（1 跳过） | 基础功能测试（含 skipIf）                           |
+| `test-options.test.ts`                    | 18     | ✅ 全部通过           | 测试套件选项与钩子选项                              |
+| `test-utils-comprehensive.test.ts`        | 26     | ✅ 全部通过           | 测试工具函数全面测试                                |
 
 ## 🔍 功能模块测试覆盖
 

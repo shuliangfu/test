@@ -8,6 +8,41 @@ and this project adheres to
 
 ---
 
+## [1.0.5] - 2026-02-11
+
+### Added
+
+- **Browser test**: Full-suite browser test (`full-suite-browser.test.ts`) with
+  sequential reuse, `entryPoint` + `globalName`, and shared browser context.
+
+### Changed
+
+- **Test report**: Canonical test reports moved to `docs/en-US/TEST_REPORT.md`
+  and `docs/zh-CN/TEST_REPORT.md`; root `TEST_REPORT.md` removed.
+- **JSR publish**: Removed `TEST_REPORT.md` from `publish.include` in
+  `deno.json`.
+
+### Fixed
+
+- **Test runner**: Clear `beforeAllExecutedMap` in `cleanupAllBrowsers()` to
+  avoid unbounded map growth in watch or repeated runs.
+
+### Performance
+
+- **Test runner**: Cache `getBunTest()` result to avoid repeated dynamic
+  `import("bun:test")`; optimize `collectParentSuites()` from O(n²) to O(n)
+  (push + reverse instead of unshift); reduce cleanup logging (use
+  `logger.error` only on failure).
+
+### Security
+
+- **Snapshot**: Use `IS_DENO`/`IS_BUN` from `@dreamer/runtime-adapter`;
+  sanitize `..` in snapshot filenames to prevent path traversal.
+- **mock-fetch**: Safely serialize `requestBody` (try/catch around
+  `JSON.stringify` for non-serializable bodies e.g. ReadableStream).
+
+---
+
 ## [1.0.4] - 2026-02-10
 
 ### Added

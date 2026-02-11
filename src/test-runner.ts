@@ -13,10 +13,7 @@ import {
 import type { BrowserContext } from "./browser/browser-context.ts";
 import { createBrowserContext } from "./browser/browser-context.ts";
 import { buildClientBundle } from "./browser/bundle.ts";
-import {
-  createTestPage,
-  DEFAULT_TEMPLATE_IIFE,
-} from "./browser/page.ts";
+import { createTestPage, DEFAULT_TEMPLATE_IIFE } from "./browser/page.ts";
 import { logger } from "./logger.ts";
 import { _clearCurrentHooks } from "./test-utils.ts";
 import type {
@@ -263,7 +260,9 @@ async function setupBrowserTest(
         const loadTimeout = config.moduleLoadTimeout
           ? config.moduleLoadTimeout + 10_000
           : 60_000;
-        let diagRightAfterGoto: { hasGlobal?: boolean; hasTestReady?: boolean } | { error: string } = {};
+        let diagRightAfterGoto:
+          | { hasGlobal?: boolean; hasTestReady?: boolean }
+          | { error: string } = {};
         try {
           const response = await newPage.goto(`file://${htmlPath}`, {
             waitUntil: "domcontentloaded",
@@ -310,8 +309,7 @@ async function setupBrowserTest(
         const moduleLoadTimeout = config.moduleLoadTimeout || 10000;
         const globalName = config.globalName;
         if (globalName) {
-          const alreadyReady =
-            typeof diagRightAfterGoto === "object" &&
+          const alreadyReady = typeof diagRightAfterGoto === "object" &&
             !("error" in diagRightAfterGoto) &&
             diagRightAfterGoto.hasGlobal === true &&
             diagRightAfterGoto.hasTestReady === true;
@@ -329,7 +327,8 @@ async function setupBrowserTest(
             } catch (_error) {
               try {
                 await newPage.waitForFunction(
-                  (name: string) => typeof (window as any)[name] !== "undefined",
+                  (name: string) =>
+                    typeof (window as any)[name] !== "undefined",
                   { timeout: 2000 },
                   globalName,
                 );

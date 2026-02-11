@@ -32,7 +32,7 @@ const fullSuiteBrowserConfig = {
     globalName: "FullSuiteClient",
     browserMode: false,
     moduleLoadTimeout: 15_000,
-    bodyContent: "<div id=\"root\"></div>",
+    bodyContent: '<div id="root"></div>',
   },
 };
 
@@ -44,8 +44,9 @@ describe("全量浏览器测试（多用例顺序执行）", () => {
   it("第 1 个用例：应加载入口并得到 global", async (t) => {
     if (!t?.browser) return;
     const result = await t.browser.evaluate(() => {
-      const g = (globalThis as unknown as { FullSuiteClient?: { ok?: boolean } })
-        .FullSuiteClient;
+      const g =
+        (globalThis as unknown as { FullSuiteClient?: { ok?: boolean } })
+          .FullSuiteClient;
       return g?.ok === true;
     });
     expect(result).toBe(true);
@@ -54,8 +55,9 @@ describe("全量浏览器测试（多用例顺序执行）", () => {
   it("第 2 个用例：应再次加载页面并得到 global", async (t) => {
     if (!t?.browser) return;
     const result = await t.browser.evaluate(() => {
-      const g = (globalThis as unknown as { FullSuiteClient?: { ok?: boolean } })
-        .FullSuiteClient;
+      const g =
+        (globalThis as unknown as { FullSuiteClient?: { ok?: boolean } })
+          .FullSuiteClient;
       return g?.ok === true;
     });
     expect(result).toBe(true);
@@ -64,8 +66,9 @@ describe("全量浏览器测试（多用例顺序执行）", () => {
   it("第 3 个用例：应再次加载页面并得到 global", async (t) => {
     if (!t?.browser) return;
     const result = await t.browser.evaluate(() => {
-      const g = (globalThis as unknown as { FullSuiteClient?: { ok?: boolean } })
-        .FullSuiteClient;
+      const g =
+        (globalThis as unknown as { FullSuiteClient?: { ok?: boolean } })
+          .FullSuiteClient;
       return g?.ok === true;
     });
     expect(result).toBe(true);
@@ -74,8 +77,9 @@ describe("全量浏览器测试（多用例顺序执行）", () => {
   it("第 4 个用例：应再次加载页面并得到 global", async (t) => {
     if (!t?.browser) return;
     const result = await t.browser.evaluate(() => {
-      const g = (globalThis as unknown as { FullSuiteClient?: { ok?: boolean } })
-        .FullSuiteClient;
+      const g =
+        (globalThis as unknown as { FullSuiteClient?: { ok?: boolean } })
+          .FullSuiteClient;
       return g?.ok === true;
     });
     expect(result).toBe(true);
@@ -84,8 +88,9 @@ describe("全量浏览器测试（多用例顺序执行）", () => {
   it("第 5 个用例：应再次加载页面并得到 global", async (t) => {
     if (!t?.browser) return;
     const result = await t.browser.evaluate(() => {
-      const g = (globalThis as unknown as { FullSuiteClient?: { ok?: boolean } })
-        .FullSuiteClient;
+      const g =
+        (globalThis as unknown as { FullSuiteClient?: { ok?: boolean } })
+          .FullSuiteClient;
       return g?.ok === true;
     });
     expect(result).toBe(true);
@@ -94,8 +99,9 @@ describe("全量浏览器测试（多用例顺序执行）", () => {
   it("第 6 个用例：应再次加载页面并得到 global", async (t) => {
     if (!t?.browser) return;
     const result = await t.browser.evaluate(() => {
-      const g = (globalThis as unknown as { FullSuiteClient?: { ok?: boolean } })
-        .FullSuiteClient;
+      const g =
+        (globalThis as unknown as { FullSuiteClient?: { ok?: boolean } })
+          .FullSuiteClient;
       return g?.ok === true;
     });
     expect(result).toBe(true);
@@ -104,8 +110,9 @@ describe("全量浏览器测试（多用例顺序执行）", () => {
   it("第 7 个用例：应再次加载页面并得到 global", async (t) => {
     if (!t?.browser) return;
     const result = await t.browser.evaluate(() => {
-      const g = (globalThis as unknown as { FullSuiteClient?: { ok?: boolean } })
-        .FullSuiteClient;
+      const g =
+        (globalThis as unknown as { FullSuiteClient?: { ok?: boolean } })
+          .FullSuiteClient;
       return g?.ok === true;
     });
     expect(result).toBe(true);
@@ -114,8 +121,9 @@ describe("全量浏览器测试（多用例顺序执行）", () => {
   it("第 8 个用例：应再次加载页面并得到 global", async (t) => {
     if (!t?.browser) return;
     const result = await t.browser.evaluate(() => {
-      const g = (globalThis as unknown as { FullSuiteClient?: { ok?: boolean } })
-        .FullSuiteClient;
+      const g =
+        (globalThis as unknown as { FullSuiteClient?: { ok?: boolean } })
+          .FullSuiteClient;
       return g?.ok === true;
     });
     expect(result).toBe(true);
@@ -124,8 +132,9 @@ describe("全量浏览器测试（多用例顺序执行）", () => {
   it("第 9 个用例：应再次加载页面并得到 global", async (t) => {
     if (!t?.browser) return;
     const result = await t.browser.evaluate(() => {
-      const g = (globalThis as unknown as { FullSuiteClient?: { ok?: boolean } })
-        .FullSuiteClient;
+      const g =
+        (globalThis as unknown as { FullSuiteClient?: { ok?: boolean } })
+          .FullSuiteClient;
       return g?.ok === true;
     });
     expect(result).toBe(true);
@@ -134,8 +143,9 @@ describe("全量浏览器测试（多用例顺序执行）", () => {
   it("第 10 个用例：应再次加载页面并得到 global", async (t) => {
     if (!t?.browser) return;
     const result = await t.browser.evaluate(() => {
-      const g = (globalThis as unknown as { FullSuiteClient?: { ok?: boolean } })
-        .FullSuiteClient;
+      const g =
+        (globalThis as unknown as { FullSuiteClient?: { ok?: boolean } })
+          .FullSuiteClient;
       return g?.ok === true;
     });
     expect(result).toBe(true);

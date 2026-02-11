@@ -8,7 +8,7 @@
 import { makeTempFile, writeTextFileSync } from "@dreamer/runtime-adapter";
 
 /**
- * 默认 HTML 模板
+ * 默认 HTML 模板（ESM，用于 browserMode: true）
  */
 const DEFAULT_TEMPLATE = `<!DOCTYPE html>
 <html>
@@ -26,6 +26,26 @@ const DEFAULT_TEMPLATE = `<!DOCTYPE html>
     if (typeof window !== 'undefined') {
       window.testReady = true;
     }
+  </script>
+</body>
+</html>`;
+
+/**
+ * IIFE 用 HTML 模板（经典 script，用于 browserMode: false）
+ * 打包为 IIFE 时须用经典 script，否则 globalName 不会挂到 window，导致 waitForFunction 超时
+ */
+export const DEFAULT_TEMPLATE_IIFE = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Browser Test</title>
+</head>
+<body>
+  <div id="test-container"></div>
+  {{BODY_CONTENT}}
+  <script>
+    {{BUNDLE_CODE}}
+    if (typeof window !== 'undefined') { window.testReady = true; }
   </script>
 </body>
 </html>`;

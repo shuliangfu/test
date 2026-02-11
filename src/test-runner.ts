@@ -13,7 +13,10 @@ import {
 import type { BrowserContext } from "./browser/browser-context.ts";
 import { createBrowserContext } from "./browser/browser-context.ts";
 import { buildClientBundle } from "./browser/bundle.ts";
-import { createTestPage } from "./browser/page.ts";
+import {
+  createTestPage,
+  DEFAULT_TEMPLATE_IIFE,
+} from "./browser/page.ts";
 import { logger } from "./logger.ts";
 import { _clearCurrentHooks } from "./test-utils.ts";
 import type {
@@ -85,25 +88,35 @@ export function _setCurrentSuiteHooks(hooks: TestHooks): void {
   currentSuite.afterEach = hooks.afterEach;
 }
 
+/** 缓存 Bun test 函数，避免重复动态 import */
+let cachedBunTest: Promise<any> | null = null;
+
 /**
- * 获取 Bun 的 test 函数
+ * 获取 Bun 的 test 函数（结果缓存，仅首次解析 bun:test）
  */
 async function getBunTest(): Promise<any> {
   if (!IS_BUN) {
     return null;
   }
-  try {
-    // @ts-ignore: bun:test 是 Bun 特有的模块，Deno 类型检查器不识别
-    const bunTest = await import("bun:test" as string);
-    return bunTest.test;
-  } catch {
-    // 如果导入失败，尝试使用全局 test
-    return (globalThis as any).test;
+  if (cachedBunTest !== null) {
+    return await cachedBunTest;
   }
+  cachedBunTest = (async () => {
+    try {
+      // @ts-ignore: bun:test 是 Bun 特有的模块，Deno 类型检查器不识别
+      const bunTest = await import("bun:test" as string);
+      return bunTest.test;
+    } catch {
+      // 如果导入失败，尝试使用全局 test
+      return (globalThis as any).test;
+    }
+  })();
+  return cachedBunTest;
 }
 
 /**
  * 收集所有父套件的钩子（从根到当前套件）
+ * 使用 push + reverse 避免 unshift 的 O(n) 每次导致整体 O(n²)
  * @param suite 当前套件
  * @returns 所有父套件的数组（从根到当前套件）
  */
@@ -111,9 +124,10 @@ function collectParentSuites(suite: TestSuite): TestSuite[] {
   const suites: TestSuite[] = [];
   let current: TestSuite | undefined = suite;
   while (current && current !== rootSuite) {
-    suites.unshift(current); // 从根到当前套件的顺序
+    suites.push(current);
     current = current.parent;
   }
+  suites.reverse();
   return suites;
 }
 
@@ -223,10 +237,12 @@ async function setupBrowserTest(
           browserMode: config.browserMode,
         });
 
+        const template = config.htmlTemplate ??
+          (config.browserMode === false ? DEFAULT_TEMPLATE_IIFE : undefined);
         const htmlPath = await createTestPage({
           bundleCode: bundle,
           bodyContent: config.bodyContent,
-          template: config.htmlTemplate,
+          template,
         });
 
         browserCtx.htmlPath = htmlPath;
@@ -243,10 +259,21 @@ async function setupBrowserTest(
         });
 
         // 加载页面，捕获加载错误
+        // 使用 domcontentloaded：DOM 就绪即触发、内联脚本已执行，比 load 更早且对 file:// 更稳定
+        const loadTimeout = config.moduleLoadTimeout
+          ? config.moduleLoadTimeout + 10_000
+          : 60_000;
+        let diagRightAfterGoto: { hasGlobal?: boolean; hasTestReady?: boolean } | { error: string } = {};
         try {
           const response = await newPage.goto(`file://${htmlPath}`, {
-            waitUntil: "networkidle0",
+            waitUntil: "domcontentloaded",
+            timeout: loadTimeout,
           });
+          // goto 后立即检查：若已就绪则跳过 waitForFunction，避免复用路径下 waitForFunction 不返回的 Playwright 行为
+          diagRightAfterGoto = await newPage.evaluate((name: string) => ({
+            hasGlobal: typeof (window as any)[name] !== "undefined",
+            hasTestReady: (window as any).testReady === true,
+          }), config.globalName!).catch((e: unknown) => ({ error: String(e) }));
 
           // 检查页面加载是否成功
           if (!response || !response.ok()) {
@@ -283,33 +310,38 @@ async function setupBrowserTest(
         const moduleLoadTimeout = config.moduleLoadTimeout || 10000;
         const globalName = config.globalName;
         if (globalName) {
-          // 等待全局变量存在且 testReady 标记已设置
-          try {
-            await newPage.waitForFunction(
-              (name: string) => {
-                return typeof (window as any)[name] !== "undefined" &&
-                  (window as any).testReady === true;
-              },
-              { timeout: moduleLoadTimeout },
-              globalName,
-            );
-          } catch (_error) {
-            // 如果超时，尝试只检查全局变量（可能 testReady 设置失败）
+          const alreadyReady =
+            typeof diagRightAfterGoto === "object" &&
+            !("error" in diagRightAfterGoto) &&
+            diagRightAfterGoto.hasGlobal === true &&
+            diagRightAfterGoto.hasTestReady === true;
+          if (!alreadyReady) {
+            // 等待全局变量存在且 testReady 标记已设置
             try {
               await newPage.waitForFunction(
-                (name: string) => typeof (window as any)[name] !== "undefined",
-                { timeout: 2000 },
+                (name: string) => {
+                  return typeof (window as any)[name] !== "undefined" &&
+                    (window as any).testReady === true;
+                },
+                { timeout: moduleLoadTimeout },
                 globalName,
               );
-            } catch (_retryError) {
-              // 如果仍然失败，抛出更详细的错误信息
-              const errorDetails = consoleErrors.length > 0
-                ? `\nBrowser console errors: ${consoleErrors.join("\n")}`
-                : "";
-              throw new Error(
-                `Module load timeout: cannot find global "${globalName}" or testReady not set. ` +
-                  `Entry file: ${config.entryPoint}${errorDetails}`,
-              );
+            } catch (_error) {
+              try {
+                await newPage.waitForFunction(
+                  (name: string) => typeof (window as any)[name] !== "undefined",
+                  { timeout: 2000 },
+                  globalName,
+                );
+              } catch (_retryError) {
+                const errorDetails = consoleErrors.length > 0
+                  ? `\nBrowser console errors: ${consoleErrors.join("\n")}`
+                  : "";
+                throw new Error(
+                  `Module load timeout: cannot find global "${globalName}" or testReady not set. ` +
+                    `Entry file: ${config.entryPoint}${errorDetails}`,
+                );
+              }
             }
           }
         } else {
@@ -398,18 +430,17 @@ export function cleanupSuiteBrowser(suitePath: string): Promise<void> {
 
 /**
  * 清理所有浏览器实例
- * 在所有测试完成后调用，确保所有浏览器实例都被关闭
+ * 在所有测试完成后调用，确保所有浏览器实例都被关闭。
+ * 同时清空 beforeAll 执行标记，避免 watch/重复运行下 Map 无限增长。
  */
 export async function cleanupAllBrowsers(): Promise<void> {
+  beforeAllExecutedMap.clear();
   const closePromises: Promise<void>[] = [];
   for (const [suitePath, browserCtx] of suiteBrowserCache.entries()) {
     suiteBrowserCache.delete(suitePath);
-    console.log("cleanupSuiteBrowser", suitePath);
     closePromises.push(
-      browserCtx.close().then(() => {
-        console.log("cleanupSuiteBrowser success", suitePath);
-      }).catch(() => {
-        console.error("cleanupSuiteBrowser error", suitePath);
+      browserCtx.close().catch((err) => {
+        logger.error(`cleanupSuiteBrowser failed: ${suitePath} - ${err}`);
       }),
     );
   }

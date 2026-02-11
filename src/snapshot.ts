@@ -4,6 +4,8 @@
  */
 
 import {
+  IS_BUN,
+  IS_DENO,
   join,
   mkdir,
   readTextFile,
@@ -13,19 +15,15 @@ import {
 import type { TestContext } from "./types.ts";
 
 /**
- * 检测运行环境
- */
-const IS_DENO = typeof (globalThis as any).Deno !== "undefined";
-const IS_BUN = typeof (globalThis as any).Bun !== "undefined";
-
-/**
- * 将测试名称转为安全的文件名（Windows 兼容）
+ * 将测试名称转为安全的文件名（Windows 兼容，并防止路径穿越）
  * 移除或替换 Windows 不允许的字符: \ / : * ? " < > |
+ * 移除 ".." 防止路径穿越
  */
 function sanitizeSnapshotFilename(name: string): string {
   return name
     .replace(/\s+/g, "-")
     .replace(/[\\/:*?"<>|]/g, "-")
+    .replace(/\.\./g, "") // 防止路径穿越
     .replace(/-+/g, "-") // 合并连续连字符
     .replace(/^-|-$/g, "") || "snapshot";
 }

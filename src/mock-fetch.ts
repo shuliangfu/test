@@ -46,13 +46,18 @@ export function mockFetch(
       return originalFetch(input, init);
     }
 
-    // 检查请求体是否匹配
+    // 检查请求体是否匹配（安全序列化：Stream 等不可序列化时视为不匹配）
     if (options.requestBody !== undefined) {
-      const requestBody = init?.body
-        ? (typeof init.body === "string"
-          ? init.body
-          : JSON.stringify(init.body))
-        : undefined;
+      let requestBody: string | undefined;
+      try {
+        requestBody = init?.body
+          ? (typeof init.body === "string"
+            ? init.body
+            : JSON.stringify(init.body))
+          : undefined;
+      } catch {
+        return originalFetch(input, init);
+      }
       const expectedBody = typeof options.requestBody === "string"
         ? options.requestBody
         : JSON.stringify(options.requestBody);

@@ -14,7 +14,7 @@ import {
 import type { BrowserTestConfig } from "../types.ts";
 import { buildClientBundle } from "./bundle.ts";
 import { getPlaywright } from "./dependencies.ts";
-import { createTestPage } from "./page.ts";
+import { createTestPage, DEFAULT_TEMPLATE_IIFE } from "./page.ts";
 import { findChromePath } from "./chrome.ts";
 
 /** 关闭浏览器时等待的最长时间（毫秒），超时则放弃等待，避免卡住 */
@@ -255,11 +255,14 @@ export async function createBrowserContext(
       htmlPath = await createTestPage({
         bundleCode: bundle,
         bodyContent: config.bodyContent,
-        template: config.htmlTemplate,
+        template: config.htmlTemplate ??
+          (config.browserMode === false ? DEFAULT_TEMPLATE_IIFE : undefined),
       });
 
+      const loadTimeout = (config.moduleLoadTimeout || 10000) + 10000;
       await page.goto(`file://${htmlPath}`, {
-        waitUntil: "networkidle",
+        waitUntil: "domcontentloaded",
+        timeout: loadTimeout,
       });
 
       const moduleLoadTimeout = config.moduleLoadTimeout || 10000;
@@ -330,7 +333,10 @@ export async function createBrowserContext(
       return await context.page.evaluate(fn);
     },
     async goto(url: string): Promise<void> {
-      await context.page.goto(url, { waitUntil: "networkidle" });
+      await context.page.goto(url, {
+        waitUntil: "domcontentloaded",
+        timeout: 60_000,
+      });
     },
     async waitFor(
       fn: () => boolean,

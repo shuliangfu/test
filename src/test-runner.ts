@@ -618,6 +618,8 @@ export function test(
       { sanitizeResources: options.sanitizeResources }),
   };
   currentSuite.tests.push(testCase);
+  // 注册时从调用栈解析测试文件路径，用于超时等错误信息（Bun 无 origin 时使用，Deno 作兜底）
+  const testFilePath = getTestFilePathFromStack();
 
   // 在 Deno 环境下，直接注册测试，使用 parallel: false 确保顺序执行
   if (IS_DENO) {
@@ -778,13 +780,50 @@ export function test(
           }
           // 执行测试函数，如果函数内部修改了 sanitizeOps 或 sanitizeResources，
           // 需要同步到 Deno.TestContext
-          await fn(testContext);
-          // 同步测试上下文中的 sanitize 选项到 Deno.TestContext
-          if (testContext.sanitizeOps !== undefined) {
-            t.sanitizeOps = testContext.sanitizeOps;
-          }
-          if (testContext.sanitizeResources !== undefined) {
-            t.sanitizeResources = testContext.sanitizeResources;
+          // Deno 的 timeout 在异步/浏览器场景下不可靠，在运行器内用 Promise.race 强制到点失败
+          try {
+            if (options?.timeout) {
+              let timeoutId: ReturnType<typeof setTimeout> | undefined;
+              const timeoutPromise = new Promise<never>((_, reject) => {
+                timeoutId = setTimeout(
+                  () => {
+                    const filePart = t.origin
+                      ? formatOriginToPath(t.origin)
+                      : testFilePath;
+                    const fileSuffix = filePart ? `\n  at ${filePart}` : "";
+                    reject(
+                      new Error(
+                        `Test timeout: ${options.timeout}ms (test: ${fullName})${fileSuffix}`,
+                      ),
+                    );
+                  },
+                  options.timeout,
+                );
+              });
+              try {
+                await Promise.race([
+                  Promise.resolve(fn(testContext)),
+                  timeoutPromise,
+                ]);
+              } finally {
+                if (timeoutId != null) clearTimeout(timeoutId);
+              }
+            } else {
+              await fn(testContext);
+            }
+            // 同步测试上下文中的 sanitize 选项到 Deno.TestContext
+            if (testContext.sanitizeOps !== undefined) {
+              t.sanitizeOps = testContext.sanitizeOps;
+            }
+            if (testContext.sanitizeResources !== undefined) {
+              t.sanitizeResources = testContext.sanitizeResources;
+            }
+          } catch (error) {
+            const filePart = t.origin
+              ? formatOriginToPath(t.origin)
+              : testFilePath;
+            augmentErrorWithFilePath(error, filePart);
+            throw error;
           }
         } finally {
           // 清理浏览器上下文
@@ -942,14 +981,43 @@ export function test(
                   throw browserSetupErr;
                 }
               }
-              await fn(testContext);
+              // 与 Deno 一致：在运行器内用 Promise.race 强制超时，避免运行时不可靠
+              if (options?.timeout) {
+                let timeoutId: ReturnType<typeof setTimeout> | undefined;
+                const timeoutPromise = new Promise<never>((_, reject) => {
+                  timeoutId = setTimeout(
+                    () => {
+                      const fileSuffix = testFilePath
+                        ? `\n  at ${testFilePath}`
+                        : "";
+                      reject(
+                        new Error(
+                          `Test timeout: ${options.timeout}ms (test: ${fullName})${fileSuffix}`,
+                        ),
+                      );
+                    },
+                    options.timeout,
+                  );
+                });
+                try {
+                  await Promise.race([
+                    Promise.resolve(fn(testContext)),
+                    timeoutPromise,
+                  ]);
+                } finally {
+                  if (timeoutId != null) clearTimeout(timeoutId);
+                }
+              } else {
+                await fn(testContext);
+              }
               // 测试通过，统计数量
               testStats.passed++;
               testStats.total++;
             } catch (error) {
-              // 测试失败，统计数量
+              // 测试失败，统计数量，并在错误信息中追加测试文件路径
               testStats.failed++;
               testStats.total++;
+              augmentErrorWithFilePath(error, testFilePath);
               throw error; // 重新抛出错误，让 Bun 捕获
             } finally {
               // 清理浏览器上下文
@@ -1027,6 +1095,70 @@ function getFullTestName(name: string): string {
     suite = suite.parent;
   }
   return path.length > 0 ? `${path.join(" > ")} > ${name}` : name;
+}
+
+/**
+ * 将 Deno 测试上下文的 origin（file URL）格式化为可读的文件路径，用于超时等错误信息
+ * @param origin - 测试的 origin 字符串（如 file:///path/to/test.ts）
+ * @returns 可读路径，若解析失败则返回原字符串
+ */
+function formatOriginToPath(origin: string): string {
+  if (!origin || !origin.startsWith("file:")) return origin;
+  try {
+    const u = new URL(origin);
+    return decodeURIComponent(u.pathname);
+  } catch {
+    return origin;
+  }
+}
+
+/**
+ * 从当前调用栈中解析出第一个非 test-runner 的文件路径（用于 Bun 等无 origin 的环境）
+ * 在 test() 注册时调用，栈中调用方为测试文件
+ * @returns 文件路径或 undefined
+ */
+function getTestFilePathFromStack(): string | undefined {
+  try {
+    const stack = new Error().stack ?? "";
+    const lines = stack.split("\n");
+    const runnerBasename = "test-runner";
+    for (const line of lines) {
+      // 匹配 file:// URL（括号内或单独）
+      const fileUrlMatch = line.match(/file:\/\/[^\s)]+/);
+      const pathInParen = line.match(/at\s+.*?\s+\(([^)]+)\)/)?.[1];
+      const path = fileUrlMatch?.[0] ?? pathInParen;
+      if (!path || path.includes(runnerBasename)) continue;
+      if (path.startsWith("file://")) {
+        try {
+          return decodeURIComponent(new URL(path).pathname);
+        } catch {
+          return path;
+        }
+      }
+      if (path.includes(".ts") || path.includes(".js")) return path;
+    }
+  } catch {
+    // ignore
+  }
+  return undefined;
+}
+
+/**
+ * 在错误信息末尾追加测试文件路径，便于定位失败用例所在文件
+ * @param error - 捕获的异常（可为 Error 或任意值）
+ * @param filePath - 测试文件路径（Deno 的 origin 格式化后或栈解析结果），无则不变
+ */
+function augmentErrorWithFilePath(
+  error: unknown,
+  filePath: string | undefined,
+): void {
+  if (!filePath) return;
+  const suffix = `\n  at ${filePath}`;
+  if (error instanceof Error) {
+    if (!error.message.endsWith(suffix)) {
+      error.message += suffix;
+    }
+  }
 }
 
 /**
@@ -1149,6 +1281,7 @@ test.only = function (
     only: true,
   };
   currentSuite.tests.push(testCase);
+  const testFilePath = getTestFilePathFromStack();
 
   // 在 Deno 环境下，注册 only 测试
   if (IS_DENO) {
@@ -1198,7 +1331,15 @@ test.only = function (
               throw browserSetupErr;
             }
           }
-          await fn(testContext);
+          try {
+            await fn(testContext);
+          } catch (error) {
+            const filePart = t.origin
+              ? formatOriginToPath(t.origin)
+              : testFilePath;
+            augmentErrorWithFilePath(error, filePart);
+            throw error;
+          }
         } finally {
           // 清理浏览器上下文
           if (browserCtx) {
@@ -1279,7 +1420,8 @@ test.only = function (
             testStats.passed++;
             testStats.total++;
           } catch (error) {
-            // 测试失败，统计数量
+            // 测试失败，统计数量，并在错误信息中追加测试文件路径
+            augmentErrorWithFilePath(error, testFilePath);
             testStats.failed++;
             testStats.total++;
             throw error; // 重新抛出错误，让 Bun 捕获

@@ -8,7 +8,7 @@ utilities, assertion enhancements, test utility functions, browser test
 integration, and other features, and is compatible with both Deno and Bun
 runtimes.
 
-**Test Date**: 2026-02-11 **Test Version**: 1.0.4 **Test Framework**: Deno
+**Test Date**: 2026-02-16 **Test Version**: 1.0.5 **Test Framework**: Deno
 built-in test framework + Bun test framework
 
 ## 🎯 Test Objectives
@@ -29,13 +29,13 @@ built-in test framework + Bun test framework
 
 | Metric               | Value                  |
 | -------------------- | ---------------------- |
-| Number of test files | 18                     |
-| Total test cases     | 390                    |
-| Passed cases         | 388                    |
+| Number of test files | 19                     |
+| Total test cases     | 394                    |
+| Passed cases         | 392                    |
 | Skipped cases        | 2                      |
 | Failed cases         | 0                      |
 | Pass rate            | 100%                   |
-| Test execution time  | 12 seconds (Deno)      |
+| Test execution time  | 13 seconds (Deno)      |
 | Code coverage        | Comprehensive coverage |
 
 ### Test File List
@@ -60,6 +60,7 @@ built-in test framework + Bun test framework
 | `mod.test.ts`                             | 84         | ✅ All passed (1 skipped) | Basic functionality tests (includes skipIf tests)                    |
 | `test-options.test.ts`                    | 18         | ✅ All passed             | Test suite options and hook options tests                            |
 | `test-utils-comprehensive.test.ts`        | 26         | ✅ All passed             | Test utility function comprehensive tests                            |
+| `timeout.test.ts`                         | 4          | ✅ All passed             | timeout option (pass within limit, throw on timeout)                 |
 
 ## 🔍 Functional Module Test Coverage
 
@@ -786,7 +787,7 @@ resource leaks:
 
 | Environment | Execution time | Test cases | Average per test |
 | ----------- | -------------- | ---------- | ---------------- |
-| Deno        | 58 seconds     | 354        | ~162ms           |
+| Deno        | 13 seconds     | 392        | ~33ms            |
 
 **Note**: The long test execution time is mainly because browser tests need to
 launch real Chrome browser instances. Each browser test case requires creating,
@@ -826,7 +827,7 @@ demonstrate:
 
 1. ✅ **Functional Completeness**: All declared functionality is correctly
    implemented
-2. ✅ **Stability**: 376 test cases passed, 2 skipped by design (test.skip /
+2. ✅ **Stability**: 392 test cases passed, 2 skipped by design (test.skip /
    skipIf), no failed cases
 3. ✅ **Compatibility**: Works correctly in both Deno and Bun environments
 4. ✅ **Reliability**: Edge cases and error handling have been verified
@@ -841,10 +842,10 @@ testing.
 
 ---
 
-**Test Report Generated**: 2026-02-10 **Test Execution Environment**:
+**Test Report Generated**: 2026-02-16 **Test Execution Environment**:
 
 - Deno: Latest stable version
 - Playwright: v1.58.2
-- @dreamer/esbuild: v1.0.3 **Test Framework**: @dreamer/test@1.0.2 **This
-  Execution**: `deno test -A tests/` → ok | 376 passed | 0 failed | 2 ignored
-  (17s)
+- @dreamer/esbuild: v1.0.3 **Test Framework**: @dreamer/test@1.0.5 **This
+  Execution**: `deno test -A tests/` → ok | 392 passed | 0 failed | 2 ignored
+  (13s)

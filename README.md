@@ -7,8 +7,8 @@
 English | [中文 (Chinese)](./docs/zh-CN/README.md)
 
 [![JSR](https://jsr.io/badges/@dreamer/test)](https://jsr.io/@dreamer/test)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE.md)
-[![Tests](https://img.shields.io/badge/tests-388%20passed-brightgreen)](./docs/en-US/TEST_REPORT.md)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](./LICENSE)
+[![Tests](https://img.shields.io/badge/tests-392%20passed-brightgreen)](./docs/en-US/TEST_REPORT.md)
 
 ---
 
@@ -745,26 +745,27 @@ describe("Browser test suite", {
 
 ## 📊 Test Report
 
-This library has undergone comprehensive testing. 354 test cases passed, 2
+This library has undergone comprehensive testing. 392 test cases passed, 2
 skipped by design (test.skip / skipIf), achieving 100% test coverage. See
 [TEST_REPORT.md](./docs/en-US/TEST_REPORT.md) for detailed report.
 
 **Test statistics**:
 
-- **Test files**: 17
-- **Total tests**: 356
-- **Passed**: 354 ✅
+- **Test files**: 19
+- **Total tests**: 394
+- **Passed**: 392 ✅
 - **Skipped**: 2 (test.skip, skipIf, etc. skipped by design)
 - **Failed**: 0
 - **Pass rate**: 100% ✅
-- **Execution time**: 58 seconds
+- **Execution time**: 13 seconds
 - **Coverage**: All public APIs, edge cases, error handling
 - **Environment**: Deno latest stable
 
 **Test types**:
 
-- ✅ Unit tests (272)
-- ✅ Browser tests (84)
+- ✅ Unit tests
+- ✅ Browser tests
+- ✅ Timeout option tests
 
 **Highlights**:
 
@@ -782,13 +783,13 @@ Full test report: [TEST_REPORT.md](./docs/en-US/TEST_REPORT.md)
 
 ## 📋 Changelog
 
-### [1.0.5] - 2026-02-11
+### [1.0.6] - 2026-02-16
 
-- **Added**: Full-suite browser test (sequential reuse, entryPoint + globalName).
-- **Changed**: Test reports moved to docs/en-US and docs/zh-CN; removed TEST_REPORT.md from JSR publish.
-- **Fixed**: Clear beforeAllExecutedMap in cleanupAllBrowsers to avoid map growth.
-- **Performance**: Cache getBunTest, optimize collectParentSuites to O(n), reduce cleanup logging.
-- **Security**: Snapshot path sanitize (..), mock-fetch safe requestBody serialization.
+- **Added**: Timeout option tests (`timeout.test.ts`, `timeout-fixture.run.ts`);
+  test file path in all test error messages (timeout and assertion failures) via
+  `formatOriginToPath`, `getTestFilePathFromStack`, `augmentErrorWithFilePath`.
+- **Changed**: License to Apache-2.0 (LICENSE + NOTICE; removed LICENSE.md); CI
+  workflow adjustments; docs updated (392 passed, 19 files, 13s).
 
 See [CHANGELOG.md](./docs/en-US/CHANGELOG.md) for full history.
 
@@ -832,7 +833,7 @@ Issues and Pull Requests welcome!
 
 ## 📄 License
 
-MIT License - see [LICENSE.md](./LICENSE.md)
+Apache License 2.0 - see [LICENSE](./LICENSE)
 
 ---
 

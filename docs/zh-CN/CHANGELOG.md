@@ -7,6 +7,32 @@
 
 ---
 
+## [1.0.6] - 2026-02-16
+
+### 新增
+
+- **timeout 选项测试**：新增 `timeout.test.ts`（4 条）与
+  `timeout-fixture.run.ts`， 通过子进程运行 fixture 断言超时失败。验证：在
+  `options.timeout` 内完成则通过； 未传 timeout 时正常执行；超时后抛出 "Test
+  timeout" 错误（Deno/Bun 均在运行器内 用 `Promise.race` 保证超时可靠）。
+- **错误信息附带测试文件路径**：所有测试失败与超时错误均会附带测试文件路径。新增
+  `formatOriginToPath()`（Deno `t.origin`
+  转可读路径）、`getTestFilePathFromStack()`
+  （Bun/兜底：注册时从调用栈解析）、`augmentErrorWithFilePath()`（在错误信息末尾追加
+  `\n  at <路径>`）。应用于：主测试执行（Deno/Bun）、`test.only`（Deno/Bun）、超时
+  reject 路径。
+
+### 变更
+
+- **许可证**：项目许可证改为 Apache-2.0。使用标准 `LICENSE` 与 `NOTICE` 替代
+  `LICENSE.md`。`deno.json` 中 `license` 为 `Apache-2.0`，`publish.include` 包含
+  `LICENSE` 与 `NOTICE`。
+- **CI**：工作流中 check/lint/test 步骤调整。
+- **文档**：测试报告与 README 已更新：392 通过、19 个测试文件、2 跳过、13 秒；
+  测试文件列表增加 `timeout.test.ts`，测试类型增加「timeout 选项测试」。
+
+---
+
 ## [1.0.5] - 2026-02-11
 
 ### 新增
@@ -28,13 +54,13 @@
 ### 性能
 
 - **测试运行器**：缓存 `getBunTest()` 结果，避免重复动态 `import("bun:test")`；
-  将 `collectParentSuites()` 从 O(n²) 优化为 O(n)（push + reverse 替代 unshift）；
-  精简清理日志（仅在失败时使用 `logger.error`）。
+  将 `collectParentSuites()` 从 O(n²) 优化为 O(n)（push + reverse 替代
+  unshift）； 精简清理日志（仅在失败时使用 `logger.error`）。
 
 ### 安全
 
-- **快照**：使用 `@dreamer/runtime-adapter` 的 `IS_DENO`/`IS_BUN`；对快照文件名中的
-  `..` 做清理，防止路径穿越。
+- **快照**：使用 `@dreamer/runtime-adapter` 的
+  `IS_DENO`/`IS_BUN`；对快照文件名中的 `..` 做清理，防止路径穿越。
 - **mock-fetch**：安全序列化 `requestBody`（对不可序列化 body 如 ReadableStream
   的 `JSON.stringify` 使用 try/catch）。
 

@@ -8,6 +8,36 @@ and this project adheres to
 
 ---
 
+## [1.0.6] - 2026-02-16
+
+### Added
+
+- **Timeout option tests**: New test file `timeout.test.ts` (4 cases) and
+  `timeout-fixture.run.ts` for subprocess-based timeout assertion. Verifies:
+  test passes when it completes within `options.timeout`; test without timeout
+  runs normally; test that exceeds timeout throws a "Test timeout" error (Deno
+  and Bun both use in-runner `Promise.race` for reliable timeout).
+- **Test file path in errors**: All test failure and timeout error messages now
+  include the test file path. Helpers: `formatOriginToPath()` (Deno `t.origin` →
+  readable path), `getTestFilePathFromStack()` (Bun / fallback: parse caller
+  from stack at registration), `augmentErrorWithFilePath()` (append
+  `\n  at <path>` to error message). Applied in: main test run (Deno/Bun),
+  `test.only` (Deno/Bun), and timeout reject path.
+
+### Changed
+
+- **License**: Project license is now Apache-2.0. Replaced `LICENSE.md` with
+  standard `LICENSE` and added `NOTICE`. `deno.json` sets
+  `"license":
+  "Apache-2.0"` and `publish.include` lists `LICENSE` and
+  `NOTICE`.
+- **CI**: Workflow adjustments for check/lint/test steps.
+- **Docs**: Test report and README updated: 392 passed, 19 test files, 2
+  skipped, 13s execution; added `timeout.test.ts` to file list and "timeout
+  option" to test types.
+
+---
+
 ## [1.0.5] - 2026-02-11
 
 ### Added
@@ -36,8 +66,8 @@ and this project adheres to
 
 ### Security
 
-- **Snapshot**: Use `IS_DENO`/`IS_BUN` from `@dreamer/runtime-adapter`;
-  sanitize `..` in snapshot filenames to prevent path traversal.
+- **Snapshot**: Use `IS_DENO`/`IS_BUN` from `@dreamer/runtime-adapter`; sanitize
+  `..` in snapshot filenames to prevent path traversal.
 - **mock-fetch**: Safely serialize `requestBody` (try/catch around
   `JSON.stringify` for non-serializable bodies e.g. ReadableStream).
 
@@ -52,9 +82,9 @@ and this project adheres to
 
 ### Fixed
 
-- **Browser context**: Pre-check `executablePath` with `existsSync` before launch
-  so "Chrome not found" error is immediate on all platforms (avoids 60s timeout
-  on Windows). Longer launch timeout in CI (120s).
+- **Browser context**: Pre-check `executablePath` with `existsSync` before
+  launch so "Chrome not found" error is immediate on all platforms (avoids 60s
+  timeout on Windows). Longer launch timeout in CI (120s).
 - **Test runner**: Root-level browser reuse (one browser per top-level describe)
   to avoid Windows CI timeouts after many launch/close cycles. When
   `executablePath` is set, use full suite path as cache key so error-handling

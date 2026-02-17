@@ -5,6 +5,7 @@
 
 import { makeTempFile, writeTextFileSync } from "@dreamer/runtime-adapter";
 import {
+  $t,
   afterAll,
   beforeEach,
   cleanupAllBrowsers,
@@ -341,12 +342,14 @@ describe("测试运行器浏览器集成", () => {
         expect(setupError).toBeDefined();
         expect(setupError).toBeInstanceOf(Error);
 
-        // 验证错误信息包含关键信息
+        // 验证错误信息包含关键信息（使用 i18n 以兼容中英文环境）
         const errorMessage = setupError!.message;
-        expect(errorMessage).toContain("Failed to create browser context");
+        const ctxFailedPrefix = $t("runner.browserContextFailed", {
+          message: "x",
+        }).split(":")[0];
+        expect(errorMessage).toContain(ctxFailedPrefix);
         expect(errorMessage).toContain("executablePath");
         expect(errorMessage).toContain("/nonexistent/chrome/path");
-        expect(errorMessage).toContain("Please check if Chrome is installed");
 
         // 浏览器上下文应该是 undefined
         expect(t.browser).toBeUndefined();

@@ -6,6 +6,7 @@
  */
 
 import { statSync } from "@dreamer/runtime-adapter";
+import { $t } from "../i18n.ts";
 import {
   type BundleOptions as EsbuildBundleOptions,
   getBuildBundle,
@@ -177,7 +178,10 @@ export async function buildClientBundle(
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     throw new Error(
-      `Bundle failed: ${errorMessage}. Entry file: ${options.entryPoint}`,
+      $t("bundle.failed", {
+        message: errorMessage,
+        entry: options.entryPoint,
+      }),
     );
   }
 }

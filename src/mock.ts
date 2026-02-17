@@ -3,6 +3,7 @@
  * 提供函数 Mock 和 Mock 期望值匹配器
  */
 
+import { $t } from "./i18n.ts";
 import type { MockCall, MockFunction } from "./types.ts";
 
 /**
@@ -56,7 +57,7 @@ export class MockExpect {
    */
   toHaveBeenCalled(): void {
     if (this.mock.calls.length === 0) {
-      throw new Error("Expected mock function to be called, but it was not");
+      throw new Error($t("mock.expectedToBeCalled"));
     }
   }
 
@@ -66,7 +67,10 @@ export class MockExpect {
   toHaveBeenCalledTimes(times: number): void {
     if (this.mock.calls.length !== times) {
       throw new Error(
-        `Expected mock to be called ${times} times, but was called ${this.mock.calls.length} times`,
+        $t("mock.expectedTimesButWas", {
+          times: String(times),
+          actual: String(this.mock.calls.length),
+        }),
       );
     }
   }
@@ -81,9 +85,9 @@ export class MockExpect {
 
     if (!found) {
       throw new Error(
-        `Expected mock to be called with ${
-          JSON.stringify(args)
-        }, but no matching call found`,
+        $t("mock.expectedCalledWithNoMatch", {
+          args: JSON.stringify(args),
+        }),
       );
     }
   }
@@ -93,18 +97,19 @@ export class MockExpect {
    */
   toHaveBeenLastCalledWith(...args: unknown[]): void {
     if (this.mock.calls.length === 0) {
-      throw new Error("Expected mock function to be called, but it was not");
+      throw new Error($t("mock.expectedToBeCalled"));
     }
 
     const lastCall = this.mock.calls[this.mock.calls.length - 1];
     if (!lastCall) {
-      throw new Error("Cannot get last call");
+      throw new Error($t("mock.cannotGetLastCall"));
     }
     if (!this.deepEqual(lastCall.args, args)) {
       throw new Error(
-        `Expected last call with args ${JSON.stringify(args)}, actual: ${
-          JSON.stringify(lastCall.args)
-        }`,
+        $t("mock.expectedLastCallWith", {
+          args: JSON.stringify(args),
+          actual: JSON.stringify(lastCall.args),
+        }),
       );
     }
   }
@@ -115,19 +120,24 @@ export class MockExpect {
   toHaveBeenNthCalledWith(n: number, ...args: unknown[]): void {
     if (n < 1 || n > this.mock.calls.length) {
       throw new Error(
-        `Expected call #${n}, but only ${this.mock.calls.length} calls`,
+        $t("mock.expectedNthCallButOnly", {
+          n: String(n),
+          actual: String(this.mock.calls.length),
+        }),
       );
     }
 
     const nthCall = this.mock.calls[n - 1];
     if (!nthCall) {
-      throw new Error(`Cannot get call #${n}`);
+      throw new Error($t("mock.cannotGetCallN", { n: String(n) }));
     }
     if (!this.deepEqual(nthCall.args, args)) {
       throw new Error(
-        `Expected call #${n} with args ${JSON.stringify(args)}, actual: ${
-          JSON.stringify(nthCall.args)
-        }`,
+        $t("mock.expectedNthCallWith", {
+          n: String(n),
+          args: JSON.stringify(args),
+          actual: JSON.stringify(nthCall.args),
+        }),
       );
     }
   }
@@ -142,9 +152,9 @@ export class MockExpect {
 
     if (!found) {
       throw new Error(
-        `Expected mock to return ${
-          JSON.stringify(expected)
-        }, but no matching return found`,
+        $t("mock.expectedReturnNoMatch", {
+          expected: JSON.stringify(expected),
+        }),
       );
     }
   }
@@ -158,7 +168,7 @@ export class MockExpect {
     });
 
     if (!hasReturned) {
-      throw new Error("Expected mock to return a value, but it did not");
+      throw new Error($t("mock.expectedToReturnValue"));
     }
   }
 
@@ -169,9 +179,7 @@ export class MockExpect {
     // 注意：当前实现中，如果函数抛出错误，调用会失败
     // 这个方法主要用于检查函数是否应该抛出错误
     // 实际实现可能需要特殊处理
-    throw new Error(
-      "toHaveThrown requires special implementation, not supported in current version",
-    );
+    throw new Error($t("mock.toHaveThrownNotSupported"));
   }
 
   /**
@@ -245,7 +253,9 @@ class MockNotExpect extends MockExpect {
   override toHaveBeenCalled(): void {
     if (this.mock.calls.length > 0) {
       throw new Error(
-        `Expected mock not to be called, but was called ${this.mock.calls.length} times`,
+        $t("mock.expectedNotToBeCalled", {
+          times: String(this.mock.calls.length),
+        }),
       );
     }
   }
@@ -256,7 +266,10 @@ class MockNotExpect extends MockExpect {
   override toHaveBeenCalledTimes(times: number): void {
     if (this.mock.calls.length === times) {
       throw new Error(
-        `Expected mock not to be called ${times} times, but was called ${this.mock.calls.length} times`,
+        $t("mock.expectedNotCalledTimes", {
+          times: String(times),
+          actual: String(this.mock.calls.length),
+        }),
       );
     }
   }
@@ -271,9 +284,9 @@ class MockNotExpect extends MockExpect {
 
     if (found) {
       throw new Error(
-        `Expected mock not to be called with ${
-          JSON.stringify(args)
-        }, but matching call found`,
+        $t("mock.expectedNotCalledWith", {
+          args: JSON.stringify(args),
+        }),
       );
     }
   }
@@ -286,9 +299,9 @@ class MockNotExpect extends MockExpect {
       const lastCall = this.mock.calls[this.mock.calls.length - 1];
       if (lastCall && this.deepEqual(lastCall.args, args)) {
         throw new Error(
-          `Expected last call not to use args ${
-            JSON.stringify(args)
-          }, but it did`,
+          $t("mock.expectedLastCallNotArgs", {
+            args: JSON.stringify(args),
+          }),
         );
       }
     }
@@ -302,9 +315,10 @@ class MockNotExpect extends MockExpect {
       const nthCall = this.mock.calls[n - 1];
       if (nthCall && this.deepEqual(nthCall.args, args)) {
         throw new Error(
-          `Expected call #${n} not to use args ${
-            JSON.stringify(args)
-          }, but it did`,
+          $t("mock.expectedNthCallNotArgs", {
+            n: String(n),
+            args: JSON.stringify(args),
+          }),
         );
       }
     }
@@ -320,9 +334,9 @@ class MockNotExpect extends MockExpect {
 
     if (found) {
       throw new Error(
-        `Expected mock not to return ${
-          JSON.stringify(expected)
-        }, but matching return found`,
+        $t("mock.expectedNotReturn", {
+          expected: JSON.stringify(expected),
+        }),
       );
     }
   }
@@ -336,7 +350,7 @@ class MockNotExpect extends MockExpect {
     });
 
     if (hasReturned) {
-      throw new Error("Expected mock not to return a value, but it did");
+      throw new Error($t("mock.expectedNotToReturnValue"));
     }
   }
 }

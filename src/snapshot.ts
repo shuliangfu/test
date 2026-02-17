@@ -12,6 +12,7 @@ import {
   resolve,
   writeTextFile,
 } from "@dreamer/runtime-adapter";
+import { $t } from "./i18n.ts";
 import type { TestContext } from "./types.ts";
 
 /**
@@ -74,7 +75,10 @@ export async function assertSnapshot(
     // 对比快照
     if (existingSnapshot !== serialized) {
       throw new Error(
-        `Snapshot mismatch\nExpected:\n${existingSnapshot}\nReceived:\n${serialized}`,
+        $t("snapshot.mismatch", {
+          expected: existingSnapshot,
+          received: serialized,
+        }),
       );
     }
   } else if (IS_BUN) {
@@ -108,13 +112,14 @@ export async function assertSnapshot(
     // 对比快照
     if (existingSnapshot !== serialized) {
       throw new Error(
-        `Snapshot mismatch\nExpected:\n${existingSnapshot}\nReceived:\n${serialized}`,
+        $t("snapshot.mismatch", {
+          expected: existingSnapshot,
+          received: serialized,
+        }),
       );
     }
   } else {
     // 其他环境：不支持快照测试
-    throw new Error(
-      "Snapshot testing is not supported in the current environment",
-    );
+    throw new Error($t("snapshot.notSupported"));
   }
 }

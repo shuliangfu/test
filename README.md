@@ -783,13 +783,12 @@ Full test report: [TEST_REPORT.md](./docs/en-US/TEST_REPORT.md)
 
 ## 📋 Changelog
 
-### [1.0.6] - 2026-02-16
+### [1.0.7] - 2026-02-17
 
-- **Added**: Timeout option tests (`timeout.test.ts`, `timeout-fixture.run.ts`);
-  test file path in all test error messages (timeout and assertion failures) via
-  `formatOriginToPath`, `getTestFilePathFromStack`, `augmentErrorWithFilePath`.
-- **Changed**: License to Apache-2.0 (LICENSE + NOTICE; removed LICENSE.md); CI
-  workflow adjustments; docs updated (392 passed, 19 files, 13s).
+- **Added**: i18n for assertion/runner/browser messages; browser entry
+  `index.ts` → `mod.ts`.
+- **Fixed**: i18n placeholder for `undefined`; tests use `$t()` for
+  locale-agnostic assertions.
 
 See [CHANGELOG.md](./docs/en-US/CHANGELOG.md) for full history.
 

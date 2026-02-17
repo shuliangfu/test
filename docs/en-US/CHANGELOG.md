@@ -8,6 +8,36 @@ and this project adheres to
 
 ---
 
+## [1.0.7] - 2026-02-17
+
+### Added
+
+- **i18n for assertion and runner messages**: All user-facing strings in expect,
+  mock, assertions, test-runner, browser-context, and bundle use `$t()` with
+  `en-US` and `zh-CN` locales. Locale is auto-detected from `LANGUAGE`/`LC_ALL`/
+  `LANG`; export `$t` from main entry for tests that assert on error messages.
+- **Browser entry**: `src/browser/index.ts` renamed to `src/browser/mod.ts`;
+  `deno.json` export `"./browser"` updated accordingly.
+
+### Fixed
+
+- **i18n placeholder**: `JSON.stringify(undefined)` returns `undefined`, so
+  `{received}` was not replaced in zh locale. Added `stringifyForI18n()` in
+  expect and use it for all `received` params so `undefined` becomes the string
+  `"undefined"`.
+- **Tests under non-English locale**: Assertions that checked for English
+  substrings in error messages failed when system locale was zh. Tests now use
+  `$t("key", ...)` for expected message content so they pass in both en and zh.
+
+### Changed
+
+- **Test suite**: Error-message assertions in
+  `assertions-comprehensive.test.ts`, `expect-comprehensive.test.ts`,
+  `mod.test.ts`, and `test-runner-integration.test.ts` use `$t()` for
+  locale-agnostic expectations.
+
+---
+
 ## [1.0.6] - 2026-02-16
 
 ### Added

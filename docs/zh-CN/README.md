@@ -758,14 +758,10 @@ skipIf），测试覆盖率达到 100%。详细测试报告请查看
 
 ## 📋 变更日志
 
-### [1.0.6] - 2026-02-16
+### [1.0.7] - 2026-02-17
 
-- **新增**：timeout
-  选项测试（`timeout.test.ts`、`timeout-fixture.run.ts`）；所有
-  测试错误与超时错误附带测试文件路径（`formatOriginToPath`、`getTestFilePathFromStack`、
-  `augmentErrorWithFilePath`）。
-- **变更**：许可证改为 Apache-2.0（LICENSE + NOTICE，移除 LICENSE.md）；CI
-  工作流 调整；文档更新（392 通过、19 个测试文件、13 秒）。
+- **新增**：断言/runner/browser 文案 i18n；Browser 入口 `index.ts` → `mod.ts`。
+- **修复**：i18n 中 `undefined` 占位符；测试用 `$t()` 做与语言无关的断言。
 
 完整历史请查看 [CHANGELOG.md](./CHANGELOG.md)。
 

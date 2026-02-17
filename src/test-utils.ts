@@ -3,6 +3,7 @@
  * 提供 Setup/Teardown、参数化测试、基准测试等功能
  */
 
+import { $t } from "./i18n.ts";
 import { logger } from "./logger.ts";
 import { _setCurrentSuiteHooks, test } from "./test-runner.ts";
 import type { TestContext, TestHooks, TestOptions } from "./types.ts";
@@ -149,39 +150,28 @@ export function bench(
     const IS_DENO = typeof (globalThis as any).Deno !== "undefined";
     const IS_BUN = typeof (globalThis as any).Bun !== "undefined";
 
+    const benchMsg = $t("test.benchSummary", {
+      name,
+      avg: avgTime.toFixed(3),
+      n: String(n),
+    });
     if (IS_DENO) {
       // Deno 环境：Deno 会自动添加分隔线，我们直接使用 logger
       const yellow = "\x1b[33m";
-      const cyan = "\x1b[36m";
       const gray = "\x1b[90m";
-      const bold = "\x1b[1m";
       const reset = "\x1b[0m";
-      logger.info(
-        `${yellow}⚡${reset} ${gray}基准测试 "${name}": 平均 ${bold}${cyan}${
-          avgTime.toFixed(3)
-        }ms${reset}${gray} (${n} 次运行)${reset}`,
-      );
+      logger.info(`${yellow}⚡${reset} ${gray}${benchMsg}${reset}`);
     } else if (IS_BUN) {
       // Bun 环境：使用 ANSI 颜色代码，添加分隔线以统一格式
       const yellow = "\x1b[33m";
-      const cyan = "\x1b[36m";
       const gray = "\x1b[90m";
-      const bold = "\x1b[1m";
       const reset = "\x1b[0m";
       const dim = "\x1b[2m";
-      // 添加分隔线，模仿 Deno 的输出格式
-      logger.info(`${dim}------- output -------${reset}`);
-      logger.info(
-        `${yellow}⚡${reset} ${gray}基准测试 "${name}": 平均 ${bold}${cyan}${
-          avgTime.toFixed(3)
-        }ms${reset}${gray} (${n} 次运行)${reset}`,
-      );
-      logger.info(`${dim}----- output end -----${reset}`);
+      logger.info(`${dim}${$t("test.outputSeparator")}${reset}`);
+      logger.info(`${yellow}⚡${reset} ${gray}${benchMsg}${reset}`);
+      logger.info(`${dim}${$t("test.outputEnd")}${reset}`);
     } else {
-      // 其他环境：普通输出
-      logger.info(
-        `⚡ 基准测试 "${name}": 平均 ${avgTime.toFixed(3)}ms (${n} 次运行)`,
-      );
+      logger.info(`⚡ ${benchMsg}`);
     }
   });
 }

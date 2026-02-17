@@ -3,7 +3,13 @@
  * 提供期望值匹配器和断言功能
  */
 
+import { $t } from "./i18n.ts";
 import type { ExpectFunction } from "./types.ts";
+
+/** 供 i18n 占位符使用：undefined 转为字符串 "undefined"，否则用 JSON.stringify */
+function stringifyForI18n(v: unknown): string {
+  return v === undefined ? "undefined" : JSON.stringify(v);
+}
 
 /**
  * 期望值匹配器
@@ -17,9 +23,10 @@ export class Expect {
   toBe(expected: unknown): void {
     if (this.actual !== expected) {
       throw new Error(
-        `Expected: ${JSON.stringify(expected)}, received: ${
-          JSON.stringify(this.actual)
-        }`,
+        $t("expect.expectedReceived", {
+          expected: JSON.stringify(expected),
+          received: stringifyForI18n(this.actual),
+        }),
       );
     }
   }
@@ -30,9 +37,10 @@ export class Expect {
   toEqual(expected: unknown): void {
     if (!this.deepEqual(this.actual, expected)) {
       throw new Error(
-        `Expected: ${JSON.stringify(expected)}, received: ${
-          JSON.stringify(this.actual)
-        }`,
+        $t("expect.expectedReceived", {
+          expected: JSON.stringify(expected),
+          received: stringifyForI18n(this.actual),
+        }),
       );
     }
   }
@@ -43,7 +51,9 @@ export class Expect {
   toBeTruthy(): void {
     if (!this.actual) {
       throw new Error(
-        `Expected truthy value, received: ${JSON.stringify(this.actual)}`,
+        $t("expect.expectedTruthyReceived", {
+          received: stringifyForI18n(this.actual),
+        }),
       );
     }
   }
@@ -54,7 +64,9 @@ export class Expect {
   toBeFalsy(): void {
     if (this.actual) {
       throw new Error(
-        `Expected falsy value, received: ${JSON.stringify(this.actual)}`,
+        $t("expect.expectedFalsyReceived", {
+          received: stringifyForI18n(this.actual),
+        }),
       );
     }
   }
@@ -65,7 +77,9 @@ export class Expect {
   toBeNull(): void {
     if (this.actual !== null) {
       throw new Error(
-        `Expected null, received: ${JSON.stringify(this.actual)}`,
+        $t("expect.expectedNullReceived", {
+          received: stringifyForI18n(this.actual),
+        }),
       );
     }
   }
@@ -76,7 +90,9 @@ export class Expect {
   toBeUndefined(): void {
     if (this.actual !== undefined) {
       throw new Error(
-        `Expected undefined, received: ${JSON.stringify(this.actual)}`,
+        $t("expect.expectedUndefinedReceived", {
+          received: stringifyForI18n(this.actual),
+        }),
       );
     }
   }
@@ -86,7 +102,7 @@ export class Expect {
    */
   toBeDefined(): void {
     if (this.actual === undefined) {
-      throw new Error(`Expected defined value, received undefined`);
+      throw new Error($t("expect.expectedDefinedReceivedUndefined"));
     }
   }
 
@@ -98,9 +114,10 @@ export class Expect {
     const pattern = typeof regex === "string" ? new RegExp(regex) : regex;
     if (!pattern.test(str)) {
       throw new Error(
-        `Expected to match ${pattern}, received: ${
-          JSON.stringify(this.actual)
-        }`,
+        $t("expect.expectedMatchReceived", {
+          pattern: String(pattern),
+          received: stringifyForI18n(this.actual),
+        }),
       );
     }
   }
@@ -112,21 +129,23 @@ export class Expect {
     if (Array.isArray(this.actual)) {
       if (!this.actual.includes(item as never)) {
         throw new Error(
-          `Expected array to contain ${JSON.stringify(item)}, received: ${
-            JSON.stringify(this.actual)
-          }`,
+          $t("expect.expectedArrayContainReceived", {
+            item: JSON.stringify(item),
+            received: stringifyForI18n(this.actual),
+          }),
         );
       }
     } else if (typeof this.actual === "string") {
       if (!this.actual.includes(String(item))) {
         throw new Error(
-          `Expected string to contain ${String(item)}, received: ${
-            JSON.stringify(this.actual)
-          }`,
+          $t("expect.expectedStringContainReceived", {
+            item: String(item),
+            received: stringifyForI18n(this.actual),
+          }),
         );
       }
     } else {
-      throw new Error("toContain can only be used with arrays or strings");
+      throw new Error($t("expect.toContainOnlyArraysOrStrings"));
     }
   }
 
@@ -136,9 +155,10 @@ export class Expect {
   toBeGreaterThan(expected: number): void {
     if (typeof this.actual !== "number" || this.actual <= expected) {
       throw new Error(
-        `Expected value > ${expected}, received: ${
-          JSON.stringify(this.actual)
-        }`,
+        $t("expect.expectedGreaterThanReceived", {
+          expected: String(expected),
+          received: stringifyForI18n(this.actual),
+        }),
       );
     }
   }
@@ -149,9 +169,10 @@ export class Expect {
   toBeGreaterThanOrEqual(expected: number): void {
     if (typeof this.actual !== "number" || this.actual < expected) {
       throw new Error(
-        `Expected value >= ${expected}, received: ${
-          JSON.stringify(this.actual)
-        }`,
+        $t("expect.expectedGreaterThanOrEqualReceived", {
+          expected: String(expected),
+          received: stringifyForI18n(this.actual),
+        }),
       );
     }
   }
@@ -162,9 +183,10 @@ export class Expect {
   toBeLessThan(expected: number): void {
     if (typeof this.actual !== "number" || this.actual >= expected) {
       throw new Error(
-        `Expected value < ${expected}, received: ${
-          JSON.stringify(this.actual)
-        }`,
+        $t("expect.expectedLessThanReceived", {
+          expected: String(expected),
+          received: stringifyForI18n(this.actual),
+        }),
       );
     }
   }
@@ -175,9 +197,10 @@ export class Expect {
   toBeLessThanOrEqual(expected: number): void {
     if (typeof this.actual !== "number" || this.actual > expected) {
       throw new Error(
-        `Expected value <= ${expected}, received: ${
-          JSON.stringify(this.actual)
-        }`,
+        $t("expect.expectedLessThanOrEqualReceived", {
+          expected: String(expected),
+          received: stringifyForI18n(this.actual),
+        }),
       );
     }
   }
@@ -188,9 +211,10 @@ export class Expect {
   toBeInstanceOf(expected: new (...args: any[]) => any): void {
     if (!(this.actual instanceof expected)) {
       throw new Error(
-        `Expected ${expected.name} instance, received: ${
-          JSON.stringify(this.actual)
-        }`,
+        $t("expect.expectedInstanceReceived", {
+          name: expected.name,
+          received: stringifyForI18n(this.actual),
+        }),
       );
     }
   }
@@ -203,13 +227,15 @@ export class Expect {
   toHaveProperty(path: string, value?: unknown): void {
     if (typeof this.actual !== "object" || this.actual === null) {
       throw new Error(
-        `Expected object, received: ${JSON.stringify(this.actual)}`,
+        $t("expect.expectedObjectReceived", {
+          received: stringifyForI18n(this.actual),
+        }),
       );
     }
 
     const keys = path.split(".").filter((k) => k.length > 0);
     if (keys.length === 0) {
-      throw new Error("Property path cannot be empty");
+      throw new Error($t("expect.propertyPathEmpty"));
     }
 
     let current: any = this.actual;
@@ -219,18 +245,21 @@ export class Expect {
       const key = keys[i]!; // 已经过滤空字符串，所以不会是 undefined
       if (!(key in current)) {
         throw new Error(
-          `Expected object to have property "${path}", but missing "${key}". Received: ${
-            JSON.stringify(this.actual)
-          }`,
+          $t("expect.expectedPropertyMissing", {
+            path,
+            key,
+            received: stringifyForI18n(this.actual),
+          }),
         );
       }
       if (i < keys.length - 1) {
         // 不是最后一个键，继续深入
         if (typeof current[key] !== "object" || current[key] === null) {
           throw new Error(
-            `Expected path "${
-              keys.slice(0, i + 1).join(".")
-            }" to be object, got: ${JSON.stringify(current[key])}`,
+            $t("expect.expectedPathToBeObject", {
+              path: keys.slice(0, i + 1).join("."),
+              got: JSON.stringify(current[key]),
+            }),
           );
         }
         current = current[key];
@@ -239,9 +268,11 @@ export class Expect {
         if (value !== undefined) {
           if (!this.deepEqual(current[key], value)) {
             throw new Error(
-              `Expected property "${path}" to be ${
-                JSON.stringify(value)
-              }, received: ${JSON.stringify(current[key])}`,
+              $t("expect.expectedPropertyValue", {
+                path,
+                value: JSON.stringify(value),
+                received: JSON.stringify(current[key]),
+              }),
             );
           }
         }
@@ -257,9 +288,9 @@ export class Expect {
   toBeCloseTo(expected: number, numDigits: number = 2): void {
     if (typeof this.actual !== "number" || typeof expected !== "number") {
       throw new Error(
-        `toBeCloseTo can only be used with numbers, received: ${
-          JSON.stringify(this.actual)
-        }`,
+        $t("expect.toBeCloseToOnlyNumbers", {
+          received: stringifyForI18n(this.actual),
+        }),
       );
     }
 
@@ -269,7 +300,11 @@ export class Expect {
 
     if (actualRounded !== expectedRounded) {
       throw new Error(
-        `Expected ≈ ${expected} (${numDigits} decimal places), received: ${this.actual}`,
+        $t("expect.expectedCloseToReceived", {
+          expected: String(expected),
+          numDigits: String(numDigits),
+          received: String(this.actual),
+        }),
       );
     }
   }
@@ -280,7 +315,9 @@ export class Expect {
   toBeNaN(): void {
     if (!Number.isNaN(this.actual)) {
       throw new Error(
-        `Expected NaN, received: ${JSON.stringify(this.actual)}`,
+        $t("expect.expectedNaNReceived", {
+          received: stringifyForI18n(this.actual),
+        }),
       );
     }
   }
@@ -303,15 +340,18 @@ export class Expect {
       length = (this.actual as any).length;
     } else {
       throw new Error(
-        `toHaveLength can only be used with arrays, strings or objects with length, received: ${
-          JSON.stringify(this.actual)
-        }`,
+        $t("expect.toHaveLengthOnlyArraysOrStrings", {
+          received: stringifyForI18n(this.actual),
+        }),
       );
     }
 
     if (length !== expected) {
       throw new Error(
-        `Expected length ${expected}, received: ${length}`,
+        $t("expect.expectedLengthReceived", {
+          expected: String(expected),
+          length: String(length),
+        }),
       );
     }
   }
@@ -322,7 +362,9 @@ export class Expect {
   toBeArray(): void {
     if (!Array.isArray(this.actual)) {
       throw new Error(
-        `Expected array, received: ${JSON.stringify(this.actual)}`,
+        $t("expect.expectedArrayReceived", {
+          received: stringifyForI18n(this.actual),
+        }),
       );
     }
   }
@@ -333,7 +375,9 @@ export class Expect {
   toBeString(): void {
     if (typeof this.actual !== "string") {
       throw new Error(
-        `Expected string, received: ${JSON.stringify(this.actual)}`,
+        $t("expect.expectedStringReceived", {
+          received: stringifyForI18n(this.actual),
+        }),
       );
     }
   }
@@ -344,7 +388,9 @@ export class Expect {
   toBeNumber(): void {
     if (typeof this.actual !== "number" || Number.isNaN(this.actual)) {
       throw new Error(
-        `Expected number, received: ${JSON.stringify(this.actual)}`,
+        $t("expect.expectedNumberReceived", {
+          received: stringifyForI18n(this.actual),
+        }),
       );
     }
   }
@@ -355,7 +401,9 @@ export class Expect {
   toBeBoolean(): void {
     if (typeof this.actual !== "boolean") {
       throw new Error(
-        `Expected boolean, received: ${JSON.stringify(this.actual)}`,
+        $t("expect.expectedBooleanReceived", {
+          received: stringifyForI18n(this.actual),
+        }),
       );
     }
   }
@@ -366,7 +414,9 @@ export class Expect {
   toBeFunction(): void {
     if (typeof this.actual !== "function") {
       throw new Error(
-        `Expected function, received: ${JSON.stringify(this.actual)}`,
+        $t("expect.expectedFunctionReceived", {
+          received: stringifyForI18n(this.actual),
+        }),
       );
     }
   }
@@ -378,27 +428,33 @@ export class Expect {
     if (Array.isArray(this.actual)) {
       if (this.actual.length !== 0) {
         throw new Error(
-          `Expected empty array, received length: ${this.actual.length}`,
+          $t("expect.expectedEmptyArrayReceived", {
+            length: String(this.actual.length),
+          }),
         );
       }
     } else if (typeof this.actual === "string") {
       if (this.actual.length !== 0) {
         throw new Error(
-          `Expected empty string, received length: ${this.actual.length}`,
+          $t("expect.expectedEmptyStringReceived", {
+            length: String(this.actual.length),
+          }),
         );
       }
     } else if (this.actual && typeof this.actual === "object") {
       const keys = Object.keys(this.actual);
       if (keys.length !== 0) {
         throw new Error(
-          `Expected empty object, received ${keys.length} properties`,
+          $t("expect.expectedEmptyObjectReceived", {
+            count: String(keys.length),
+          }),
         );
       }
     } else {
       throw new Error(
-        `toBeEmpty can only be used with arrays, strings or objects, received: ${
-          JSON.stringify(this.actual)
-        }`,
+        $t("expect.toBeEmptyOnlyArraysOrStringsOrObjects", {
+          received: stringifyForI18n(this.actual),
+        }),
       );
     }
   }
@@ -409,9 +465,10 @@ export class Expect {
   toStrictEqual(expected: unknown): void {
     if (!this.strictDeepEqual(this.actual, expected)) {
       throw new Error(
-        `Expected (strict): ${JSON.stringify(expected)}, received: ${
-          JSON.stringify(this.actual)
-        }`,
+        $t("expect.expectedStrictReceived", {
+          expected: JSON.stringify(expected),
+          received: stringifyForI18n(this.actual),
+        }),
       );
     }
   }
@@ -423,12 +480,12 @@ export class Expect {
     expectedError?: string | RegExp | (new (...args: any[]) => Error),
   ): void {
     if (typeof this.actual !== "function") {
-      throw new Error("toThrow can only be used with functions");
+      throw new Error($t("expect.toThrowOnlyFunctions"));
     }
 
     try {
       this.actual();
-      throw new Error("Expected function to throw, but it succeeded");
+      throw new Error($t("expect.expectedFunctionToThrow"));
     } catch (error) {
       if (expectedError === undefined) {
         // 只要抛出错误即可
@@ -439,22 +496,32 @@ export class Expect {
         const errorMsg = error instanceof Error ? error.message : String(error);
         if (!errorMsg.includes(expectedError)) {
           throw new Error(
-            `Expected error message to contain "${expectedError}", received: ${errorMsg}`,
+            $t("expect.expectedErrorContainReceived", {
+              expected: expectedError,
+              received: errorMsg,
+            }),
           );
         }
       } else if (expectedError instanceof RegExp) {
         const errorMsg = error instanceof Error ? error.message : String(error);
         if (!expectedError.test(errorMsg)) {
           throw new Error(
-            `Expected error message to match ${expectedError}, received: ${errorMsg}`,
+            $t("expect.expectedErrorMatchReceived", {
+              pattern: String(expectedError),
+              received: errorMsg,
+            }),
           );
         }
       } else if (typeof expectedError === "function") {
         if (!(error instanceof expectedError)) {
+          const threw = error instanceof Error
+            ? error.constructor.name
+            : typeof error;
           throw new Error(
-            `Expected to throw ${expectedError.name}, threw: ${
-              error instanceof Error ? error.constructor.name : typeof error
-            }`,
+            $t("expect.expectedToThrowThrew", {
+              expected: expectedError.name,
+              threw,
+            }),
           );
         }
       }
@@ -594,9 +661,9 @@ class NotExpect extends Expect {
   override toBe(expected: unknown): void {
     if (this.actual === expected) {
       throw new Error(
-        `Expected value not equal to ${
-          JSON.stringify(expected)
-        }, but values are equal`,
+        $t("expect.expectedNotEqualButEqual", {
+          expected: JSON.stringify(expected),
+        }),
       );
     }
   }
@@ -607,9 +674,9 @@ class NotExpect extends Expect {
   override toEqual(expected: unknown): void {
     if (this.deepEqual(this.actual, expected)) {
       throw new Error(
-        `Expected value not equal to ${
-          JSON.stringify(expected)
-        }, but values are equal`,
+        $t("expect.expectedNotEqualButEqual", {
+          expected: JSON.stringify(expected),
+        }),
       );
     }
   }
@@ -620,7 +687,9 @@ class NotExpect extends Expect {
   override toBeTruthy(): void {
     if (this.actual) {
       throw new Error(
-        `Expected falsy value, received: ${JSON.stringify(this.actual)}`,
+        $t("expect.expectedFalsyReceivedTruthy", {
+          received: stringifyForI18n(this.actual),
+        }),
       );
     }
   }
@@ -630,7 +699,7 @@ class NotExpect extends Expect {
    */
   override toBeFalsy(): void {
     if (!this.actual) {
-      throw new Error(`Expected truthy value, received falsy`);
+      throw new Error($t("expect.expectedTruthyReceivedFalsy"));
     }
   }
 
@@ -639,7 +708,7 @@ class NotExpect extends Expect {
    */
   override toBeNull(): void {
     if (this.actual === null) {
-      throw new Error(`Expected value not null, received null`);
+      throw new Error($t("expect.expectedValueNotNull"));
     }
   }
 
@@ -648,7 +717,7 @@ class NotExpect extends Expect {
    */
   override toBeUndefined(): void {
     if (this.actual === undefined) {
-      throw new Error(`Expected value not undefined, received undefined`);
+      throw new Error($t("expect.expectedValueNotUndefined"));
     }
   }
 
@@ -658,7 +727,9 @@ class NotExpect extends Expect {
   override toBeDefined(): void {
     if (this.actual !== undefined) {
       throw new Error(
-        `Expected undefined, received: ${JSON.stringify(this.actual)}`,
+        $t("expect.expectedUndefinedReceived", {
+          received: stringifyForI18n(this.actual),
+        }),
       );
     }
   }
@@ -671,9 +742,10 @@ class NotExpect extends Expect {
     const pattern = typeof regex === "string" ? new RegExp(regex) : regex;
     if (pattern.test(str)) {
       throw new Error(
-        `Expected not to match ${pattern}, but received: ${
-          JSON.stringify(this.actual)
-        }`,
+        $t("expect.expectedNotMatchReceived", {
+          pattern: String(pattern),
+          received: stringifyForI18n(this.actual),
+        }),
       );
     }
   }
@@ -685,17 +757,21 @@ class NotExpect extends Expect {
     if (Array.isArray(this.actual)) {
       if (this.actual.includes(item as never)) {
         throw new Error(
-          `Expected array not to contain ${JSON.stringify(item)}, but it does`,
+          $t("expect.expectedArrayNotContain", {
+            item: JSON.stringify(item),
+          }),
         );
       }
     } else if (typeof this.actual === "string") {
       if (this.actual.includes(String(item))) {
         throw new Error(
-          `Expected string not to contain ${String(item)}, but it does`,
+          $t("expect.expectedStringNotContain", {
+            item: String(item),
+          }),
         );
       }
     } else {
-      throw new Error("toContain can only be used with arrays or strings");
+      throw new Error($t("expect.toContainOnlyArraysOrStrings"));
     }
   }
 
@@ -746,10 +822,15 @@ class NotExpect extends Expect {
     }
 
     if (hasProperty) {
+      const valueHint = value !== undefined
+        ? ` or value != ${JSON.stringify(value)}`
+        : "";
       throw new Error(
-        `Expected object not to have property "${path}"${
-          value !== undefined ? ` or value != ${JSON.stringify(value)}` : ""
-        }, but it does. Received: ${JSON.stringify(this.actual)}`,
+        $t("expect.expectedNotHaveProperty", {
+          path,
+          valueHint,
+          received: stringifyForI18n(this.actual),
+        }),
       );
     }
   }
@@ -768,7 +849,11 @@ class NotExpect extends Expect {
 
     if (actualRounded === expectedRounded) {
       throw new Error(
-        `Expected not ≈ ${expected} (${numDigits} decimals), but values are equal: ${this.actual}`,
+        $t("expect.expectedNotCloseToEqual", {
+          expected: String(expected),
+          numDigits: String(numDigits),
+          received: String(this.actual),
+        }),
       );
     }
   }
@@ -778,7 +863,7 @@ class NotExpect extends Expect {
    */
   override toBeNaN(): void {
     if (Number.isNaN(this.actual)) {
-      throw new Error(`Expected value not NaN, received NaN`);
+      throw new Error($t("expect.expectedValueNotNaN"));
     }
   }
 
@@ -805,7 +890,10 @@ class NotExpect extends Expect {
 
     if (length === expected) {
       throw new Error(
-        `Expected length != ${expected}, but equal: ${length}`,
+        $t("expect.expectedLengthNotEqual", {
+          expected: String(expected),
+          length: String(length),
+        }),
       );
     }
   }
@@ -815,7 +903,7 @@ class NotExpect extends Expect {
    */
   override toBeArray(): void {
     if (Array.isArray(this.actual)) {
-      throw new Error(`Expected value not array, received array`);
+      throw new Error($t("expect.expectedNotArray"));
     }
   }
 
@@ -824,7 +912,7 @@ class NotExpect extends Expect {
    */
   override toBeString(): void {
     if (typeof this.actual === "string") {
-      throw new Error(`Expected value not string, received string`);
+      throw new Error($t("expect.expectedNotString"));
     }
   }
 
@@ -833,7 +921,7 @@ class NotExpect extends Expect {
    */
   override toBeNumber(): void {
     if (typeof this.actual === "number" && !Number.isNaN(this.actual)) {
-      throw new Error(`Expected value not number, received number`);
+      throw new Error($t("expect.expectedNotNumber"));
     }
   }
 
@@ -842,7 +930,7 @@ class NotExpect extends Expect {
    */
   override toBeBoolean(): void {
     if (typeof this.actual === "boolean") {
-      throw new Error(`Expected value not boolean, received boolean`);
+      throw new Error($t("expect.expectedNotBoolean"));
     }
   }
 
@@ -851,7 +939,7 @@ class NotExpect extends Expect {
    */
   override toBeFunction(): void {
     if (typeof this.actual === "function") {
-      throw new Error(`Expected value not function, received function`);
+      throw new Error($t("expect.expectedNotFunction"));
     }
   }
 
@@ -861,16 +949,16 @@ class NotExpect extends Expect {
   override toBeEmpty(): void {
     if (Array.isArray(this.actual)) {
       if (this.actual.length === 0) {
-        throw new Error(`Expected value not empty, received empty array`);
+        throw new Error($t("expect.expectedNotEmptyArray"));
       }
     } else if (typeof this.actual === "string") {
       if (this.actual.length === 0) {
-        throw new Error(`Expected value not empty, received empty string`);
+        throw new Error($t("expect.expectedNotEmptyString"));
       }
     } else if (this.actual && typeof this.actual === "object") {
       const keys = Object.keys(this.actual);
       if (keys.length === 0) {
-        throw new Error(`Expected value not empty, received empty object`);
+        throw new Error($t("expect.expectedNotEmptyObject"));
       }
     }
   }
@@ -881,9 +969,9 @@ class NotExpect extends Expect {
   override toStrictEqual(expected: unknown): void {
     if (this.strictDeepEqual(this.actual, expected)) {
       throw new Error(
-        `Expected (strict) not equal to ${
-          JSON.stringify(expected)
-        }, but values are equal`,
+        $t("expect.expectedStrictNotEqual", {
+          expected: JSON.stringify(expected),
+        }),
       );
     }
   }
@@ -894,9 +982,10 @@ class NotExpect extends Expect {
   override toBeGreaterThan(expected: number): void {
     if (typeof this.actual === "number" && this.actual > expected) {
       throw new Error(
-        `Expected value not > ${expected}, received: ${
-          JSON.stringify(this.actual)
-        }`,
+        $t("expect.expectedNotGreaterThan", {
+          expected: String(expected),
+          received: stringifyForI18n(this.actual),
+        }),
       );
     }
   }
@@ -907,9 +996,10 @@ class NotExpect extends Expect {
   override toBeGreaterThanOrEqual(expected: number): void {
     if (typeof this.actual === "number" && this.actual >= expected) {
       throw new Error(
-        `Expected value not >= ${expected}, received: ${
-          JSON.stringify(this.actual)
-        }`,
+        $t("expect.expectedNotGreaterThanOrEqual", {
+          expected: String(expected),
+          received: stringifyForI18n(this.actual),
+        }),
       );
     }
   }
@@ -920,9 +1010,10 @@ class NotExpect extends Expect {
   override toBeLessThan(expected: number): void {
     if (typeof this.actual === "number" && this.actual < expected) {
       throw new Error(
-        `Expected value not < ${expected}, received: ${
-          JSON.stringify(this.actual)
-        }`,
+        $t("expect.expectedNotLessThan", {
+          expected: String(expected),
+          received: stringifyForI18n(this.actual),
+        }),
       );
     }
   }
@@ -933,9 +1024,10 @@ class NotExpect extends Expect {
   override toBeLessThanOrEqual(expected: number): void {
     if (typeof this.actual === "number" && this.actual <= expected) {
       throw new Error(
-        `Expected value not <= ${expected}, received: ${
-          JSON.stringify(this.actual)
-        }`,
+        $t("expect.expectedNotLessThanOrEqual", {
+          expected: String(expected),
+          received: stringifyForI18n(this.actual),
+        }),
       );
     }
   }
@@ -946,9 +1038,10 @@ class NotExpect extends Expect {
   override toBeInstanceOf(expected: new (...args: any[]) => any): void {
     if (this.actual instanceof expected) {
       throw new Error(
-        `Expected value not instance of ${expected.name}, but it is. Received: ${
-          JSON.stringify(this.actual)
-        }`,
+        $t("expect.expectedNotInstance", {
+          name: expected.name,
+          received: stringifyForI18n(this.actual),
+        }),
       );
     }
   }
@@ -961,7 +1054,7 @@ class NotExpect extends Expect {
     expectedError?: string | RegExp | (new (...args: any[]) => Error),
   ): void {
     if (typeof this.actual !== "function") {
-      throw new Error("toThrow can only be used with functions");
+      throw new Error($t("expect.toThrowOnlyFunctions"));
     }
 
     try {
@@ -971,11 +1064,8 @@ class NotExpect extends Expect {
       // 函数抛出了错误，需要检查是否匹配 expectedError
       if (expectedError === undefined) {
         // 没有指定错误类型，任何错误都应该报错
-        throw new Error(
-          `Expected function not to throw, but threw: ${
-            error instanceof Error ? error.message : String(error)
-          }`,
-        );
+        const message = error instanceof Error ? error.message : String(error);
+        throw new Error($t("expect.expectedFunctionNotToThrow", { message }));
       }
 
       // 检查错误是否匹配 expectedError
@@ -999,7 +1089,10 @@ class NotExpect extends Expect {
           ? expectedError.toString()
           : expectedError.name;
         throw new Error(
-          `Expected function not to throw matching ${expectedDesc}, but threw: ${errorMsg}`,
+          $t("expect.expectedFunctionNotToThrowMatching", {
+            expectedDesc,
+            message: errorMsg,
+          }),
         );
       }
       // 如果错误不匹配 expectedError，说明抛出了其他类型的错误
@@ -1071,7 +1164,7 @@ function expectFn(actual: unknown): Expect {
  * @param message 失败消息
  */
 expectFn.fail = function (message?: string): never {
-  throw new Error(message || "Test failed");
+  throw new Error(message || $t("expect.testFailed"));
 };
 
 /**

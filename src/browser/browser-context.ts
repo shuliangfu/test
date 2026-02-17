@@ -11,6 +11,7 @@ import {
   removeSync,
   writeStderrSync,
 } from "@dreamer/runtime-adapter";
+import { $t } from "../i18n.ts";
 import type { BrowserTestConfig } from "../types.ts";
 import { buildClientBundle } from "./bundle.ts";
 import { getPlaywright } from "./dependencies.ts";
@@ -31,7 +32,7 @@ async function closeBrowserWithTimeout(
   const closePromise = browser.close();
   const timeoutPromise = new Promise<void>((_, reject) =>
     setTimeout(
-      () => reject(new Error("browser close timeout")),
+      () => reject(new Error($t("browser.closeTimeout"))),
       BROWSER_CLOSE_TIMEOUT_MS,
     )
   );
@@ -105,17 +106,16 @@ export async function createBrowserContext(
     config.browserSource === "system" &&
     !executablePath
   ) {
-    throw new Error(
-      "browserSource is 'system' but no system Chrome/Chromium found. " +
-        "Install Chrome or set browserSource to 'test' to use Playwright Chromium.",
-    );
+    throw new Error($t("browser.noSystemChrome"));
   }
 
   // 显式指定 executablePath 时先检查文件是否存在，避免 Windows 上长时间超时后才报错
   if (executablePath && !existsSync(executablePath)) {
     throw new Error(
-      `Executable not found at ${executablePath}. ` +
-        `Please check executablePath or run \`npx playwright install ${engine}\`.`,
+      $t("browser.executableNotFound", {
+        path: executablePath,
+        engine,
+      }),
     );
   }
 
@@ -202,9 +202,10 @@ export async function createBrowserContext(
           () =>
             reject(
               new Error(
-                `Browser launch timed out after ${
-                  launchTimeoutMs / 1000
-                }s. Try \`dumpio: false\` or run \`npx playwright install ${engine}\`.`,
+                $t("browser.launchTimedOutHint", {
+                  seconds: String(launchTimeoutMs / 1000),
+                  engine,
+                }),
               ),
             ),
           launchTimeoutMs,
@@ -223,10 +224,8 @@ export async function createBrowserContext(
     const needHint = msg.includes("Executable doesn't exist") ||
       msg.includes("browserType.launch") ||
       msg.includes(engine);
-    const hint = needHint
-      ? `\n\nFix: Run \`npx playwright install ${engine}\` (or \`npx playwright install\` for all browsers).`
-      : "";
-    throw new Error(`${msg}${hint}`);
+    const hint = needHint ? $t("browser.launchFixHint", { engine }) : "";
+    throw new Error($t("browser.launchFailed", { message: msg, hint }));
   }
 
   let page;
@@ -292,8 +291,11 @@ export async function createBrowserContext(
               ? `\nBrowser console errors: ${consoleErrors.join("\n")}`
               : "";
             throw new Error(
-              `Module load timeout: cannot find global "${globalName}" or testReady not set. ` +
-                `Entry file: ${config.entryPoint}${errorDetails}`,
+              $t("browser.moduleLoadTimeout", {
+                globalName,
+                entry: config.entryPoint,
+                details: errorDetails,
+              }),
             );
           }
         }
@@ -308,8 +310,10 @@ export async function createBrowserContext(
             ? `\nBrowser console errors: ${consoleErrors.join("\n")}`
             : "";
           throw new Error(
-            `Module load timeout: testReady not set. ` +
-              `Entry file: ${config.entryPoint}${errorDetails}`,
+            $t("browser.moduleLoadTimeoutTestReady", {
+              entry: config.entryPoint,
+              details: errorDetails,
+            }),
           );
         }
       }

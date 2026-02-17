@@ -11,6 +11,7 @@ import {
   IS_DENO,
 } from "@dreamer/runtime-adapter";
 import type { BrowserContext } from "./browser/browser-context.ts";
+import { $t, initTestI18n } from "./i18n.ts";
 import { createBrowserContext } from "./browser/browser-context.ts";
 import { buildClientBundle } from "./browser/bundle.ts";
 import { createTestPage, DEFAULT_TEMPLATE_IIFE } from "./browser/page.ts";
@@ -25,6 +26,8 @@ import type {
   TestOptions,
   TestSuite,
 } from "./types.ts";
+
+initTestI18n();
 
 /**
  * 当前测试套件栈
@@ -216,8 +219,7 @@ async function setupBrowserTest(
         ? error.message
         : String(error);
       throw new Error(
-        `Failed to create browser context: ${errorMessage}. ` +
-          `Please check if Chrome is installed, or set executablePath config.`,
+        $t("runner.browserContextFailed", { message: errorMessage }),
       );
     }
   } else {
@@ -278,8 +280,10 @@ async function setupBrowserTest(
           if (!response || !response.ok()) {
             const status = response?.status() || "unknown";
             throw new Error(
-              `Page load failed: HTTP status ${status}. ` +
-                `HTML file path: ${htmlPath}`,
+              $t("runner.pageLoadFailedStatus", {
+                status: String(status),
+                htmlPath,
+              }),
             );
           }
 
@@ -287,8 +291,10 @@ async function setupBrowserTest(
           const actualUrl = newPage.url();
           if (!actualUrl.startsWith("file://")) {
             throw new Error(
-              `Page URL after load is incorrect: expected file:// protocol, got: ${actualUrl}. ` +
-                `HTML file path: ${htmlPath}`,
+              $t("runner.pageUrlIncorrect", {
+                url: actualUrl,
+                htmlPath,
+              }),
             );
           }
         } catch (error) {
@@ -301,8 +307,11 @@ async function setupBrowserTest(
             ? `\nBrowser console errors: ${consoleErrors.join("\n")}`
             : "";
           throw new Error(
-            `Page load failed: ${errorMessage}. ` +
-              `HTML file path: ${htmlPath}${errorDetails}`,
+            $t("runner.pageLoadFailed", {
+              message: errorMessage,
+              htmlPath,
+              details: errorDetails,
+            }),
           );
         }
 
@@ -337,8 +346,11 @@ async function setupBrowserTest(
                   ? `\nBrowser console errors: ${consoleErrors.join("\n")}`
                   : "";
                 throw new Error(
-                  `Module load timeout: cannot find global "${globalName}" or testReady not set. ` +
-                    `Entry file: ${config.entryPoint}${errorDetails}`,
+                  $t("runner.moduleLoadTimeout", {
+                    globalName: globalName!,
+                    entry: config.entryPoint!,
+                    details: errorDetails,
+                  }),
                 );
               }
             }
@@ -355,8 +367,10 @@ async function setupBrowserTest(
               ? `\nBrowser console errors: ${consoleErrors.join("\n")}`
               : "";
             throw new Error(
-              `Module load timeout: testReady not set. ` +
-                `Entry file: ${config.entryPoint}${errorDetails}`,
+              $t("runner.moduleLoadTimeoutTestReady", {
+                entry: config.entryPoint!,
+                details: errorDetails,
+              }),
             );
           }
         }
@@ -439,7 +453,10 @@ export async function cleanupAllBrowsers(): Promise<void> {
     suiteBrowserCache.delete(suitePath);
     closePromises.push(
       browserCtx.close().catch((err) => {
-        logger.error(`cleanupSuiteBrowser failed: ${suitePath} - ${err}`);
+        logger.error($t("runner.cleanupSuiteBrowserFailed", {
+          suitePath,
+          err: String(err),
+        }));
       }),
     );
   }
@@ -518,7 +535,7 @@ export function describe(
   // 确保 fn 是函数
   if (typeof fn !== "function") {
     throw new Error(
-      `describe: second argument must be a function, got: ${typeof fn}. Use describe(name, fn, options?) form.`,
+      $t("runner.describeSecondArgMustBeFunction", { type: typeof fn }),
     );
   }
 
@@ -573,7 +590,11 @@ export function describe(
             try {
               await savedAfterAll();
             } catch (error) {
-              logger.error(`执行 afterAll 钩子时出错: ${error}`);
+              logger.error(
+                $t("runner.afterAllHookError", {
+                  error: String(error),
+                }),
+              );
               throw error;
             }
           },
@@ -587,7 +608,11 @@ export function describe(
               try {
                 await savedAfterAll();
               } catch (error) {
-                logger.error(`执行 afterAll 钩子时出错: ${error}`);
+                logger.error(
+                  $t("runner.afterAllHookError", {
+                    error: String(error),
+                  }),
+                );
                 throw error;
               }
             });
@@ -1061,11 +1086,7 @@ export function test(
     } else {
       // 不在 describe 块内（可能在测试执行期间），在 Bun 中这是不允许的
       // 抛出友好的错误提示
-      throw new Error(
-        `In Bun, test() must be called during describe() execution, not during test execution. ` +
-          `Move test("${name}", ...) inside a describe() block, not inside it() or test() callback. ` +
-          `\nNote: testEach() and bench() should be called during describe() execution, not inside it() callback.`,
-      );
+      throw new Error($t("runner.bunTestMustBeInDescribe", { name }));
     }
   }
   // 其他环境：手动顺序执行
@@ -1235,7 +1256,7 @@ test.skip = function (
       if (bunTest && bunTest.skip) {
         bunTest.skip(fullName, async () => {
           // 跳过测试，使用 warn 级别（黄色）输出
-          logger.warn(`⊘ ${fullName}`);
+          logger.warn($t("runner.skipped", { name: fullName }));
           const testContext = createTestContext(fullName);
           await fn(testContext);
         }, options);

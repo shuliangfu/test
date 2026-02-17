@@ -7,6 +7,33 @@
 
 ---
 
+## [1.0.7] - 2026-02-17
+
+### 新增
+
+- **断言与运行器文案
+  i18n**：expect、mock、assertions、test-runner、browser-context、 bundle
+  中所有面向用户的字符串均通过 `$t()` 使用 en-US/zh-CN 文案。语言由
+  `LANGUAGE`/`LC_ALL`/`LANG` 自动检测；主入口导出 `$t` 供测试断言错误信息使用。
+- **浏览器入口**：`src/browser/index.ts` 重命名为 `src/browser/mod.ts`，并更新
+  `deno.json` 中 `"./browser"` 导出。
+
+### 修复
+
+- **i18n 占位符**：`JSON.stringify(undefined)` 返回 `undefined`，导致中文环境下
+  `{received}` 未被替换。在 expect 中新增 `stringifyForI18n()`，对所有
+  `received` 参数使用该函数，使 `undefined` 转为字符串 `"undefined"`。
+- **非英文环境下的测试**：错误信息断言依赖英文子串时，在中文环境下会失败。测试改为
+  使用 `$t("key", ...)` 作为期望内容，从而在英文与中文环境下均通过。
+
+### 变更
+
+- **测试套件**：`assertions-comprehensive.test.ts`、`expect-comprehensive.test.ts`、
+  `mod.test.ts`、`test-runner-integration.test.ts` 中针对错误信息的断言改为使用
+  `$t()`，实现与语言无关的期望。
+
+---
+
 ## [1.0.6] - 2026-02-16
 
 ### 新增

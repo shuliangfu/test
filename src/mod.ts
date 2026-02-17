@@ -28,6 +28,9 @@
  * ```
  */
 
+// 导出 i18n（供测试断言错误信息时与当前语言一致）
+export { $t } from "./i18n.ts";
+
 // 导出测试运行器
 export { describe, it, test } from "./test-runner.ts";
 export type { DescribeOptions, TestContext } from "./types.ts";

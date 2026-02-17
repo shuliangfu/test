@@ -3,6 +3,7 @@
  */
 
 import {
+  $t,
   assertDeepEqual,
   assertInstanceOf,
   assertMatch,
@@ -58,7 +59,7 @@ describe("断言工具函数全面测试", () => {
           });
         },
         Error,
-        "Expected function to throw",
+        $t("assert.expectedFunctionToThrow"),
       );
     });
 
@@ -73,7 +74,10 @@ describe("断言工具函数全面测试", () => {
           );
         },
         Error,
-        "Expected to throw TypeError",
+        $t("assert.expectedToThrowThrew", {
+          expected: "TypeError",
+          threw: "Error",
+        }),
       );
     });
 
@@ -89,7 +93,10 @@ describe("断言工具函数全面测试", () => {
           );
         },
         Error,
-        "Expected error message to contain",
+        $t("assert.expectedErrorContainReceived", {
+          expected: "expected message",
+          received: "different message",
+        }),
       );
     });
   });
@@ -127,7 +134,7 @@ describe("断言工具函数全面测试", () => {
           });
         },
         Error,
-        "Expected function to succeed",
+        $t("assert.expectedSucceedButThrew", { message: "test error" }),
       );
     });
 
@@ -142,7 +149,7 @@ describe("断言工具函数全面测试", () => {
           );
         },
         Error,
-        "Expected return",
+        $t("assert.expectedReturnReceived", { expected: "43", received: "42" }),
       );
     });
   });
@@ -200,7 +207,7 @@ describe("断言工具函数全面测试", () => {
       await assertRejects(
         () => Promise.resolve(assertInstanceOf({}, Date)),
         Error,
-        "Expected Date instance",
+        $t("assert.expectedInstanceReceived", { name: "Date", received: "{}" }),
       );
     });
 
@@ -228,7 +235,10 @@ describe("断言工具函数全面测试", () => {
       await assertRejects(
         () => Promise.resolve(assertMatch("hello", /world/)),
         Error,
-        "Expected to match",
+        $t("assert.expectedMatchReceived", {
+          pattern: "/world/",
+          received: '"hello"',
+        }),
       );
     });
 

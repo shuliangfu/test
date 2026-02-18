@@ -8,6 +8,18 @@ and this project adheres to
 
 ---
 
+## [1.0.8] - 2026-02-18
+
+### Fixed
+
+- **Bun: `it.skip` / `it.skipIf` / `it.only`**: Export `it` via
+  `Object.assign()` so `skip`, `skipIf`, and `only` are own properties on the
+  exported function. This ensures Bun (and other runtimes that resolve exports
+  differently) see `it.skip`, `it.skipIf`, and `it.only` correctly when
+  importing from `@dreamer/test`.
+
+---
+
 ## [1.0.7] - 2026-02-17
 
 ### Added

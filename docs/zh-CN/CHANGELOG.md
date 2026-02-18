@@ -7,6 +7,17 @@
 
 ---
 
+## [1.0.8] - 2026-02-18
+
+### 修复
+
+- **Bun 下 `it.skip` / `it.skipIf` / `it.only`**：通过 `Object.assign()` 导出
+  `it`，使 `skip`、`skipIf`、`only` 成为导出函数上的自有属性，确保 Bun
+  （及以不同方式解析导出的运行时）在从 `@dreamer/test` 导入时能正确识别
+  `it.skip`、`it.skipIf`、`it.only`。
+
+---
+
 ## [1.0.7] - 2026-02-17
 
 ### 新增

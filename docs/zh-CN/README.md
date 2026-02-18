@@ -758,10 +758,10 @@ skipIf），测试覆盖率达到 100%。详细测试报告请查看
 
 ## 📋 变更日志
 
-### [1.0.7] - 2026-02-17
+### [1.0.8] - 2026-02-18
 
-- **新增**：断言/runner/browser 文案 i18n；Browser 入口 `index.ts` → `mod.ts`。
-- **修复**：i18n 中 `undefined` 占位符；测试用 `$t()` 做与语言无关的断言。
+- **修复**：Bun 下 `it.skip`、`it.skipIf`、`it.only` 的兼容性，通过
+  `Object.assign()` 导出 `it` 使方法为自有属性。
 
 完整历史请查看 [CHANGELOG.md](./CHANGELOG.md)。
 

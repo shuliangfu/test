@@ -1280,10 +1280,8 @@ test.skipIf = function (
   options?: TestOptions,
 ): void {
   if (condition) {
-    // 条件为真，跳过测试
     test.skip(name, fn, options);
   } else {
-    // 条件为假，正常执行测试
     test(name, fn, options);
   }
 };
@@ -1471,6 +1469,31 @@ test.only = function (
 };
 
 /**
- * it 作为 test 的别名
+ * it 的导出类型：与 test 相同的调用签名，并包含 skip / skipIf / only 方法（JSR 要求显式类型）
  */
-export const it = test;
+export type ItExport = ((
+  name: string,
+  fn: (t?: TestContext) => void | Promise<void>,
+  options?: TestOptions,
+) => void) & {
+  skip: typeof test.skip;
+  skipIf: typeof test.skipIf;
+  only: typeof test.only;
+};
+
+/**
+ * it 作为 test 的别名，并显式挂载 skip / skipIf / only 为自有属性
+ * 确保 Bun 等运行时在解析模块时能正确看到 it.skip、it.skipIf、it.only
+ */
+export const it: ItExport = Object.assign(
+  (
+    name: string,
+    fn: (t?: TestContext) => void | Promise<void>,
+    options?: TestOptions,
+  ) => test(name, fn, options),
+  {
+    skip: test.skip,
+    skipIf: test.skipIf,
+    only: test.only,
+  },
+);

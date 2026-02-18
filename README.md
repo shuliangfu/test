@@ -783,12 +783,10 @@ Full test report: [TEST_REPORT.md](./docs/en-US/TEST_REPORT.md)
 
 ## 📋 Changelog
 
-### [1.0.7] - 2026-02-17
+### [1.0.8] - 2026-02-18
 
-- **Added**: i18n for assertion/runner/browser messages; browser entry
-  `index.ts` → `mod.ts`.
-- **Fixed**: i18n placeholder for `undefined`; tests use `$t()` for
-  locale-agnostic assertions.
+- **Fixed**: Bun compatibility for `it.skip`, `it.skipIf`, `it.only` by
+  exporting `it` with `Object.assign()` so methods are own properties.
 
 See [CHANGELOG.md](./docs/en-US/CHANGELOG.md) for full history.
 

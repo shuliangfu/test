@@ -8,7 +8,7 @@ English | [中文 (Chinese)](./docs/zh-CN/README.md)
 
 [![JSR](https://jsr.io/badges/@dreamer/test)](https://jsr.io/@dreamer/test)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](./LICENSE)
-[![Tests](https://img.shields.io/badge/tests-392%20passed-brightgreen)](./docs/en-US/TEST_REPORT.md)
+[![Tests](https://img.shields.io/badge/tests-399%20passed-brightgreen)](./docs/en-US/TEST_REPORT.md)
 
 ---
 
@@ -166,6 +166,29 @@ describe("HTTP Mock", () => {
     const data = await response.json();
 
     expect(data).toEqual({ id: 1, name: "Alice" });
+  });
+});
+```
+
+### Document/Cookie Mock
+
+`createCookieDocument()` returns a document-like object whose `cookie`
+getter/setter accumulates multiple cookies (like the browser) instead of
+overwriting the whole string. Use it when testing code that relies on
+`document.cookie`.
+
+```typescript
+import { createCookieDocument, describe, expect, it } from "@dreamer/test";
+
+describe("Cookie tests", () => {
+  it("should accumulate cookies", () => {
+    const doc = createCookieDocument();
+    (globalThis as any).document = doc;
+
+    doc.cookie = "token1=value1; Path=/";
+    doc.cookie = "token2=value2; Path=/";
+    expect(doc.cookie).toContain("token1=value1");
+    expect(doc.cookie).toContain("token2=value2");
   });
 });
 ```
@@ -624,6 +647,8 @@ describe("Browser test suite", {
 - `mockFn(implementation?: Function)`: Create Mock function
 - `expectMock(mock: MockFunction)`: Create Mock assertion object (`MockExpect`)
 - `mockFetch(url: string, options?)`: Mock HTTP request
+- `createCookieDocument()`: Create document-like object with accumulating
+  `cookie` getter/setter (for Cookie tests)
 
 **Mock assertion methods (MockExpect)**:
 
@@ -745,33 +770,34 @@ describe("Browser test suite", {
 
 ## 📊 Test Report
 
-This library has undergone comprehensive testing. 392 test cases passed, 2
+This library has undergone comprehensive testing. 399 test cases passed, 2
 skipped by design (test.skip / skipIf), achieving 100% test coverage. See
 [TEST_REPORT.md](./docs/en-US/TEST_REPORT.md) for detailed report.
 
 **Test statistics**:
 
-- **Test files**: 19
-- **Total tests**: 394
-- **Passed**: 392 ✅
+- **Test files**: 20
+- **Total tests**: 401
+- **Passed**: 399 ✅
 - **Skipped**: 2 (test.skip, skipIf, etc. skipped by design)
 - **Failed**: 0
 - **Pass rate**: 100% ✅
-- **Execution time**: 13 seconds
+- **Execution time**: 16 seconds (Deno)
 - **Coverage**: All public APIs, edge cases, error handling
-- **Environment**: Deno latest stable
+- **Environment**: Deno latest stable, Bun supported
 
 **Test types**:
 
 - ✅ Unit tests
 - ✅ Browser tests
-- ✅ Timeout option tests
+- ✅ Timeout option tests (Deno & Bun)
 
 **Highlights**:
 
 - ✅ All functionality, edge cases, error handling have full test coverage
 - ✅ Browser tests verify functionality in real Chrome environment
-- ✅ Complete Mock functionality tests (function Mock, HTTP Mock)
+- ✅ Complete Mock functionality tests (function Mock, HTTP Mock,
+  Document/Cookie Mock)
 - ✅ Comprehensive hook function execution tests (27 tests)
 - ✅ Deno resolver plugin tests (17 tests)
 - ✅ Browser beforeAll execution dedicated tests
@@ -783,8 +809,9 @@ Full test report: [TEST_REPORT.md](./docs/en-US/TEST_REPORT.md)
 
 ## 📋 Changelog
 
-**v1.0.11** (2026-02-19) — Changed: Bumped @dreamer/esbuild to ^1.0.30. See
-[CHANGELOG.md](./docs/en-US/CHANGELOG.md) for full history.
+**v1.0.12** (2026-02-20) — Added: `createCookieDocument()` (Document/Cookie
+Mock). Fixed: timeout test for Bun. Docs: test report and README (mock-document,
+test summary). See [CHANGELOG.md](./docs/en-US/CHANGELOG.md) for full history.
 
 ---
 

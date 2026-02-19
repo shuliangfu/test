@@ -8,6 +8,14 @@ and this project adheres to
 
 ---
 
+## [1.0.11] - 2026-02-19
+
+### Changed
+
+- **Dependencies**: Bumped `@dreamer/esbuild` to ^1.0.30.
+
+---
+
 ## [1.0.10] - 2026-02-19
 
 ### Changed

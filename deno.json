@@ -1,6 +1,6 @@
 {
   "name": "@dreamer/test",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "license": "Apache-2.0",
   "exports": {
     ".": "./src/mod.ts",
@@ -39,7 +39,7 @@
   "imports": {
     "@dreamer/i18n": "jsr:@dreamer/i18n@^1.0.1",
     "@dreamer/runtime-adapter": "jsr:@dreamer/runtime-adapter@^1.0.15",
-    "@dreamer/esbuild": "jsr:@dreamer/esbuild@^1.0.29",
+    "@dreamer/esbuild": "jsr:@dreamer/esbuild@^1.0.30",
     "@dreamer/logger": "jsr:@dreamer/logger@^1.0.0",
     "playwright": "npm:playwright@1.58.2"
   },

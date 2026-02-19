@@ -4,9 +4,9 @@
  * 使用 @dreamer/test 库自己来测试自己的功能
  */
 
+import { $tr } from "../src/i18n.ts";
 import { logger } from "../src/logger.ts";
 import {
-  $t,
   afterAll,
   afterEach,
   assertDeepEqual,
@@ -47,7 +47,7 @@ describe("@dreamer/test 自测试", () => {
         await assertRejects(
           () => Promise.resolve(expect(1).toBe(2)),
           Error,
-          $t("expect.expectedReceived", { expected: "2", received: "1" }),
+          $tr("expect.expectedReceived", { expected: "2", received: "1" }),
         );
       });
     });
@@ -63,7 +63,7 @@ describe("@dreamer/test 自测试", () => {
         await assertRejects(
           () => Promise.resolve(expect({ a: 1 }).toEqual({ a: 2 })),
           Error,
-          $t("expect.expectedReceived", {
+          $tr("expect.expectedReceived", {
             expected: '{"a":2}',
             received: '{"a":1}',
           }),
@@ -84,7 +84,7 @@ describe("@dreamer/test 自测试", () => {
         await assertRejects(
           () => Promise.resolve(expect(false).toBeTruthy()),
           Error,
-          $t("expect.expectedTruthyReceived", { received: "false" }),
+          $tr("expect.expectedTruthyReceived", { received: "false" }),
         );
       });
     });
@@ -102,7 +102,7 @@ describe("@dreamer/test 自测试", () => {
         await assertRejects(
           () => Promise.resolve(expect(true).toBeFalsy()),
           Error,
-          $t("expect.expectedFalsyReceived", { received: "true" }),
+          $tr("expect.expectedFalsyReceived", { received: "true" }),
         );
       });
     });
@@ -116,7 +116,7 @@ describe("@dreamer/test 自测试", () => {
         await assertRejects(
           () => Promise.resolve(expect(undefined).toBeNull()),
           Error,
-          $t("expect.expectedNullReceived", { received: "undefined" }),
+          $tr("expect.expectedNullReceived", { received: "undefined" }),
         );
       });
     });
@@ -130,7 +130,7 @@ describe("@dreamer/test 自测试", () => {
         await assertRejects(
           () => Promise.resolve(expect(null).toBeUndefined()),
           Error,
-          $t("expect.expectedUndefinedReceived", { received: "null" }),
+          $tr("expect.expectedUndefinedReceived", { received: "null" }),
         );
       });
     });
@@ -146,7 +146,7 @@ describe("@dreamer/test 自测试", () => {
         await assertRejects(
           () => Promise.resolve(expect(undefined).toBeDefined()),
           Error,
-          $t("expect.expectedDefinedReceivedUndefined"),
+          $tr("expect.expectedDefinedReceivedUndefined"),
         );
       });
     });
@@ -162,7 +162,7 @@ describe("@dreamer/test 自测试", () => {
         await assertRejects(
           () => Promise.resolve(expect("hello").toMatch(/world/)),
           Error,
-          $t("expect.expectedMatchReceived", {
+          $tr("expect.expectedMatchReceived", {
             pattern: "/world/",
             received: '"hello"',
           }),
@@ -184,7 +184,7 @@ describe("@dreamer/test 自测试", () => {
         await assertRejects(
           () => Promise.resolve(expect([1, 2, 3]).toContain(4)),
           Error,
-          $t("expect.expectedArrayContainReceived", {
+          $tr("expect.expectedArrayContainReceived", {
             item: "4",
             received: "[1,2,3]",
           }),
@@ -202,7 +202,7 @@ describe("@dreamer/test 自测试", () => {
         await assertRejects(
           () => Promise.resolve(expect(3).toBeGreaterThan(5)),
           Error,
-          $t("expect.expectedGreaterThanReceived", {
+          $tr("expect.expectedGreaterThanReceived", {
             expected: "5",
             received: "3",
           }),
@@ -220,7 +220,7 @@ describe("@dreamer/test 自测试", () => {
         await assertRejects(
           () => Promise.resolve(expect(3).toBeGreaterThanOrEqual(5)),
           Error,
-          $t("expect.expectedGreaterThanOrEqualReceived", {
+          $tr("expect.expectedGreaterThanOrEqualReceived", {
             expected: "5",
             received: "3",
           }),
@@ -238,7 +238,7 @@ describe("@dreamer/test 自测试", () => {
         await assertRejects(
           () => Promise.resolve(expect(5).toBeLessThan(3)),
           Error,
-          $t("expect.expectedLessThanReceived", {
+          $tr("expect.expectedLessThanReceived", {
             expected: "3",
             received: "5",
           }),
@@ -256,7 +256,7 @@ describe("@dreamer/test 自测试", () => {
         await assertRejects(
           () => Promise.resolve(expect(5).toBeLessThanOrEqual(3)),
           Error,
-          $t("expect.expectedLessThanOrEqualReceived", {
+          $tr("expect.expectedLessThanOrEqualReceived", {
             expected: "3",
             received: "5",
           }),
@@ -275,7 +275,7 @@ describe("@dreamer/test 自测试", () => {
         await assertRejects(
           () => Promise.resolve(expect({}).toBeInstanceOf(Date)),
           Error,
-          $t("expect.expectedInstanceReceived", {
+          $tr("expect.expectedInstanceReceived", {
             name: "Date",
             received: "{}",
           }),
@@ -466,7 +466,7 @@ describe("@dreamer/test 自测试", () => {
           });
         },
         Error,
-        $t("assert.expectedFunctionToThrow"),
+        $tr("assert.expectedFunctionToThrow"),
       );
     });
   });
@@ -495,7 +495,7 @@ describe("@dreamer/test 自测试", () => {
           });
         },
         Error,
-        $t("assert.expectedSucceedButThrew", { message: "test error" }),
+        $tr("assert.expectedSucceedButThrew", { message: "test error" }),
       );
     });
   });
@@ -510,7 +510,7 @@ describe("@dreamer/test 自测试", () => {
       await assertRejects(
         () => Promise.resolve(assertDeepEqual({ a: 1 }, { a: 2 })),
         Error,
-        $t("assert.expectedReceived", {
+        $tr("assert.expectedReceived", {
           expected: '{"a":2}',
           received: '{"a":1}',
         }),
@@ -528,7 +528,10 @@ describe("@dreamer/test 自测试", () => {
       await assertRejects(
         () => Promise.resolve(assertInstanceOf({}, Date)),
         Error,
-        $t("assert.expectedInstanceReceived", { name: "Date", received: "{}" }),
+        $tr("assert.expectedInstanceReceived", {
+          name: "Date",
+          received: "{}",
+        }),
       );
     });
   });
@@ -543,7 +546,7 @@ describe("@dreamer/test 自测试", () => {
       await assertRejects(
         () => Promise.resolve(assertMatch("hello", /world/)),
         Error,
-        $t("assert.expectedMatchReceived", {
+        $tr("assert.expectedMatchReceived", {
           pattern: "/world/",
           received: '"hello"',
         }),

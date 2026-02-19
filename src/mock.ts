@@ -3,7 +3,7 @@
  * 提供函数 Mock 和 Mock 期望值匹配器
  */
 
-import { $t } from "./i18n.ts";
+import { $tr } from "./i18n.ts";
 import type { MockCall, MockFunction } from "./types.ts";
 
 /**
@@ -57,7 +57,7 @@ export class MockExpect {
    */
   toHaveBeenCalled(): void {
     if (this.mock.calls.length === 0) {
-      throw new Error($t("mock.expectedToBeCalled"));
+      throw new Error($tr("mock.expectedToBeCalled"));
     }
   }
 
@@ -67,7 +67,7 @@ export class MockExpect {
   toHaveBeenCalledTimes(times: number): void {
     if (this.mock.calls.length !== times) {
       throw new Error(
-        $t("mock.expectedTimesButWas", {
+        $tr("mock.expectedTimesButWas", {
           times: String(times),
           actual: String(this.mock.calls.length),
         }),
@@ -85,7 +85,7 @@ export class MockExpect {
 
     if (!found) {
       throw new Error(
-        $t("mock.expectedCalledWithNoMatch", {
+        $tr("mock.expectedCalledWithNoMatch", {
           args: JSON.stringify(args),
         }),
       );
@@ -97,16 +97,16 @@ export class MockExpect {
    */
   toHaveBeenLastCalledWith(...args: unknown[]): void {
     if (this.mock.calls.length === 0) {
-      throw new Error($t("mock.expectedToBeCalled"));
+      throw new Error($tr("mock.expectedToBeCalled"));
     }
 
     const lastCall = this.mock.calls[this.mock.calls.length - 1];
     if (!lastCall) {
-      throw new Error($t("mock.cannotGetLastCall"));
+      throw new Error($tr("mock.cannotGetLastCall"));
     }
     if (!this.deepEqual(lastCall.args, args)) {
       throw new Error(
-        $t("mock.expectedLastCallWith", {
+        $tr("mock.expectedLastCallWith", {
           args: JSON.stringify(args),
           actual: JSON.stringify(lastCall.args),
         }),
@@ -120,7 +120,7 @@ export class MockExpect {
   toHaveBeenNthCalledWith(n: number, ...args: unknown[]): void {
     if (n < 1 || n > this.mock.calls.length) {
       throw new Error(
-        $t("mock.expectedNthCallButOnly", {
+        $tr("mock.expectedNthCallButOnly", {
           n: String(n),
           actual: String(this.mock.calls.length),
         }),
@@ -129,11 +129,11 @@ export class MockExpect {
 
     const nthCall = this.mock.calls[n - 1];
     if (!nthCall) {
-      throw new Error($t("mock.cannotGetCallN", { n: String(n) }));
+      throw new Error($tr("mock.cannotGetCallN", { n: String(n) }));
     }
     if (!this.deepEqual(nthCall.args, args)) {
       throw new Error(
-        $t("mock.expectedNthCallWith", {
+        $tr("mock.expectedNthCallWith", {
           n: String(n),
           args: JSON.stringify(args),
           actual: JSON.stringify(nthCall.args),
@@ -152,7 +152,7 @@ export class MockExpect {
 
     if (!found) {
       throw new Error(
-        $t("mock.expectedReturnNoMatch", {
+        $tr("mock.expectedReturnNoMatch", {
           expected: JSON.stringify(expected),
         }),
       );
@@ -168,7 +168,7 @@ export class MockExpect {
     });
 
     if (!hasReturned) {
-      throw new Error($t("mock.expectedToReturnValue"));
+      throw new Error($tr("mock.expectedToReturnValue"));
     }
   }
 
@@ -179,7 +179,7 @@ export class MockExpect {
     // 注意：当前实现中，如果函数抛出错误，调用会失败
     // 这个方法主要用于检查函数是否应该抛出错误
     // 实际实现可能需要特殊处理
-    throw new Error($t("mock.toHaveThrownNotSupported"));
+    throw new Error($tr("mock.toHaveThrownNotSupported"));
   }
 
   /**
@@ -253,7 +253,7 @@ class MockNotExpect extends MockExpect {
   override toHaveBeenCalled(): void {
     if (this.mock.calls.length > 0) {
       throw new Error(
-        $t("mock.expectedNotToBeCalled", {
+        $tr("mock.expectedNotToBeCalled", {
           times: String(this.mock.calls.length),
         }),
       );
@@ -266,7 +266,7 @@ class MockNotExpect extends MockExpect {
   override toHaveBeenCalledTimes(times: number): void {
     if (this.mock.calls.length === times) {
       throw new Error(
-        $t("mock.expectedNotCalledTimes", {
+        $tr("mock.expectedNotCalledTimes", {
           times: String(times),
           actual: String(this.mock.calls.length),
         }),
@@ -284,7 +284,7 @@ class MockNotExpect extends MockExpect {
 
     if (found) {
       throw new Error(
-        $t("mock.expectedNotCalledWith", {
+        $tr("mock.expectedNotCalledWith", {
           args: JSON.stringify(args),
         }),
       );
@@ -299,7 +299,7 @@ class MockNotExpect extends MockExpect {
       const lastCall = this.mock.calls[this.mock.calls.length - 1];
       if (lastCall && this.deepEqual(lastCall.args, args)) {
         throw new Error(
-          $t("mock.expectedLastCallNotArgs", {
+          $tr("mock.expectedLastCallNotArgs", {
             args: JSON.stringify(args),
           }),
         );
@@ -315,7 +315,7 @@ class MockNotExpect extends MockExpect {
       const nthCall = this.mock.calls[n - 1];
       if (nthCall && this.deepEqual(nthCall.args, args)) {
         throw new Error(
-          $t("mock.expectedNthCallNotArgs", {
+          $tr("mock.expectedNthCallNotArgs", {
             n: String(n),
             args: JSON.stringify(args),
           }),
@@ -334,7 +334,7 @@ class MockNotExpect extends MockExpect {
 
     if (found) {
       throw new Error(
-        $t("mock.expectedNotReturn", {
+        $tr("mock.expectedNotReturn", {
           expected: JSON.stringify(expected),
         }),
       );
@@ -350,7 +350,7 @@ class MockNotExpect extends MockExpect {
     });
 
     if (hasReturned) {
-      throw new Error($t("mock.expectedNotToReturnValue"));
+      throw new Error($tr("mock.expectedNotToReturnValue"));
     }
   }
 }

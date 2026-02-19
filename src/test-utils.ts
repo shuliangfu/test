@@ -3,7 +3,7 @@
  * 提供 Setup/Teardown、参数化测试、基准测试等功能
  */
 
-import { $t } from "./i18n.ts";
+import { $tr } from "./i18n.ts";
 import { logger } from "./logger.ts";
 import { _setCurrentSuiteHooks, test } from "./test-runner.ts";
 import type { TestContext, TestHooks, TestOptions } from "./types.ts";
@@ -150,7 +150,7 @@ export function bench(
     const IS_DENO = typeof (globalThis as any).Deno !== "undefined";
     const IS_BUN = typeof (globalThis as any).Bun !== "undefined";
 
-    const benchMsg = $t("test.benchSummary", {
+    const benchMsg = $tr("test.benchSummary", {
       name,
       avg: avgTime.toFixed(3),
       n: String(n),
@@ -167,9 +167,9 @@ export function bench(
       const gray = "\x1b[90m";
       const reset = "\x1b[0m";
       const dim = "\x1b[2m";
-      logger.info(`${dim}${$t("test.outputSeparator")}${reset}`);
+      logger.info(`${dim}${$tr("test.outputSeparator")}${reset}`);
       logger.info(`${yellow}⚡${reset} ${gray}${benchMsg}${reset}`);
-      logger.info(`${dim}${$t("test.outputEnd")}${reset}`);
+      logger.info(`${dim}${$tr("test.outputEnd")}${reset}`);
     } else {
       logger.info(`⚡ ${benchMsg}`);
     }

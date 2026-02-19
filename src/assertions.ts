@@ -3,7 +3,7 @@
  * 提供各种断言辅助函数
  */
 
-import { $t } from "./i18n.ts";
+import { $tr } from "./i18n.ts";
 
 /**
  * 深度相等比较函数
@@ -67,14 +67,14 @@ export async function assertRejects(
 ): Promise<void> {
   try {
     await fn();
-    throw new Error($t("assert.expectedFunctionToThrow"));
+    throw new Error($tr("assert.expectedFunctionToThrow"));
   } catch (error) {
     if (ErrorClass && !(error instanceof ErrorClass)) {
       const threw = error instanceof Error
         ? error.constructor.name
         : typeof error;
       throw new Error(
-        $t("assert.expectedToThrowThrew", {
+        $tr("assert.expectedToThrowThrew", {
           expected: ErrorClass.name,
           threw,
         }),
@@ -86,7 +86,7 @@ export async function assertRejects(
       if (typeof msgIncludes === "string") {
         if (!errorMsg.includes(msgIncludes)) {
           throw new Error(
-            $t("assert.expectedErrorContainReceived", {
+            $tr("assert.expectedErrorContainReceived", {
               expected: msgIncludes,
               received: errorMsg,
             }),
@@ -95,7 +95,7 @@ export async function assertRejects(
       } else if (msgIncludes instanceof RegExp) {
         if (!msgIncludes.test(errorMsg)) {
           throw new Error(
-            $t("assert.expectedErrorMatchReceived", {
+            $tr("assert.expectedErrorMatchReceived", {
               pattern: String(msgIncludes),
               received: errorMsg,
             }),
@@ -120,7 +120,7 @@ export async function assertResolves(
     if (expected !== undefined) {
       if (!deepEqual(result, expected)) {
         throw new Error(
-          $t("assert.expectedReturnReceived", {
+          $tr("assert.expectedReturnReceived", {
             expected: JSON.stringify(expected),
             received: JSON.stringify(result),
           }),
@@ -129,7 +129,7 @@ export async function assertResolves(
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    throw new Error($t("assert.expectedSucceedButThrew", { message }));
+    throw new Error($tr("assert.expectedSucceedButThrew", { message }));
   }
 }
 
@@ -147,7 +147,7 @@ export function assertDeepEqual(
   if (!deepEqual(actual, expected)) {
     throw new Error(
       msg ??
-        $t("assert.expectedReceived", {
+        $tr("assert.expectedReceived", {
           expected: JSON.stringify(expected),
           received: JSON.stringify(actual),
         }),
@@ -169,7 +169,7 @@ export function assertInstanceOf(
   if (!(actual instanceof expected)) {
     throw new Error(
       msg ??
-        $t("assert.expectedInstanceReceived", {
+        $tr("assert.expectedInstanceReceived", {
           name: expected.name,
           received: JSON.stringify(actual),
         }),
@@ -193,7 +193,7 @@ export function assertMatch(
   if (!pattern.test(str)) {
     throw new Error(
       msg ??
-        $t("assert.expectedMatchReceived", {
+        $tr("assert.expectedMatchReceived", {
           pattern: String(pattern),
           received: JSON.stringify(actual),
         }),

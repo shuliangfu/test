@@ -2,14 +2,13 @@
  * @module @dreamer/test/i18n
  *
  * i18n for @dreamer/test: assertion errors, snapshot messages, benchmark output.
- * When lang is not passed, locale is auto-detected from env
- * (LANGUAGE/LC_ALL/LANG).
+ * Uses $tr + module instance, no install(); locale auto-detected from env
+ * (LANGUAGE/LC_ALL/LANG) when not set.
  */
 
 import {
-  $i18n,
-  getGlobalI18n,
-  getI18n,
+  createI18n,
+  type I18n,
   type TranslationData,
   type TranslationParams,
 } from "@dreamer/i18n";
@@ -25,7 +24,13 @@ export const DEFAULT_LOCALE: Locale = "en-US";
 
 const TEST_LOCALES: Locale[] = ["en-US", "zh-CN"];
 
-let testTranslationsLoaded = false;
+const LOCALE_DATA: Record<string, TranslationData> = {
+  "en-US": enUS as TranslationData,
+  "zh-CN": zhCN as TranslationData,
+};
+
+/** Module-scoped i18n instance for test; not installed globally. */
+let testI18n: I18n | null = null;
 
 /**
  * Detect locale: LANGUAGE > LC_ALL > LANG.
@@ -50,42 +55,40 @@ export function detectLocale(): Locale {
 }
 
 /**
- * Load test translations into the current I18n instance (once).
- */
-export function ensureTestI18n(): void {
-  if (testTranslationsLoaded) return;
-  const i18n = getGlobalI18n() ?? getI18n();
-  i18n.loadTranslations("en-US", enUS as TranslationData);
-  i18n.loadTranslations("zh-CN", zhCN as TranslationData);
-  testTranslationsLoaded = true;
-}
-
-/**
- * Load translations and set current locale. Call once at entry (e.g. test-runner).
+ * Create test i18n instance and set locale. Call once at entry (e.g. test-runner or mod).
+ * Does not call install(); uses module instance only.
  */
 export function initTestI18n(): void {
-  ensureTestI18n();
-  const effective = detectLocale();
-  $i18n.setLocale(effective);
+  if (testI18n) return;
+  const i18n = createI18n({
+    defaultLocale: DEFAULT_LOCALE,
+    fallbackBehavior: "default",
+    locales: [...TEST_LOCALES],
+    translations: LOCALE_DATA as Record<string, TranslationData>,
+  });
+  i18n.setLocale(detectLocale());
+  testI18n = i18n;
 }
 
 /**
- * Translate by key. When lang is not passed, uses current locale (set at entry).
- * Call ensureTestI18n() and setLocale at entry (e.g. test-runner or mod), not here.
+ * Translate by key. Uses module instance; when lang is not passed, uses current locale.
+ * When init not called, returns key.
  */
-export function $t(
+export function $tr(
   key: string,
-  params?: TranslationParams,
+  params?: Record<string, string | number>,
   lang?: Locale,
 ): string {
+  if (!testI18n) initTestI18n();
+  if (!testI18n) return key;
   if (lang !== undefined) {
-    const prev = $i18n.getLocale();
-    $i18n.setLocale(lang);
+    const prev = testI18n.getLocale();
+    testI18n.setLocale(lang);
     try {
-      return $i18n.t(key, params);
+      return testI18n.t(key, params as TranslationParams);
     } finally {
-      $i18n.setLocale(prev);
+      testI18n.setLocale(prev);
     }
   }
-  return $i18n.t(key, params);
+  return testI18n.t(key, params as TranslationParams);
 }

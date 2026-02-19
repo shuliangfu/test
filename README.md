@@ -783,9 +783,8 @@ Full test report: [TEST_REPORT.md](./docs/en-US/TEST_REPORT.md)
 
 ## 📋 Changelog
 
-**v1.0.10** (2026-02-19) — Changed: i18n init runs automatically in module;
-entry files no longer call init. See [CHANGELOG.md](./docs/en-US/CHANGELOG.md)
-for full history.
+**v1.0.11** (2026-02-19) — Changed: Bumped @dreamer/esbuild to ^1.0.30. See
+[CHANGELOG.md](./docs/en-US/CHANGELOG.md) for full history.
 
 ---
 

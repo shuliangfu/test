@@ -11,7 +11,7 @@ import {
   IS_DENO,
 } from "@dreamer/runtime-adapter";
 import type { BrowserContext } from "./browser/browser-context.ts";
-import { $t, initTestI18n } from "./i18n.ts";
+import { $tr, initTestI18n } from "./i18n.ts";
 import { createBrowserContext } from "./browser/browser-context.ts";
 import { buildClientBundle } from "./browser/bundle.ts";
 import { createTestPage, DEFAULT_TEMPLATE_IIFE } from "./browser/page.ts";
@@ -219,7 +219,7 @@ async function setupBrowserTest(
         ? error.message
         : String(error);
       throw new Error(
-        $t("runner.browserContextFailed", { message: errorMessage }),
+        $tr("runner.browserContextFailed", { message: errorMessage }),
       );
     }
   } else {
@@ -280,7 +280,7 @@ async function setupBrowserTest(
           if (!response || !response.ok()) {
             const status = response?.status() || "unknown";
             throw new Error(
-              $t("runner.pageLoadFailedStatus", {
+              $tr("runner.pageLoadFailedStatus", {
                 status: String(status),
                 htmlPath,
               }),
@@ -291,7 +291,7 @@ async function setupBrowserTest(
           const actualUrl = newPage.url();
           if (!actualUrl.startsWith("file://")) {
             throw new Error(
-              $t("runner.pageUrlIncorrect", {
+              $tr("runner.pageUrlIncorrect", {
                 url: actualUrl,
                 htmlPath,
               }),
@@ -307,7 +307,7 @@ async function setupBrowserTest(
             ? `\nBrowser console errors: ${consoleErrors.join("\n")}`
             : "";
           throw new Error(
-            $t("runner.pageLoadFailed", {
+            $tr("runner.pageLoadFailed", {
               message: errorMessage,
               htmlPath,
               details: errorDetails,
@@ -346,7 +346,7 @@ async function setupBrowserTest(
                   ? `\nBrowser console errors: ${consoleErrors.join("\n")}`
                   : "";
                 throw new Error(
-                  $t("runner.moduleLoadTimeout", {
+                  $tr("runner.moduleLoadTimeout", {
                     globalName: globalName!,
                     entry: config.entryPoint!,
                     details: errorDetails,
@@ -367,7 +367,7 @@ async function setupBrowserTest(
               ? `\nBrowser console errors: ${consoleErrors.join("\n")}`
               : "";
             throw new Error(
-              $t("runner.moduleLoadTimeoutTestReady", {
+              $tr("runner.moduleLoadTimeoutTestReady", {
                 entry: config.entryPoint!,
                 details: errorDetails,
               }),
@@ -453,7 +453,7 @@ export async function cleanupAllBrowsers(): Promise<void> {
     suiteBrowserCache.delete(suitePath);
     closePromises.push(
       browserCtx.close().catch((err) => {
-        logger.error($t("runner.cleanupSuiteBrowserFailed", {
+        logger.error($tr("runner.cleanupSuiteBrowserFailed", {
           suitePath,
           err: String(err),
         }));
@@ -535,7 +535,7 @@ export function describe(
   // 确保 fn 是函数
   if (typeof fn !== "function") {
     throw new Error(
-      $t("runner.describeSecondArgMustBeFunction", { type: typeof fn }),
+      $tr("runner.describeSecondArgMustBeFunction", { type: typeof fn }),
     );
   }
 
@@ -591,7 +591,7 @@ export function describe(
               await savedAfterAll();
             } catch (error) {
               logger.error(
-                $t("runner.afterAllHookError", {
+                $tr("runner.afterAllHookError", {
                   error: String(error),
                 }),
               );
@@ -609,7 +609,7 @@ export function describe(
                 await savedAfterAll();
               } catch (error) {
                 logger.error(
-                  $t("runner.afterAllHookError", {
+                  $tr("runner.afterAllHookError", {
                     error: String(error),
                   }),
                 );
@@ -1086,7 +1086,7 @@ export function test(
     } else {
       // 不在 describe 块内（可能在测试执行期间），在 Bun 中这是不允许的
       // 抛出友好的错误提示
-      throw new Error($t("runner.bunTestMustBeInDescribe", { name }));
+      throw new Error($tr("runner.bunTestMustBeInDescribe", { name }));
     }
   }
   // 其他环境：手动顺序执行
@@ -1256,7 +1256,7 @@ test.skip = function (
       if (bunTest && bunTest.skip) {
         bunTest.skip(fullName, async () => {
           // 跳过测试，使用 warn 级别（黄色）输出
-          logger.warn($t("runner.skipped", { name: fullName }));
+          logger.warn($tr("runner.skipped", { name: fullName }));
           const testContext = createTestContext(fullName);
           await fn(testContext);
         }, options);
@@ -1471,15 +1471,17 @@ test.only = function (
 /**
  * it 的导出类型：与 test 相同的调用签名，并包含 skip / skipIf / only 方法（JSR 要求显式类型）
  */
-export type ItExport = ((
-  name: string,
-  fn: (t?: TestContext) => void | Promise<void>,
-  options?: TestOptions,
-) => void) & {
-  skip: typeof test.skip;
-  skipIf: typeof test.skipIf;
-  only: typeof test.only;
-};
+export type ItExport =
+  & ((
+    name: string,
+    fn: (t?: TestContext) => void | Promise<void>,
+    options?: TestOptions,
+  ) => void)
+  & {
+    skip: typeof test.skip;
+    skipIf: typeof test.skipIf;
+    only: typeof test.only;
+  };
 
 /**
  * it 作为 test 的别名，并显式挂载 skip / skipIf / only 为自有属性

@@ -11,7 +11,7 @@ import {
   removeSync,
   writeStderrSync,
 } from "@dreamer/runtime-adapter";
-import { $t } from "../i18n.ts";
+import { $tr } from "../i18n.ts";
 import type { BrowserTestConfig } from "../types.ts";
 import { buildClientBundle } from "./bundle.ts";
 import { getPlaywright } from "./dependencies.ts";
@@ -32,7 +32,7 @@ async function closeBrowserWithTimeout(
   const closePromise = browser.close();
   const timeoutPromise = new Promise<void>((_, reject) =>
     setTimeout(
-      () => reject(new Error($t("browser.closeTimeout"))),
+      () => reject(new Error($tr("browser.closeTimeout"))),
       BROWSER_CLOSE_TIMEOUT_MS,
     )
   );
@@ -106,13 +106,13 @@ export async function createBrowserContext(
     config.browserSource === "system" &&
     !executablePath
   ) {
-    throw new Error($t("browser.noSystemChrome"));
+    throw new Error($tr("browser.noSystemChrome"));
   }
 
   // 显式指定 executablePath 时先检查文件是否存在，避免 Windows 上长时间超时后才报错
   if (executablePath && !existsSync(executablePath)) {
     throw new Error(
-      $t("browser.executableNotFound", {
+      $tr("browser.executableNotFound", {
         path: executablePath,
         engine,
       }),
@@ -202,7 +202,7 @@ export async function createBrowserContext(
           () =>
             reject(
               new Error(
-                $t("browser.launchTimedOutHint", {
+                $tr("browser.launchTimedOutHint", {
                   seconds: String(launchTimeoutMs / 1000),
                   engine,
                 }),
@@ -224,8 +224,8 @@ export async function createBrowserContext(
     const needHint = msg.includes("Executable doesn't exist") ||
       msg.includes("browserType.launch") ||
       msg.includes(engine);
-    const hint = needHint ? $t("browser.launchFixHint", { engine }) : "";
-    throw new Error($t("browser.launchFailed", { message: msg, hint }));
+    const hint = needHint ? $tr("browser.launchFixHint", { engine }) : "";
+    throw new Error($tr("browser.launchFailed", { message: msg, hint }));
   }
 
   let page;
@@ -291,7 +291,7 @@ export async function createBrowserContext(
               ? `\nBrowser console errors: ${consoleErrors.join("\n")}`
               : "";
             throw new Error(
-              $t("browser.moduleLoadTimeout", {
+              $tr("browser.moduleLoadTimeout", {
                 globalName,
                 entry: config.entryPoint,
                 details: errorDetails,
@@ -310,7 +310,7 @@ export async function createBrowserContext(
             ? `\nBrowser console errors: ${consoleErrors.join("\n")}`
             : "";
           throw new Error(
-            $t("browser.moduleLoadTimeoutTestReady", {
+            $tr("browser.moduleLoadTimeoutTestReady", {
               entry: config.entryPoint,
               details: errorDetails,
             }),

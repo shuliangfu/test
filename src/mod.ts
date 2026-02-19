@@ -28,8 +28,7 @@
  * ```
  */
 
-// 导出 i18n（供测试断言错误信息时与当前语言一致）
-export { $t } from "./i18n.ts";
+// i18n 仅包内使用，不对外导出；测试需 $tr 时从 ./i18n.ts 导入
 
 // 导出测试运行器
 export { describe, it, test } from "./test-runner.ts";

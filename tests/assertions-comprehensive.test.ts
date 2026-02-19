@@ -2,8 +2,8 @@
  * 断言工具函数全面测试
  */
 
+import { $tr } from "../src/i18n.ts";
 import {
-  $t,
   assertDeepEqual,
   assertInstanceOf,
   assertMatch,
@@ -59,7 +59,7 @@ describe("断言工具函数全面测试", () => {
           });
         },
         Error,
-        $t("assert.expectedFunctionToThrow"),
+        $tr("assert.expectedFunctionToThrow"),
       );
     });
 
@@ -74,7 +74,7 @@ describe("断言工具函数全面测试", () => {
           );
         },
         Error,
-        $t("assert.expectedToThrowThrew", {
+        $tr("assert.expectedToThrowThrew", {
           expected: "TypeError",
           threw: "Error",
         }),
@@ -93,7 +93,7 @@ describe("断言工具函数全面测试", () => {
           );
         },
         Error,
-        $t("assert.expectedErrorContainReceived", {
+        $tr("assert.expectedErrorContainReceived", {
           expected: "expected message",
           received: "different message",
         }),
@@ -134,7 +134,7 @@ describe("断言工具函数全面测试", () => {
           });
         },
         Error,
-        $t("assert.expectedSucceedButThrew", { message: "test error" }),
+        $tr("assert.expectedSucceedButThrew", { message: "test error" }),
       );
     });
 
@@ -149,7 +149,10 @@ describe("断言工具函数全面测试", () => {
           );
         },
         Error,
-        $t("assert.expectedReturnReceived", { expected: "43", received: "42" }),
+        $tr("assert.expectedReturnReceived", {
+          expected: "43",
+          received: "42",
+        }),
       );
     });
   });
@@ -207,7 +210,10 @@ describe("断言工具函数全面测试", () => {
       await assertRejects(
         () => Promise.resolve(assertInstanceOf({}, Date)),
         Error,
-        $t("assert.expectedInstanceReceived", { name: "Date", received: "{}" }),
+        $tr("assert.expectedInstanceReceived", {
+          name: "Date",
+          received: "{}",
+        }),
       );
     });
 
@@ -235,7 +241,7 @@ describe("断言工具函数全面测试", () => {
       await assertRejects(
         () => Promise.resolve(assertMatch("hello", /world/)),
         Error,
-        $t("assert.expectedMatchReceived", {
+        $tr("assert.expectedMatchReceived", {
           pattern: "/world/",
           received: '"hello"',
         }),

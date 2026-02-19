@@ -8,6 +8,23 @@ and this project adheres to
 
 ---
 
+## [1.0.9] - 2026-02-19
+
+### Changed
+
+- **i18n**: Renamed translation method from `$t` to `$tr` to avoid conflict with
+  global `$t`. Update existing code to use `$tr` for package messages. `$tr` is
+  not re-exported from the main entry; import from `./i18n.ts` (or
+  `@dreamer/test`’s i18n module) when tests need it.
+
+### Fixed
+
+- **Tests**: test-runner-integration.test.ts imports `$tr` from i18n.ts instead
+  of mod. Browser integration test timeouts (evaluate, goto, waitFor) increased
+  to 30s for slow or CI environments.
+
+---
+
 ## [1.0.8] - 2026-02-18
 
 ### Fixed

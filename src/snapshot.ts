@@ -12,7 +12,7 @@ import {
   resolve,
   writeTextFile,
 } from "@dreamer/runtime-adapter";
-import { $t } from "./i18n.ts";
+import { $tr } from "./i18n.ts";
 import type { TestContext } from "./types.ts";
 
 /**
@@ -75,7 +75,7 @@ export async function assertSnapshot(
     // 对比快照
     if (existingSnapshot !== serialized) {
       throw new Error(
-        $t("snapshot.mismatch", {
+        $tr("snapshot.mismatch", {
           expected: existingSnapshot,
           received: serialized,
         }),
@@ -112,7 +112,7 @@ export async function assertSnapshot(
     // 对比快照
     if (existingSnapshot !== serialized) {
       throw new Error(
-        $t("snapshot.mismatch", {
+        $tr("snapshot.mismatch", {
           expected: existingSnapshot,
           received: serialized,
         }),
@@ -120,6 +120,6 @@ export async function assertSnapshot(
     }
   } else {
     // 其他环境：不支持快照测试
-    throw new Error($t("snapshot.notSupported"));
+    throw new Error($tr("snapshot.notSupported"));
   }
 }

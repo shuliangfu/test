@@ -4,8 +4,8 @@
  */
 
 import { makeTempFile, writeTextFileSync } from "@dreamer/runtime-adapter";
+import { $tr } from "../../src/i18n.ts";
 import {
-  $t,
   afterAll,
   beforeEach,
   cleanupAllBrowsers,
@@ -214,7 +214,7 @@ describe("测试运行器浏览器集成", () => {
         expect(result).toBe(4);
       }
     }, {
-      timeout: 15000,
+      timeout: 30000, // 浏览器启动 + evaluate 在 CI/高负载下可能超过 15s，放宽到 30s
       browser: {
         enabled: true,
         headless: true,
@@ -233,12 +233,12 @@ describe("测试运行器浏览器集成", () => {
         expect(url).toBe("about:blank");
       }
     }, {
-      timeout: 15000,
+      timeout: 30000,
       browser: {
         enabled: true,
         headless: true,
         reuseBrowser: false,
-        dumpio: true, // 设为 true 可输出 Chrome 日志便于调试，默认 false 减少 Updater/Crashpad 刷屏
+        dumpio: true,
         browserSource: "test",
       },
     });
@@ -263,12 +263,12 @@ describe("测试运行器浏览器集成", () => {
         expect(condition).toBe(true);
       }
     }, {
-      timeout: 15000,
+      timeout: 30000,
       browser: {
         enabled: true,
         headless: true,
         reuseBrowser: false,
-        dumpio: true, // 设为 true 可输出 Chrome 日志便于调试，默认 false 减少 Updater/Crashpad 刷屏
+        dumpio: true,
         browserSource: "test",
       },
     });
@@ -344,7 +344,7 @@ describe("测试运行器浏览器集成", () => {
 
         // 验证错误信息包含关键信息（使用 i18n 以兼容中英文环境）
         const errorMessage = setupError!.message;
-        const ctxFailedPrefix = $t("runner.browserContextFailed", {
+        const ctxFailedPrefix = $tr("runner.browserContextFailed", {
           message: "x",
         }).split(":")[0];
         expect(errorMessage).toContain(ctxFailedPrefix);

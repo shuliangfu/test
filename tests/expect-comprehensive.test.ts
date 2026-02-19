@@ -3,7 +3,8 @@
  * 覆盖所有断言方法，包括新添加的方法和反向断言
  */
 
-import { $t, assertRejects, describe, expect, it } from "../src/mod.ts";
+import { $tr } from "../src/i18n.ts";
+import { assertRejects, describe, expect, it } from "../src/mod.ts";
 
 describe("Expect 断言全面测试", () => {
   describe("toHaveProperty", () => {
@@ -35,7 +36,7 @@ describe("Expect 断言全面测试", () => {
       await assertRejects(
         () => Promise.resolve(expect(obj).toHaveProperty("age")),
         Error,
-        $t("expect.expectedPropertyMissing", {
+        $tr("expect.expectedPropertyMissing", {
           path: "age",
           key: "age",
           received: '{"name":"John"}',
@@ -48,7 +49,7 @@ describe("Expect 断言全面测试", () => {
       await assertRejects(
         () => Promise.resolve(expect(obj).toHaveProperty("name", "Jane")),
         Error,
-        $t("expect.expectedPropertyValue", {
+        $tr("expect.expectedPropertyValue", {
           path: "name",
           value: '"Jane"',
           received: '"John"',
@@ -61,7 +62,7 @@ describe("Expect 断言全面测试", () => {
       await assertRejects(
         () => Promise.resolve(expect(obj).toHaveProperty("user.email")),
         Error,
-        $t("expect.expectedPropertyMissing", {
+        $tr("expect.expectedPropertyMissing", {
           path: "user.email",
           key: "email",
           received: '{"user":{"name":"John"}}',
@@ -95,7 +96,7 @@ describe("Expect 断言全面测试", () => {
       await assertRejects(
         () => Promise.resolve(expect(0.1).toBeCloseTo(0.2)),
         Error,
-        $t("expect.expectedCloseToReceived", {
+        $tr("expect.expectedCloseToReceived", {
           expected: "0.2",
           numDigits: "2",
           received: "0.1",
@@ -107,7 +108,7 @@ describe("Expect 断言全面测试", () => {
       await assertRejects(
         () => Promise.resolve(expect("0.1").toBeCloseTo(0.2)),
         Error,
-        $t("expect.toBeCloseToOnlyNumbers", { received: '"0.1"' }),
+        $tr("expect.toBeCloseToOnlyNumbers", { received: '"0.1"' }),
       );
     });
 
@@ -127,7 +128,7 @@ describe("Expect 断言全面测试", () => {
       await assertRejects(
         () => Promise.resolve(expect(0).toBeNaN()),
         Error,
-        $t("expect.expectedNaNReceived", { received: "0" }),
+        $tr("expect.expectedNaNReceived", { received: "0" }),
       );
     });
 
@@ -158,7 +159,7 @@ describe("Expect 断言全面测试", () => {
       await assertRejects(
         () => Promise.resolve(expect([1, 2, 3]).toHaveLength(5)),
         Error,
-        $t("expect.expectedLengthReceived", { expected: "5", length: "3" }),
+        $tr("expect.expectedLengthReceived", { expected: "5", length: "3" }),
       );
     });
 
@@ -166,7 +167,7 @@ describe("Expect 断言全面测试", () => {
       await assertRejects(
         () => Promise.resolve(expect({}).toHaveLength(0)),
         Error,
-        $t("expect.toHaveLengthOnlyArraysOrStrings", { received: "{}" }),
+        $tr("expect.toHaveLengthOnlyArraysOrStrings", { received: "{}" }),
       );
     });
 
@@ -187,7 +188,7 @@ describe("Expect 断言全面测试", () => {
       await assertRejects(
         () => Promise.resolve(expect({}).toBeArray()),
         Error,
-        $t("expect.expectedArrayReceived", { received: "{}" }),
+        $tr("expect.expectedArrayReceived", { received: "{}" }),
       );
     });
 
@@ -208,7 +209,7 @@ describe("Expect 断言全面测试", () => {
       await assertRejects(
         () => Promise.resolve(expect(123).toBeString()),
         Error,
-        $t("expect.expectedStringReceived", { received: "123" }),
+        $tr("expect.expectedStringReceived", { received: "123" }),
       );
     });
 
@@ -230,7 +231,7 @@ describe("Expect 断言全面测试", () => {
       await assertRejects(
         () => Promise.resolve(expect(NaN).toBeNumber()),
         Error,
-        $t("expect.expectedNumberReceived", { received: "null" }),
+        $tr("expect.expectedNumberReceived", { received: "null" }),
       );
     });
 
@@ -238,7 +239,7 @@ describe("Expect 断言全面测试", () => {
       await assertRejects(
         () => Promise.resolve(expect("123").toBeNumber()),
         Error,
-        $t("expect.expectedNumberReceived", { received: '"123"' }),
+        $tr("expect.expectedNumberReceived", { received: '"123"' }),
       );
     });
 
@@ -259,7 +260,7 @@ describe("Expect 断言全面测试", () => {
       await assertRejects(
         () => Promise.resolve(expect(1).toBeBoolean()),
         Error,
-        $t("expect.expectedBooleanReceived", { received: "1" }),
+        $tr("expect.expectedBooleanReceived", { received: "1" }),
       );
     });
 
@@ -280,7 +281,7 @@ describe("Expect 断言全面测试", () => {
       await assertRejects(
         () => Promise.resolve(expect({}).toBeFunction()),
         Error,
-        $t("expect.expectedFunctionReceived", { received: "{}" }),
+        $tr("expect.expectedFunctionReceived", { received: "{}" }),
       );
     });
 
@@ -307,7 +308,7 @@ describe("Expect 断言全面测试", () => {
       await assertRejects(
         () => Promise.resolve(expect([1]).toBeEmpty()),
         Error,
-        $t("expect.expectedEmptyArrayReceived", { length: "1" }),
+        $tr("expect.expectedEmptyArrayReceived", { length: "1" }),
       );
     });
 
@@ -315,7 +316,7 @@ describe("Expect 断言全面测试", () => {
       await assertRejects(
         () => Promise.resolve(expect("hello").toBeEmpty()),
         Error,
-        $t("expect.expectedEmptyStringReceived", { length: "5" }),
+        $tr("expect.expectedEmptyStringReceived", { length: "5" }),
       );
     });
 
@@ -323,7 +324,7 @@ describe("Expect 断言全面测试", () => {
       await assertRejects(
         () => Promise.resolve(expect({ a: 1 }).toBeEmpty()),
         Error,
-        $t("expect.expectedEmptyObjectReceived", { count: "1" }),
+        $tr("expect.expectedEmptyObjectReceived", { count: "1" }),
       );
     });
 
@@ -331,7 +332,9 @@ describe("Expect 断言全面测试", () => {
       await assertRejects(
         () => Promise.resolve(expect(123).toBeEmpty()),
         Error,
-        $t("expect.toBeEmptyOnlyArraysOrStringsOrObjects", { received: "123" }),
+        $tr("expect.toBeEmptyOnlyArraysOrStringsOrObjects", {
+          received: "123",
+        }),
       );
     });
 
@@ -364,7 +367,7 @@ describe("Expect 断言全面测试", () => {
       await assertRejects(
         () => Promise.resolve(expect({ a: 1 }).toStrictEqual({ a: 2 })),
         Error,
-        $t("expect.expectedStrictReceived", {
+        $tr("expect.expectedStrictReceived", {
           expected: '{"a":2}',
           received: '{"a":1}',
         }),
@@ -426,7 +429,7 @@ describe("Expect 断言全面测试", () => {
       await assertRejects(
         () => Promise.resolve(expect(1).not.toBe(1)),
         Error,
-        $t("expect.expectedNotEqualButEqual", { expected: "1" }),
+        $tr("expect.expectedNotEqualButEqual", { expected: "1" }),
       );
     });
   });
@@ -504,7 +507,7 @@ describe("Expect 断言全面测试", () => {
 
   describe("错误消息", () => {
     it("应该提供清晰的错误消息", async () => {
-      const expectedMsg = $t("expect.expectedReceived", {
+      const expectedMsg = $tr("expect.expectedReceived", {
         expected: "2",
         received: "1",
       });
@@ -517,7 +520,7 @@ describe("Expect 断言全面测试", () => {
     });
 
     it("应该提供属性检查的错误消息", async () => {
-      const expectedMsg = $t("expect.expectedPropertyMissing", {
+      const expectedMsg = $tr("expect.expectedPropertyMissing", {
         path: "b",
         key: "b",
         received: '{"a":1}',

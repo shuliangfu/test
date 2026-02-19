@@ -783,10 +783,8 @@ Full test report: [TEST_REPORT.md](./docs/en-US/TEST_REPORT.md)
 
 ## 📋 Changelog
 
-### [1.0.8] - 2026-02-18
-
-- **Fixed**: Bun compatibility for `it.skip`, `it.skipIf`, `it.only` by
-  exporting `it` with `Object.assign()` so methods are own properties.
+**v1.0.9** (2026-02-19) — Changed: i18n `$t` → `$tr` (import `$tr` from i18n
+when needed). Fixed: test imports from i18n.ts; browser test timeouts 30s.
 
 See [CHANGELOG.md](./docs/en-US/CHANGELOG.md) for full history.
 

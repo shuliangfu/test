@@ -8,6 +8,16 @@ and this project adheres to
 
 ---
 
+## [1.0.10] - 2026-02-19
+
+### Changed
+
+- **i18n**: Initialization now runs automatically when the i18n module is
+  loaded. Entry files no longer import or call `initTestI18n`; remove any such
+  usage from your code.
+
+---
+
 ## [1.0.9] - 2026-02-19
 
 ### Changed

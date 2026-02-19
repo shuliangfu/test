@@ -43,7 +43,7 @@ describe("timeout 选项 (TestOptions.timeout)", () => {
     const stdout = new TextDecoder().decode(output.stdout);
     const out = stdout + stderr;
     expect(output.code).not.toBe(0);
-    // 子进程可能输出 "Test timeout" 或 Deno/Bun 简化为 "Test failed"
-    expect(out).toMatch(/Test timeout|Test failed/);
+    // Deno 输出 "Test timeout" 或 "Test failed"；Bun 输出 "this test timed out after ..."
+    expect(out).toMatch(/Test timeout|Test failed|timed out/);
   });
 });

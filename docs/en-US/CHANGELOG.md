@@ -8,6 +8,28 @@ and this project adheres to
 
 ---
 
+## [1.0.12] - 2026-02-20
+
+### Added
+
+- **Document/Cookie Mock**: `createCookieDocument()` — returns a document-like
+  object with accumulating `cookie` getter/setter (browser-like; multiple
+  `document.cookie` assignments accumulate instead of overwriting). Export from
+  main entry; see README and `tests/mock-document-comprehensive.test.ts`.
+
+### Fixed
+
+- **Timeout test (Bun)**: Assertion now accepts Bun’s timeout message
+  (`timed out`) in addition to Deno’s (`Test timeout` / `Test failed`).
+
+### Changed
+
+- **Docs**: Test report and README (en/zh) updated: test summary 399 passed, 20
+  files, 16s; Document/Cookie Mock usage and API; TEST_REPORT.md reflects
+  mock-document coverage.
+
+---
+
 ## [1.0.11] - 2026-02-19
 
 ### Changed

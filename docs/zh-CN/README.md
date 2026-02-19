@@ -7,7 +7,7 @@
 
 [![JSR](https://jsr.io/badges/@dreamer/test)](https://jsr.io/@dreamer/test)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](../../LICENSE)
-[![Tests](https://img.shields.io/badge/tests-392%20passed-brightgreen)](./TEST_REPORT.md)
+[![Tests](https://img.shields.io/badge/tests-399%20passed-brightgreen)](./TEST_REPORT.md)
 
 ---
 
@@ -61,6 +61,7 @@ import { createBrowserContext, findChromePath } from "@dreamer/test/browser";
 - **Mock 工具**：
   - 函数 Mock（`mockFn`）
   - HTTP Mock（`mockFetch`）
+  - Document/Cookie Mock（`createCookieDocument`）— 类浏览器累积型 cookie 存储
   - 调用次数和参数验证
   - 返回值验证
 - **断言增强**：
@@ -162,6 +163,28 @@ describe("HTTP Mock", () => {
     const data = await response.json();
 
     expect(data).toEqual({ id: 1, name: "Alice" });
+  });
+});
+```
+
+### Document/Cookie Mock
+
+`createCookieDocument()` 返回一个类 document 对象，其 `cookie` 的 getter/setter
+会像浏览器一样**累积**多个 cookie，而不是整串覆盖。适用于依赖 `document.cookie`
+的测试。
+
+```typescript
+import { createCookieDocument, describe, expect, it } from "@dreamer/test";
+
+describe("Cookie 测试", () => {
+  it("应累积多个 cookie", () => {
+    const doc = createCookieDocument();
+    (globalThis as any).document = doc;
+
+    doc.cookie = "token1=value1; Path=/";
+    doc.cookie = "token2=value2; Path=/";
+    expect(doc.cookie).toContain("token1=value1");
+    expect(doc.cookie).toContain("token2=value2");
   });
 });
 ```
@@ -603,6 +626,8 @@ describe("浏览器测试套件", {
 - `mockFn(implementation?: Function)`: 创建 Mock 函数
 - `expectMock(mock: MockFunction)`: 创建 Mock 断言对象（`MockExpect`）
 - `mockFetch(url: string, options?)`: Mock HTTP 请求
+- `createCookieDocument()`: 创建带累积型 `cookie` getter/setter 的类 document
+  对象（用于 Cookie 测试）
 
 **Mock 断言方法（MockExpect）**：
 
@@ -720,33 +745,33 @@ describe("浏览器测试套件", {
 
 ## 📊 测试报告
 
-本包经过全面测试，392 个测试用例通过，2 个按设计跳过（test.skip /
+本包经过全面测试，399 个测试用例通过，2 个按设计跳过（test.skip /
 skipIf），测试覆盖率达到 100%。详细测试报告请查看
 [TEST_REPORT.md](./TEST_REPORT.md)。
 
 **测试统计**：
 
-- **测试文件数**: 19
-- **总测试数**: 394
-- **通过**: 392 ✅
+- **测试文件数**: 20
+- **总测试数**: 401
+- **通过**: 399 ✅
 - **跳过**: 2（test.skip、skipIf 等按设计跳过）
 - **失败**: 0
 - **通过率**: 100% ✅
-- **测试执行时间**: 13 秒
+- **测试执行时间**: 16 秒（Deno）
 - **测试覆盖**: 所有公共 API、边界情况、错误处理
-- **测试环境**: Deno 最新稳定版
+- **测试环境**: Deno 最新稳定版，Bun 支持
 
 **测试类型**：
 
 - ✅ 单元测试
 - ✅ 浏览器测试
-- ✅ timeout 选项测试
+- ✅ timeout 选项测试（Deno 与 Bun）
 
 **测试亮点**：
 
 - ✅ 所有功能、边界情况、错误处理都有完整的测试覆盖
 - ✅ 浏览器测试验证了在真实 Chrome 浏览器环境中的功能
-- ✅ 完整的 Mock 功能测试（函数 Mock、HTTP Mock）
+- ✅ 完整的 Mock 功能测试（函数 Mock、HTTP Mock、Document/Cookie Mock）
 - ✅ 完善的钩子函数执行测试（27 个测试）
 - ✅ Deno 解析器插件测试（17 个测试）
 - ✅ 浏览器 beforeAll 执行等专项测试
@@ -758,8 +783,10 @@ skipIf），测试覆盖率达到 100%。详细测试报告请查看
 
 ## 📋 变更日志
 
-**v1.0.11** (2026-02-19) — 变更：@dreamer/esbuild 依赖升级至
-^1.0.30。完整历史请查看 [CHANGELOG.md](./CHANGELOG.md)。
+**v1.0.12** (2026-02-20) — 新增：`createCookieDocument()`（Document/Cookie
+Mock）。修复：Bun 下 timeout 测试。文档：测试报告与
+README（mock-document、测试总结）。完整历史请查看
+[CHANGELOG.md](./CHANGELOG.md)。
 
 ---
 

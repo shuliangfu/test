@@ -8,7 +8,7 @@ utilities, assertion enhancements, test utility functions, browser test
 integration, and other features, and is compatible with both Deno and Bun
 runtimes.
 
-**Test Date**: 2026-02-16 **Test Version**: 1.0.5 **Test Framework**: Deno
+**Test Date**: 2026-02-20 **Test Version**: 1.0.11 **Test Framework**: Deno
 built-in test framework + Bun test framework
 
 ## 🎯 Test Objectives
@@ -29,13 +29,13 @@ built-in test framework + Bun test framework
 
 | Metric               | Value                  |
 | -------------------- | ---------------------- |
-| Number of test files | 19                     |
-| Total test cases     | 394                    |
-| Passed cases         | 392                    |
+| Number of test files | 20                     |
+| Total test cases     | 401                    |
+| Passed cases         | 399                    |
 | Skipped cases        | 2                      |
 | Failed cases         | 0                      |
 | Pass rate            | 100%                   |
-| Test execution time  | 13 seconds (Deno)      |
+| Test execution time  | 16 seconds (Deno)      |
 | Code coverage        | Comprehensive coverage |
 
 ### Test File List
@@ -56,6 +56,7 @@ built-in test framework + Bun test framework
 | `expect-comprehensive.test.ts`            | 64         | ✅ All passed             | Expect assertion comprehensive tests                                 |
 | `hooks-execution.test.ts`                 | 28         | ✅ All passed             | Hook function execution tests                                        |
 | `mock-comprehensive.test.ts`              | 20         | ✅ All passed             | Mock functionality comprehensive tests                               |
+| `mock-document-comprehensive.test.ts`     | 7          | ✅ All passed             | Document/Cookie Mock (createCookieDocument, accumulating)            |
 | `mock-fetch-comprehensive.test.ts`        | 14         | ✅ All passed             | HTTP Mock comprehensive tests                                        |
 | `mod.test.ts`                             | 84         | ✅ All passed (1 skipped) | Basic functionality tests (includes skipIf tests)                    |
 | `test-options.test.ts`                    | 18         | ✅ All passed             | Test suite options and hook options tests                            |
@@ -498,6 +499,15 @@ resource leaks:
 - ✅ Clear Mock rules
 - ✅ Multiple Mock rules priority
 
+### 14.5 Document/Cookie Mock (createCookieDocument) (7 tests)
+
+- ✅ Returns object with cookie getter/setter
+- ✅ Accumulates multiple cookies (no overwrite)
+- ✅ Updates same cookie by name
+- ✅ Empty value removes cookie
+- ✅ Encode/decode for name and value
+- ✅ Each call returns independent store
+
 ### 15. Hook Function Execution Tests (27 tests)
 
 #### 15.1 beforeAll Execution Tests
@@ -752,6 +762,7 @@ resource leaks:
 | `expect.ts`                  | 100%     | All assertion methods have tests           |
 | `assertions.ts`              | 100%     | All assertion utility functions have tests |
 | `mock.ts`                    | 100%     | All Mock functionality has tests           |
+| `mock-document.ts`           | 100%     | Document/Cookie Mock has tests             |
 | `mock-fetch.ts`              | 100%     | All HTTP Mock functionality has tests      |
 | `test-utils.ts`              | 100%     | All test utility functions have tests      |
 | `test-runner.ts`             | 100%     | Test runner core logic has tests           |
@@ -768,6 +779,8 @@ resource leaks:
 - ✅ **Assertion System**: All assertion methods have comprehensive tests
 - ✅ **Mock Functionality**: All Mock functionality has comprehensive tests
 - ✅ **HTTP Mock**: All HTTP Mock functionality has comprehensive tests
+- ✅ **Document/Cookie Mock**: createCookieDocument (accumulating,
+  non-overwrite) has tests
 - ✅ **Test Utilities**: All test utility functions have comprehensive tests
 - ✅ **Test Suite Options**: All option functionality has comprehensive tests
 - ✅ **Hook Options**: All hook option functionality has comprehensive tests
@@ -787,7 +800,7 @@ resource leaks:
 
 | Environment | Execution time | Test cases | Average per test |
 | ----------- | -------------- | ---------- | ---------------- |
-| Deno        | 13 seconds     | 392        | ~33ms            |
+| Deno        | 16 seconds     | 399        | ~40ms            |
 
 **Note**: The long test execution time is mainly because browser tests need to
 launch real Chrome browser instances. Each browser test case requires creating,
@@ -827,7 +840,7 @@ demonstrate:
 
 1. ✅ **Functional Completeness**: All declared functionality is correctly
    implemented
-2. ✅ **Stability**: 392 test cases passed, 2 skipped by design (test.skip /
+2. ✅ **Stability**: 399 test cases passed, 2 skipped by design (test.skip /
    skipIf), no failed cases
 3. ✅ **Compatibility**: Works correctly in both Deno and Bun environments
 4. ✅ **Reliability**: Edge cases and error handling have been verified
@@ -842,10 +855,11 @@ testing.
 
 ---
 
-**Test Report Generated**: 2026-02-16 **Test Execution Environment**:
+**Test Report Generated**: 2026-02-20 **Test Execution Environment**:
 
 - Deno: Latest stable version
 - Playwright: v1.58.2
-- @dreamer/esbuild: v1.0.3 **Test Framework**: @dreamer/test@1.0.5 **This
-  Execution**: `deno test -A tests/` → ok | 392 passed | 0 failed | 2 ignored
-  (13s)
+- @dreamer/esbuild: v1.0.3
+- **Test Framework**: @dreamer/test@1.0.11
+- **This Execution**: `deno test -A tests/` → ok | 399 passed | 0 failed | 2
+  ignored (16s)

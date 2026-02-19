@@ -7,6 +7,27 @@
 
 ---
 
+## [1.0.12] - 2026-02-20
+
+### 新增
+
+- **Document/Cookie Mock**：`createCookieDocument()` — 返回带累积型 `cookie`
+  getter/setter 的类 document 对象（类浏览器行为；多次赋值 `document.cookie`
+  会累积而非覆盖）。从主入口导出；详见 README 与
+  `tests/mock-document-comprehensive.test.ts`。
+
+### 修复
+
+- **timeout 测试（Bun）**：断言同时接受 Bun 的超时文案（`timed out`）与 Deno
+  的（`Test timeout` / `Test failed`）。
+
+### 变更
+
+- **文档**：测试报告与 README（中英）已更新：测试总结 399 通过、20 文件、16
+  秒；Document/Cookie Mock 用法与 API；TEST_REPORT.md 体现 mock-document 覆盖。
+
+---
+
 ## [1.0.11] - 2026-02-19
 
 ### 变更

@@ -11,7 +11,7 @@ import {
   IS_DENO,
 } from "@dreamer/runtime-adapter";
 import type { BrowserContext } from "./browser/browser-context.ts";
-import { $tr, initTestI18n } from "./i18n.ts";
+import { $tr } from "./i18n.ts";
 import { createBrowserContext } from "./browser/browser-context.ts";
 import { buildClientBundle } from "./browser/bundle.ts";
 import { createTestPage, DEFAULT_TEMPLATE_IIFE } from "./browser/page.ts";
@@ -26,8 +26,6 @@ import type {
   TestOptions,
   TestSuite,
 } from "./types.ts";
-
-initTestI18n();
 
 /**
  * 当前测试套件栈

@@ -783,10 +783,9 @@ Full test report: [TEST_REPORT.md](./docs/en-US/TEST_REPORT.md)
 
 ## 📋 Changelog
 
-**v1.0.9** (2026-02-19) — Changed: i18n `$t` → `$tr` (import `$tr` from i18n
-when needed). Fixed: test imports from i18n.ts; browser test timeouts 30s.
-
-See [CHANGELOG.md](./docs/en-US/CHANGELOG.md) for full history.
+**v1.0.10** (2026-02-19) — Changed: i18n init runs automatically in module;
+entry files no longer call init. See [CHANGELOG.md](./docs/en-US/CHANGELOG.md)
+for full history.
 
 ---
 

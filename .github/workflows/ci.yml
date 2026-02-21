@@ -185,9 +185,20 @@ jobs:
       - name: Install dependencies (Bun)
         run: bun install
 
-      - name: Install Playwright Chromium
-        run: npx playwright@1.58.2 install chromium
+      - name: Install Playwright Chromium (Windows)
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.playwright-browsers
+        run: bunx playwright install chromium
         timeout-minutes: 10
+
+      - name: Verify Chromium in PLAYWRIGHT_BROWSERS_PATH (Windows)
+        shell: pwsh
+        run: |
+          $path = "$env:PLAYWRIGHT_BROWSERS_PATH"
+          Write-Host "PLAYWRIGHT_BROWSERS_PATH=$path"
+          if (-not (Test-Path $path)) { Write-Error "Path not found: $path"; exit 1 }
+          Get-ChildItem -Path $path -Recurse -Filter "chrome.exe" -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty FullName
+          if (-not $?) { Write-Error "chrome.exe not found under $path"; exit 1 }
 
       - uses: denoland/setup-deno@v2
         with:
@@ -203,5 +214,7 @@ jobs:
         run: deno lint
 
       - name: Test (Bun, Windows)
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.playwright-browsers
         run: bun test tests/
         timeout-minutes: 10

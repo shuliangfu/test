@@ -8,6 +8,23 @@ and this project adheres to
 
 ---
 
+## [1.0.14] - 2026-02-22
+
+### Fixed
+
+- **Bun cleanup “Cannot call describe() inside a test” (Windows CI)**: The final
+  cleanup `describe` is now registered from inside the first top-level
+  `describe` callback (after `getBunTestModule()` resolves), so it never runs
+  during a test. Removed `setTimeout(registerFinalCleanupTest, 0)` for Bun; Deno
+  still uses it.
+
+### Changed
+
+- **Browser context test**: “应该能够执行浏览器代码（evaluate）” timeout
+  increased from 15s to 30s to reduce flakiness on slow CI.
+
+---
+
 ## [1.0.13] - 2026-02-22
 
 ### Fixed

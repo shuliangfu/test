@@ -99,7 +99,7 @@ describe("浏览器测试上下文管理", () => {
       expect(result).toBe(2);
 
       await ctx.close();
-    }, { timeout: 15000 });
+    }, { timeout: 30000 });
 
     it("应该能够导航到 URL（goto）", async () => {
       const ctx = await createBrowserContext({

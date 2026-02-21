@@ -60,6 +60,11 @@ const beforeAllExecutedMap = new Map<string, boolean>();
 let describeDepth = 0;
 
 /**
+ * Bun 下是否已在首个顶层 describe 中注册 cleanup describe（避免 setTimeout 在 test 执行时触发导致 "Cannot call describe() inside a test"）
+ */
+let bunCleanupDescribeScheduled = false;
+
+/**
  * 测试统计信息
  */
 interface TestStats {
@@ -501,7 +506,8 @@ try {
   // 忽略信号监听错误（可能在某些环境下不支持）
 }
 
-// 注册“最终清理”测试：在 Deno/Bun 中尽量作为最后执行的测试，正常测试完成后关闭所有浏览器
+// 注册“最终清理”测试：在 Deno 中尽量作为最后执行的测试，正常测试完成后关闭所有浏览器
+// Bun 的 cleanup 改在首个顶层 describe 内注册，避免 setTimeout 在 test 执行时触发导致 "Cannot call describe() inside a test"（见上方 describe 内逻辑）
 const registerFinalCleanupTest = (): void => {
   if (IS_DENO) {
     const g = globalThis as any;
@@ -516,25 +522,14 @@ const registerFinalCleanupTest = (): void => {
         sanitizeResources: false,
       });
     }
-  } else if (IS_BUN) {
-    (async () => {
-      const mod = await getBunTestModule();
-      if (mod?.describe && mod?.test) {
-        // Bun 要求 test() 必须在 describe() 内调用，否则会报 "Cannot call test() inside a test"
-        mod.describe("\uFFFF@dreamer/test cleanup", () => {
-          mod.test("\uFFFF@dreamer/test cleanup browsers", async () => {
-            await cleanupAllBrowsers();
-          });
-        });
-      }
-    })();
   }
 };
-// 延迟注册，使该测试在用户 describe/test 之后注册，尽量最后执行
-if (typeof setTimeout !== "undefined") {
-  setTimeout(registerFinalCleanupTest, 0);
-} else {
-  queueMicrotask(registerFinalCleanupTest);
+if (IS_DENO) {
+  if (typeof setTimeout !== "undefined") {
+    setTimeout(registerFinalCleanupTest, 0);
+  } else {
+    queueMicrotask(registerFinalCleanupTest);
+  }
 }
 
 /**
@@ -588,6 +583,30 @@ export function describe(
   if (IS_BUN) describeDepth++;
 
   try {
+    // Bun：在首个顶层 describe 中先注册 cleanup describe 再执行用户 fn，避免 setTimeout 在 test 执行时触发导致 "Cannot call describe() inside a test"（Windows CI）
+    if (
+      IS_BUN &&
+      describeDepth === 1 &&
+      !bunCleanupDescribeScheduled
+    ) {
+      bunCleanupDescribeScheduled = true;
+      const parentSuite = currentSuite.parent ?? rootSuite;
+      void getBunTestModule().then((mod) => {
+        if (mod?.describe && mod?.test) {
+          mod.describe("\uFFFF@dreamer/test cleanup", () => {
+            mod.test("\uFFFF@dreamer/test cleanup browsers", async () => {
+              await cleanupAllBrowsers();
+            });
+          });
+        }
+        // 恢复当前 describe 上下文，再执行用户 fn，使内部 describe/test 挂到正确 suite
+        suiteStack.push(parentSuite);
+        currentSuite = suite;
+        if (IS_BUN) describeDepth = 1;
+        fn();
+      });
+      return;
+    }
     fn();
   } finally {
     const savedAfterAll = suite.afterAll;

@@ -7,6 +7,22 @@
 
 ---
 
+## [1.0.14] - 2026-02-22
+
+### 修复
+
+- **Bun cleanup “Cannot call describe() inside a test”（Windows CI）**：最终
+  清理用 `describe` 改为在首个顶层 `describe` 回调内（在 `getBunTestModule()`
+  解析后）注册，避免在 test 执行期间调用。Bun 不再使用
+  `setTimeout(registerFinalCleanupTest, 0)`；Deno 仍使用。
+
+### 变更
+
+- **浏览器上下文测试**：「应该能够执行浏览器代码（evaluate）」超时由 15s 调整为
+  30s，降低在慢速 CI 上的偶发超时。
+
+---
+
 ## [1.0.13] - 2026-02-22
 
 ### 修复

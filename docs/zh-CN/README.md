@@ -783,10 +783,9 @@ skipIf），测试覆盖率达到 100%。详细测试报告请查看
 
 ## 📋 变更日志
 
-**v1.0.12** (2026-02-20) — 新增：`createCookieDocument()`（Document/Cookie
-Mock）。修复：Bun 下 timeout 测试。文档：测试报告与
-README（mock-document、测试总结）。完整历史请查看
-[CHANGELOG.md](./CHANGELOG.md)。
+**v1.0.14** (2026-02-22) — 修复：Bun cleanup「Cannot call describe() inside a
+test」（在首个顶层 describe 内注册；Windows CI）。变更：浏览器 evaluate 测试
+超时 15s → 30s。完整历史请查看 [CHANGELOG.md](./CHANGELOG.md)。
 
 ---
 

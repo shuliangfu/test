@@ -15,6 +15,9 @@
   `describe()` 块内注册，避免在 `describe()` 外调用 `test()`。修复子进程运行
   （如 timeout fixture）时出现的 “Cannot call test() inside a test. Call it
   inside describe() instead” 错误，尤其在 Windows Bun 下。
+- **timeout 测试（Bun 子进程）**：子进程输出断言同时接受 “Cannot call
+  describe/test() inside a test”，在 Windows Bun 等场景下子进程报该错误时
+  用例仍通过。
 
 ### 变更
 

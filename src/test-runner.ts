@@ -112,10 +112,12 @@ async function getBunTest(): Promise<any> {
 /**
  * 获取 Bun 的 describe 与 test（用于在 describe 内注册 cleanup，避免 "Cannot call test() inside a test"）
  */
-async function getBunTestModule(): Promise<{
-  test: any;
-  describe: any;
-} | null> {
+async function getBunTestModule(): Promise<
+  {
+    test: any;
+    describe: any;
+  } | null
+> {
   if (!IS_BUN) {
     return null;
   }
@@ -126,7 +128,9 @@ async function getBunTestModule(): Promise<{
     try {
       // @ts-ignore: bun:test 是 Bun 特有的模块
       const mod = await import("bun:test" as string);
-      return mod?.test && mod?.describe ? { test: mod.test, describe: mod.describe } : null;
+      return mod?.test && mod?.describe
+        ? { test: mod.test, describe: mod.describe }
+        : null;
     } catch {
       return null;
     }

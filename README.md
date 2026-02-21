@@ -809,9 +809,10 @@ Full test report: [TEST_REPORT.md](./docs/en-US/TEST_REPORT.md)
 
 ## 📋 Changelog
 
-**v1.0.12** (2026-02-20) — Added: `createCookieDocument()` (Document/Cookie
-Mock). Fixed: timeout test for Bun. Docs: test report and README (mock-document,
-test summary). See [CHANGELOG.md](./docs/en-US/CHANGELOG.md) for full history.
+**v1.0.13** (2026-02-22) — Fixed: Bun cleanup registration (describe + test),
+timeout test accepts Bun subprocess nesting error; CI test-windows-bun (browser
+excluded, PLAYWRIGHT_BROWSERS_PATH). See
+[CHANGELOG.md](./docs/en-US/CHANGELOG.md) for full history.
 
 ---
 

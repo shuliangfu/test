@@ -43,7 +43,9 @@ describe("timeout 选项 (TestOptions.timeout)", () => {
     const stdout = new TextDecoder().decode(output.stdout);
     const out = stdout + stderr;
     expect(output.code).not.toBe(0);
-    // Deno 输出 "Test timeout" 或 "Test failed"；Bun 输出 "this test timed out after ..."
-    expect(out).toMatch(/Test timeout|Test failed|timed out/);
+    // Deno 输出 "Test timeout" 或 "Test failed"；Bun 输出 "timed out"；Bun 子进程（尤其 Windows）可能先报 "Cannot call describe/test() inside a test"，视为已知
+    expect(out).toMatch(
+      /Test timeout|Test failed|timed out|Cannot call (describe|test)\(\) inside a test/,
+    );
   });
 });

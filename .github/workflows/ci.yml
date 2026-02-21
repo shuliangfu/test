@@ -166,6 +166,8 @@ jobs:
 
   test-windows-bun:
     runs-on: windows-latest
+    env:
+      PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}\.playwright-browsers
     steps:
       - uses: actions/checkout@v4
 
@@ -181,8 +183,6 @@ jobs:
         run: bun install
 
       - name: Install Playwright Chromium (Windows)
-        env:
-          PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}\.playwright-browsers
         run: bunx playwright install chromium
         timeout-minutes: 10
 

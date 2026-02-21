@@ -88,6 +88,9 @@ export function _setCurrentSuiteHooks(hooks: TestHooks): void {
 
 /** 缓存 Bun test 函数，避免重复动态 import */
 let cachedBunTest: Promise<any> | null = null;
+/** 缓存 Bun describe/test 模块，用于在 describe 内注册 cleanup test，满足 Bun 要求「test() 必须在 describe() 内调用」 */
+let cachedBunTestModule: Promise<{ test: any; describe: any } | null> | null =
+  null;
 
 /**
  * 获取 Bun 的 test 函数（结果缓存，仅首次解析 bun:test）
@@ -100,16 +103,35 @@ async function getBunTest(): Promise<any> {
     return await cachedBunTest;
   }
   cachedBunTest = (async () => {
-    try {
-      // @ts-ignore: bun:test 是 Bun 特有的模块，Deno 类型检查器不识别
-      const bunTest = await import("bun:test" as string);
-      return bunTest.test;
-    } catch {
-      // 如果导入失败，尝试使用全局 test
-      return (globalThis as any).test;
-    }
+    const mod = await getBunTestModule();
+    return mod?.test ?? null;
   })();
   return cachedBunTest;
+}
+
+/**
+ * 获取 Bun 的 describe 与 test（用于在 describe 内注册 cleanup，避免 "Cannot call test() inside a test"）
+ */
+async function getBunTestModule(): Promise<{
+  test: any;
+  describe: any;
+} | null> {
+  if (!IS_BUN) {
+    return null;
+  }
+  if (cachedBunTestModule !== null) {
+    return await cachedBunTestModule;
+  }
+  cachedBunTestModule = (async () => {
+    try {
+      // @ts-ignore: bun:test 是 Bun 特有的模块
+      const mod = await import("bun:test" as string);
+      return mod?.test && mod?.describe ? { test: mod.test, describe: mod.describe } : null;
+    } catch {
+      return null;
+    }
+  })();
+  return cachedBunTestModule;
 }
 
 /**
@@ -492,10 +514,13 @@ const registerFinalCleanupTest = (): void => {
     }
   } else if (IS_BUN) {
     (async () => {
-      const bunTest = await getBunTest();
-      if (bunTest) {
-        bunTest("\uFFFF@dreamer/test cleanup browsers", async () => {
-          await cleanupAllBrowsers();
+      const mod = await getBunTestModule();
+      if (mod?.describe && mod?.test) {
+        // Bun 要求 test() 必须在 describe() 内调用，否则会报 "Cannot call test() inside a test"
+        mod.describe("\uFFFF@dreamer/test cleanup", () => {
+          mod.test("\uFFFF@dreamer/test cleanup browsers", async () => {
+            await cleanupAllBrowsers();
+          });
         });
       }
     })();

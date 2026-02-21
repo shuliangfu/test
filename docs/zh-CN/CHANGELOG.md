@@ -7,6 +7,23 @@
 
 ---
 
+## [1.0.13] - 2026-02-22
+
+### 修复
+
+- **Bun 清理用例注册**：在使用 Bun 时，最终的「cleanup browsers」用例改为在
+  `describe()` 块内注册，避免在 `describe()` 外调用 `test()`。修复子进程运行
+  （如 timeout fixture）时出现的 “Cannot call test() inside a test. Call it
+  inside describe() instead” 错误，尤其在 Windows Bun 下。
+
+### 变更
+
+- **CI (test-windows-bun)**：job 级 `PLAYWRIGHT_BROWSERS_PATH`（Windows 反斜杠
+  路径）、Install/Verify Chromium 步骤；因 Windows 上已知的 Playwright/Bun
+  启动卡住问题，Windows Bun 下排除 browser 测试，仅运行顶层测试文件。
+
+---
+
 ## [1.0.12] - 2026-02-20
 
 ### 新增

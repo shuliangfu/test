@@ -8,6 +8,25 @@ and this project adheres to
 
 ---
 
+## [1.0.13] - 2026-02-22
+
+### Fixed
+
+- **Bun cleanup registration**: The final “cleanup browsers” test is now
+  registered inside a `describe()` block when using Bun, so `test()` is never
+  called outside `describe()`. This fixes the “Cannot call test() inside a test.
+  Call it inside describe() instead” error in subprocess runs (e.g. timeout
+  fixture), especially on Windows Bun.
+
+### Changed
+
+- **CI (test-windows-bun)**: Job-level `PLAYWRIGHT_BROWSERS_PATH` (Windows
+  backslash path), Install/Verify Chromium steps; browser tests are excluded on
+  Windows Bun (only top-level test files run) due to known Playwright/Bun
+  launch hang on Windows.
+
+---
+
 ## [1.0.12] - 2026-02-20
 
 ### Added

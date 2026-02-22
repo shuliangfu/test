@@ -809,10 +809,9 @@ Full test report: [TEST_REPORT.md](./docs/en-US/TEST_REPORT.md)
 
 ## 📋 Changelog
 
-**v1.0.14** (2026-02-22) — Fixed: Bun cleanup “Cannot call describe() inside a
-test” (register inside first top-level describe; Windows CI). Changed: browser
-evaluate test timeout 15s → 30s. See [CHANGELOG.md](./docs/en-US/CHANGELOG.md)
-for full history.
+**v1.0.15** (2026-02-22) — Fixed: Browser bundle retry for esbuild “service is
+no longer running” (4 retries, 300ms delay; EN/ZH message). See
+[CHANGELOG.md](./docs/en-US/CHANGELOG.md) for full history.
 
 ---
 

@@ -8,6 +8,18 @@ and this project adheres to
 
 ---
 
+## [1.0.15] - 2026-02-22
+
+### Fixed
+
+- **Browser bundle retry (esbuild “service is no longer running”)**: When
+  building the browser entry fails with “service is no longer running” or
+  “service was stopped” (or Chinese equivalents), the bundle step now retries up
+  to 4 times (was 2) with a 300ms delay (was 100ms) to improve reliability on CI
+  where esbuild can briefly stop under load.
+
+---
+
 ## [1.0.14] - 2026-02-22
 
 ### Fixed

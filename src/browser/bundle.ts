@@ -111,14 +111,17 @@ async function executeBuild(
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
 
-    // 检测 esbuild 服务停止的错误，尝试重试
-    if (
+    // 检测 esbuild 服务停止的错误，尝试重试（CI 下并发/内存压力易触发）；兼容英文/中文错误文案
+    const isServiceStopped =
       errorMessage.includes("service is no longer running") ||
-      errorMessage.includes("service was stopped")
-    ) {
-      if (retryCount < 2) {
-        // 等待一小段时间后重试，让 esbuild 重新初始化
-        await new Promise((resolve) => setTimeout(resolve, 100));
+      errorMessage.includes("service was stopped") ||
+      errorMessage.includes("服务已不再运行") ||
+      errorMessage.includes("服务已停止运行") ||
+      errorMessage.includes("服务已停止");
+    if (isServiceStopped) {
+      if (retryCount < 4) {
+        // 等待后重试，让 esbuild 重新初始化；CI 下稍长延迟更稳
+        await new Promise((resolve) => setTimeout(resolve, 300));
         return executeBuild(options, retryCount + 1);
       }
     }

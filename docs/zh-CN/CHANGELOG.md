@@ -7,6 +7,17 @@
 
 ---
 
+## [1.0.15] - 2026-02-22
+
+### 修复
+
+- **浏览器 bundle 重试（esbuild “service is no longer
+  running”）**：当打包浏览器入口时报 “service is no longer running” 或 “service
+  was stopped”（或其中文等价文案）时，打包步骤 现会重试最多 4 次（原 2
+  次）、间隔 300ms（原 100ms），以提升 CI 下 esbuild 偶发停止时的 稳定性。
+
+---
+
 ## [1.0.14] - 2026-02-22
 
 ### 修复

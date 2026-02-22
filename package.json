@@ -1,6 +1,6 @@
 {
   "name": "@dreamer/test",
-  "version": "1.0.14",
+  "version": "1.0.15",
   "description": "A testing utility library compatible with Deno and Bun: mock tools, assertion enhancements, test utilities, and browser test integration.",
   "license": "Apache-2.0",
   "private": true,

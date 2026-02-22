@@ -783,9 +783,9 @@ skipIf），测试覆盖率达到 100%。详细测试报告请查看
 
 ## 📋 变更日志
 
-**v1.0.14** (2026-02-22) — 修复：Bun cleanup「Cannot call describe() inside a
-test」（在首个顶层 describe 内注册；Windows CI）。变更：浏览器 evaluate 测试
-超时 15s → 30s。完整历史请查看 [CHANGELOG.md](./CHANGELOG.md)。
+**v1.0.15** (2026-02-22) — 修复：浏览器 bundle 在 esbuild「service is no longer
+running」时增加重试（4 次、300ms 间隔；支持中英文错误文案）。完整历史请查看
+[CHANGELOG.md](./CHANGELOG.md)。
 
 ---
 

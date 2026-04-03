@@ -8,6 +8,38 @@ and this project adheres to
 
 ---
 
+## [1.1.0] - 2026-04-03
+
+### Added
+
+- **`bundleOnly` browser config**: When `bundleOnly` is true and `entryPoint` is
+  set, the runner builds the client bundle and exposes it on
+  `TestContext.browserBundle` without launching Playwright.
+- **Types**: `BrowserBundleArtifact`, `TestContext.browserBundle` /
+  `browserSetupError`, and `TestSuite.hooksOptions` for typed hook options.
+- **`hooks-state` module**: Stages suite hooks (`pendingSuiteHooks`) so
+  `test-runner` no longer imports `test-utils`, removing a circular dependency.
+- **Tests**: `tests/runner-optimizations.test.ts` covers `testEach` with parent
+  `beforeEach` and `bundleOnly` behavior.
+
+### Changed
+
+- **`testEach`**: Each parameterized case is registered via `test()` so hooks,
+  timeouts, and browser setup align with `it`.
+- **Deno registration**: Shared `mergeInheritedSanitize()` merges inherited
+  `sanitizeOps` / `sanitizeResources` from the suite chain.
+- **Docs (`mod.ts`)**: Clarified coverage (use `deno test --coverage`) and
+  documented `bundleOnly` / `browserBundle`.
+
+### Fixed
+
+- **`shouldReuse`**: Coerce suite path to boolean so `_shouldReuseBrowser`
+  assignment is type-correct.
+- **Hooks options**: Use `suite.hooksOptions` instead of casting the suite to
+  `any`.
+
+---
+
 ## [1.0.15] - 2026-02-22
 
 ### Fixed

@@ -19,6 +19,8 @@ export interface TestSuite {
   _beforeAllExecuted?: boolean;
   /** 套件选项 */
   options?: DescribeOptions;
+  /** `beforeEach`/`afterEach` 注册时附带的 `TestOptions`（sanitize 等） */
+  hooksOptions?: TestOptions;
 }
 
 /**
@@ -82,11 +84,24 @@ export interface BrowserTestConfig {
    */
   browserMode?: boolean;
   /**
+   * 为 true 时仅执行 esbuild 打包，不启动 Playwright；`TestContext.browser` 为空，
+   * 产物见 `TestContext.browserBundle`。用于 CI 快速校验「能否打出浏览器包」。
+   */
+  bundleOnly?: boolean;
+  /**
    * 浏览器初始化失败时的行为（默认：'throw'）
    * - 'throw'：在调用测试函数前直接抛出原始错误，便于快速定位
-   * - 'pass'：将错误写入 testContext._browserSetupError，仍执行测试函数，便于断言错误内容
+   * - 'pass'：将错误写入 testContext.browserSetupError，仍执行测试函数，便于断言错误内容
    */
   onSetupError?: "throw" | "pass";
+}
+
+/** `bundleOnly: true` 时运行器写入的打包产物（无 Playwright 会话） */
+export interface BrowserBundleArtifact {
+  /** 打包得到的 JS 源码字符串 */
+  code: string;
+  /** 入口路径（与配置一致） */
+  entryPoint: string;
 }
 
 /**
@@ -99,7 +114,15 @@ export interface TestContext {
   sanitizeOps: boolean;
   sanitizeResources: boolean;
   step<T>(name: string, fn: (t: TestContext) => Promise<T> | T): Promise<T>;
-  /** 浏览器测试上下文（仅在 browser.enabled 为 true 时可用） */
+  /**
+   * 浏览器预检/启动失败时由运行器写入（`onSetupError: 'pass'` 时测试体可读此字段断言）。
+   */
+  browserSetupError?: Error;
+  /**
+   * `browser.bundleOnly === true` 时的打包结果；此时无 `browser.page`。
+   */
+  browserBundle?: BrowserBundleArtifact;
+  /** 浏览器测试上下文（仅在 browser.enabled 且非 bundleOnly 时可用） */
   browser?: {
     /** Playwright Browser 实例 */
     browser: any;

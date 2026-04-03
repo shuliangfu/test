@@ -338,7 +338,7 @@ describe("测试运行器浏览器集成", () => {
       // 错误会在 setupBrowserTest 阶段抛出，现在会被捕获并传递给测试函数
       if (t) {
         // 检查是否有浏览器设置错误
-        const setupError = (t as any)._browserSetupError as Error | undefined;
+        const setupError = t.browserSetupError;
         expect(setupError).toBeDefined();
         expect(setupError).toBeInstanceOf(Error);
 
@@ -360,7 +360,7 @@ describe("测试运行器浏览器集成", () => {
         enabled: true,
         headless: true,
         executablePath: "/nonexistent/chrome/path",
-        onSetupError: "pass", // 需在测试内通过 _browserSetupError 断言错误内容，故不在此处抛出
+        onSetupError: "pass", // 需在测试内通过 browserSetupError 断言错误内容，故不在此处抛出
         dumpio: true, // 设为 true 可输出 Chrome 日志便于调试，默认 false 减少 Updater/Crashpad 刷屏
         browserSource: "test",
       },

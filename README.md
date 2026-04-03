@@ -809,9 +809,13 @@ Full test report: [TEST_REPORT.md](./docs/en-US/TEST_REPORT.md)
 
 ## 📋 Changelog
 
-**v1.0.15** (2026-02-22) — Fixed: Browser bundle retry for esbuild “service is
-no longer running” (4 retries, 300ms delay; EN/ZH message). See
-[CHANGELOG.md](./docs/en-US/CHANGELOG.md) for full history.
+**v1.1.0** (2026-04-03) — **Added**: `bundleOnly` / `TestContext.browserBundle`,
+typed `browserSetupError` and `TestSuite.hooksOptions`, `hooks-state` module
+(breaks runner ↔ test-utils cycle), `runner-optimizations` tests. **Changed**:
+`testEach` registers each case via `test()` (hooks/timeouts/browser parity with
+`it`), `mergeInheritedSanitize()` for Deno suite chain, `mod.ts` docs (coverage,
+bundle artifacts). **Fixed**: `shouldReuse` boolean coercion, typed suite hook
+options. Full history: [CHANGELOG.md](./docs/en-US/CHANGELOG.md).
 
 ---
 

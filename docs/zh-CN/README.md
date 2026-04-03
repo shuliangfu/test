@@ -783,13 +783,10 @@ skipIf），测试覆盖率达到 100%。详细测试报告请查看
 
 ## 📋 变更日志
 
-**v1.1.0** (2026-04-03) — **新增**：`bundleOnly` / `TestContext.browserBundle`、
-`browserSetupError` 与 `TestSuite.hooksOptions` 类型、`hooks-state`（消除
-test-runner 与 test-utils 循环依赖）、`runner-optimizations` 测试。**变更**：
-`testEach` 经 `test()` 注册每组参数（与 `it` 钩子/超时/浏览器一致）、Deno 侧
-`mergeInheritedSanitize()`、`mod.ts` 文档（覆盖率与 bundle）。**修复**：
-`shouldReuse` 布尔化、套件钩子选项类型化。完整历史见
-[CHANGELOG.md](./CHANGELOG.md)。
+**v1.1.1** (2026-04-03) — **修复**：Windows 下 bundle 入口 `URL#pathname` 得到
+`/D:/...` 导致 esbuild 无法解析；`buildClientBundle` 内
+`normalizeBundleEntryPoint()`， `bundleOnly` 测试入口改用
+`fromFileUrl()`。完整历史见 [CHANGELOG.md](./CHANGELOG.md)。
 
 ---
 

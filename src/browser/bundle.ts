@@ -6,6 +6,22 @@
  */
 
 import { statSync } from "@dreamer/runtime-adapter";
+
+/**
+ * 规范化 bundle 入口路径。
+ * Windows 上误用 `new URL(..., import.meta.url).pathname` 会得到 `/D:/repo/file.ts`，
+ * 文件系统与 esbuild 无法打开；去掉前导斜杠并统一为正斜杠。
+ *
+ * @param entryPoint - 调用方传入的入口路径
+ * @returns 可供 stat / esbuild 使用的路径
+ */
+function normalizeBundleEntryPoint(entryPoint: string): string {
+  const winLeadingDrive = /^\/([A-Za-z]:[/\\].*)$/.exec(entryPoint);
+  if (winLeadingDrive) {
+    return winLeadingDrive[1]!.replace(/\\/g, "/");
+  }
+  return entryPoint;
+}
 import { $tr } from "../i18n.ts";
 import {
   type BundleOptions as EsbuildBundleOptions,
@@ -152,23 +168,30 @@ async function executeBuild(
 export async function buildClientBundle(
   options: BundleOptions,
 ): Promise<string> {
+  /** 统一入口路径，避免 Windows 上 `/D:/...` 导致打包失败 */
+  const normalizedEntry = normalizeBundleEntryPoint(options.entryPoint);
+  const optionsNorm: BundleOptions = {
+    ...options,
+    entryPoint: normalizedEntry,
+  };
+
   // 检查缓存
-  const cacheKey = getCacheKey(options);
+  const cacheKey = getCacheKey(optionsNorm);
   const cached = bundleCache.get(cacheKey);
 
   if (cached) {
     // 检查文件是否已修改
-    if (!isFileModified(options.entryPoint, cached.mtime)) {
+    if (!isFileModified(optionsNorm.entryPoint, cached.mtime)) {
       return cached.code;
     }
   }
 
   try {
-    const code = await executeBuild(options);
+    const code = await executeBuild(optionsNorm);
 
     // 更新缓存
     try {
-      const stat = statSync(options.entryPoint);
+      const stat = statSync(optionsNorm.entryPoint);
       bundleCache.set(cacheKey, {
         code,
         mtime: stat.mtime?.getTime() || Date.now(),
@@ -183,7 +206,7 @@ export async function buildClientBundle(
     throw new Error(
       $tr("bundle.failed", {
         message: errorMessage,
-        entry: options.entryPoint,
+        entry: optionsNorm.entryPoint,
       }),
     );
   }

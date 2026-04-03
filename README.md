@@ -809,13 +809,10 @@ Full test report: [TEST_REPORT.md](./docs/en-US/TEST_REPORT.md)
 
 ## 📋 Changelog
 
-**v1.1.0** (2026-04-03) — **Added**: `bundleOnly` / `TestContext.browserBundle`,
-typed `browserSetupError` and `TestSuite.hooksOptions`, `hooks-state` module
-(breaks runner ↔ test-utils cycle), `runner-optimizations` tests. **Changed**:
-`testEach` registers each case via `test()` (hooks/timeouts/browser parity with
-`it`), `mergeInheritedSanitize()` for Deno suite chain, `mod.ts` docs (coverage,
-bundle artifacts). **Fixed**: `shouldReuse` boolean coercion, typed suite hook
-options. Full history: [CHANGELOG.md](./docs/en-US/CHANGELOG.md).
+**v1.1.1** (2026-04-03) — **Fixed**: Windows bundle paths where `URL#pathname`
+produced `/D:/...` (esbuild resolve failure); `normalizeBundleEntryPoint()` in
+`buildClientBundle` and `fromFileUrl()` for the `bundleOnly` test entry. Full
+history: [CHANGELOG.md](./docs/en-US/CHANGELOG.md).
 
 ---
 

@@ -1,48 +1,41 @@
 /**
  * @module @dreamer/test
  *
- * 测试工具库，提供 Mock 工具、断言增强、测试工具函数等高级功能。
+ * 测试工具库：Jest 风格的 `describe` / `it`、断言、Mock、浏览器（Playwright）与打包校验（`bundleOnly`）。
  *
  * 功能特性：
- * - Mock 工具：函数 Mock、模块 Mock、HTTP Mock、时间 Mock
- * - 断言增强：异步断言、对象断言、快照断言
- * - 测试工具函数：Setup/Teardown、参数化测试、测试分组
- * - 性能测试：基准测试、性能对比
- * - 测试覆盖率：覆盖率收集和报告生成
+ * - Mock：函数 / 模块 / HTTP / 时间
+ * - 断言与快照
+ * - 钩子：`beforeAll` / `afterEach` 等（见 `test-utils`）
+ * - 参数化：`testEach`（与 `it` 共用同一套钩子与超时逻辑）
+ * - 基准：`bench`（简单循环计时输出）
+ * - 浏览器测试：`browser: { enabled: true, entryPoint }`；**仅校验 bundle** 时用 `bundleOnly: true`（不启动 Playwright，见 `TestContext.browserBundle`）
+ *
+ * **代码覆盖率**：请使用运行器自带能力（如 `deno test --coverage`），本包不内置覆盖率收集。
  *
  * @example
  * ```typescript
- * import { describe, it, expect, mockFn } from "@dreamer/test";
+ * import { describe, it, expect } from "@dreamer/test";
  *
- * describe("测试套件", () => {
- *   it("应该通过", () => {
+ * describe("套件", () => {
+ *   it("应通过", () => {
  *     expect(1 + 1).toBe(2);
- *   });
- *
- *   // 条件跳过测试
- *   const enableWriteTests = true;
- *   it.skipIf(!enableWriteTests, "写入测试", () => {
- *     // 测试代码
  *   });
  * });
  * ```
  */
 
-// i18n 仅包内使用，不对外导出；测试需 $tr 时从 ./i18n.ts 导入
+// i18n 仅包内使用，不对外导出
 
-// 导出测试运行器
 export { describe, it, test } from "./test-runner.ts";
 export type { DescribeOptions, TestContext } from "./types.ts";
 
-// 导出 Mock 功能
 export { expectMock, MockExpect, mockFn } from "./mock.ts";
 export type { MockFunction } from "./types.ts";
 
-// 导出 Expect 断言
 export { expect } from "./expect.ts";
 export type { ExpectFunction } from "./types.ts";
 
-// 导出断言工具函数
 export {
   assertDeepEqual,
   assertInstanceOf,
@@ -51,10 +44,8 @@ export {
   assertResolves,
 } from "./assertions.ts";
 
-// 导出快照测试
 export { assertSnapshot } from "./snapshot.ts";
 
-// 导出测试工具函数
 export {
   afterAll,
   afterEach,
@@ -64,13 +55,10 @@ export {
   testEach,
 } from "./test-utils.ts";
 
-// 导出 HTTP Mock
 export { mockFetch } from "./mock-fetch.ts";
 export type { MockFetchFunction, MockFetchOptions } from "./types.ts";
 
-// 导出 Document/Cookie Mock（不覆盖、累积行为）
 export { createCookieDocument } from "./mock-document.ts";
 
-// 导出浏览器测试类型和函数
 export { cleanupAllBrowsers, cleanupSuiteBrowser } from "./test-runner.ts";
-export type { BrowserTestConfig } from "./types.ts";
+export type { BrowserBundleArtifact, BrowserTestConfig } from "./types.ts";

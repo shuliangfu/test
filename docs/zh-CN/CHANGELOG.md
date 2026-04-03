@@ -7,6 +7,37 @@
 
 ---
 
+## [1.1.0] - 2026-04-03
+
+### 新增
+
+- **浏览器 `bundleOnly` 配置**：当 `bundleOnly` 为 true 且配置了 `entryPoint`
+  时，运行器 仅构建客户端 bundle，并将结果写入
+  `TestContext.browserBundle`，不启动 Playwright。
+- **类型**：`BrowserBundleArtifact`、`TestContext.browserBundle` /
+  `browserSetupError`，以及 `TestSuite.hooksOptions`（套件钩子选项）。
+- **`hooks-state` 模块**：通过 `pendingSuiteHooks` 暂存套件钩子，使
+  `test-runner` 不再 依赖 `test-utils`，消除循环依赖。
+- **测试**：新增 `tests/runner-optimizations.test.ts`，覆盖 `testEach` 与父级
+  `beforeEach` 及 `bundleOnly` 行为。
+
+### 变更
+
+- **`testEach`**：每组参数通过 `test()` 注册，与 `it`
+  一致地参与钩子、超时与浏览器流程。
+- **Deno 注册**：抽取 `mergeInheritedSanitize()`，沿套件链合并继承的
+  `sanitizeOps` / `sanitizeResources`。
+- **文档（`mod.ts`）**：说明覆盖率应使用 `deno test --coverage` 等；补充
+  `bundleOnly` / `browserBundle` 说明。
+
+### 修复
+
+- **`shouldReuse`**：将套件路径规范为布尔值，修正 `_shouldReuseBrowser`
+  赋值类型。
+- **钩子选项**：使用 `suite.hooksOptions`，不再对套件使用 `any` 断言。
+
+---
+
 ## [1.0.15] - 2026-02-22
 
 ### 修复

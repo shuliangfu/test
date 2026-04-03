@@ -8,6 +8,18 @@ and this project adheres to
 
 ---
 
+## [1.1.1] - 2026-04-03
+
+### Fixed
+
+- **Windows bundle entry paths**: `new URL(..., import.meta.url).pathname` on
+  Windows yields `/D:/...`, which esbuild and `stat` cannot resolve. Added
+  `normalizeBundleEntryPoint()` in `buildClientBundle` to strip the leading
+  slash before drive letters. The `bundleOnly` regression test now uses
+  `fromFileUrl()` for `entryPoint` so CI (including Windows) passes.
+
+---
+
 ## [1.1.0] - 2026-04-03
 
 ### Added

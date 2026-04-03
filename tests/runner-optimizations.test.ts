@@ -1,6 +1,7 @@
 /**
  * @fileoverview 覆盖 runner 优化：testEach 走统一 `test` 钩子链、`browser.bundleOnly`、类型字段 browserSetupError。
  */
+import { fromFileUrl } from "@dreamer/runtime-adapter";
 import { beforeEach, describe, expect, it, testEach } from "../src/mod.ts";
 
 describe("runner / testEach 与父级 beforeEach", () => {
@@ -26,10 +27,13 @@ describe("runner / testEach 与父级 beforeEach", () => {
 });
 
 describe("runner / browser.bundleOnly", () => {
-  const entryPoint = new URL(
-    "./browser/fixtures/minimal-entry.ts",
-    import.meta.url,
-  ).pathname;
+  /**
+   * 必须使用 fromFileUrl：在 Windows 上 `URL#pathname` 会得到 `/D:/...`，
+   * esbuild 与 stat 无法解析；fromFileUrl 得到 `D:/...`，与 CI（含 Windows）一致。
+   */
+  const entryPoint = fromFileUrl(
+    new URL("./browser/fixtures/minimal-entry.ts", import.meta.url),
+  );
 
   it(
     "应只打包不启动 Playwright：browserBundle 有代码，browser 无 page",

@@ -7,6 +7,19 @@
 
 ---
 
+## [1.1.1] - 2026-04-03
+
+### 修复
+
+- **Windows 下 bundle 入口路径**：在 Windows 上
+  `new URL(...,
+  import.meta.url).pathname` 会得到 `/D:/...`，esbuild 与 `stat`
+  无法解析。在 `buildClientBundle` 中增加
+  `normalizeBundleEntryPoint()`，去掉盘符前的多余 `/`。`bundleOnly` 回归测试对
+  `entryPoint` 改用 `fromFileUrl()`，保证 CI（含 Windows）通过。
+
+---
+
 ## [1.1.0] - 2026-04-03
 
 ### 新增

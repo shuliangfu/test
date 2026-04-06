@@ -809,10 +809,10 @@ Full test report: [TEST_REPORT.md](./docs/en-US/TEST_REPORT.md)
 
 ## 📋 Changelog
 
-**v1.1.1** (2026-04-03) — **Fixed**: Windows bundle paths where `URL#pathname`
-produced `/D:/...` (esbuild resolve failure); `normalizeBundleEntryPoint()` in
-`buildClientBundle` and `fromFileUrl()` for the `bundleOnly` test entry. Full
-history: [CHANGELOG.md](./docs/en-US/CHANGELOG.md).
+**v1.1.2** (2026-04-07) — **Fixed**: Browser cache uses full suite path (avoids
+cross-suite Playwright reuse under Bun multi-file runs); synthetic `afterAll`
+tests use a 60s timeout on Bun/Deno so slow teardown does not fail the hook.
+Full history: [CHANGELOG.md](./docs/en-US/CHANGELOG.md).
 
 ---
 

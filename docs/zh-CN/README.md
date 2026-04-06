@@ -783,10 +783,9 @@ skipIf），测试覆盖率达到 100%。详细测试报告请查看
 
 ## 📋 变更日志
 
-**v1.1.1** (2026-04-03) — **修复**：Windows 下 bundle 入口 `URL#pathname` 得到
-`/D:/...` 导致 esbuild 无法解析；`buildClientBundle` 内
-`normalizeBundleEntryPoint()`， `bundleOnly` 测试入口改用
-`fromFileUrl()`。完整历史见 [CHANGELOG.md](./CHANGELOG.md)。
+**v1.1.2** (2026-04-07) — **修复**：浏览器缓存改为完整套件路径键（避免 Bun
+多文件顺序跑时跨套件错误复用 Playwright）；Bun/Deno 上 `afterAll` 合成用例显式
+60s 超时，避免慢清理误报钩子超时。完整历史见 [CHANGELOG.md](./CHANGELOG.md)。
 
 ---
 

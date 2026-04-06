@@ -54,6 +54,13 @@ const suiteBrowserCache = new Map<string, BrowserContext>();
 const beforeAllExecutedMap = new Map<string, boolean>();
 
 /**
+ * Bun 将 `afterAll` 注册为普通 `test()`，默认超时约 5s；含 Socket.IO / Playwright 关闭时
+ * `kill(9)` + `cleanupAllBrowsers()` 易超过 5s，导致 `(afterAll)` 误报超时。
+ * Deno 侧 `Deno.test` 同样传入，避免慢机/CI 上钩子超时。
+ */
+const AFTER_ALL_HOOK_TIMEOUT_MS = 60_000;
+
+/**
  * Bun 环境下标记是否在 describe 块内（使用计数器支持嵌套）
  */
 let describeDepth = 0;
@@ -277,13 +284,13 @@ async function setupBrowserTest(
   }
 
   // 如果配置了共享浏览器实例，尝试从缓存获取
-  // 复用且为根级 key 时，同一顶层 describe 下所有用例共用一个浏览器，减少 Windows CI 上多次启动导致的超时
-  // 若配置了 executablePath（如错误处理用例），必须用完整 suitePath 以真正执行创建并得到预期错误，不复用
+  // 缓存键必须使用完整 getFullSuiteName(suite)：若仅用 split(" > ")[0]，Bun 顺序加载多文件时套件链可能被串成
+  // 「A > B」，B 与 A 会共用同一 Playwright 实例键，造成跨示例污染、goto 挂死直至外层超时，并触发 killed dangling processes。
+  // 同一 describe 内各 it 的 suite 相同，完整路径仍一致，故套件内复用浏览器的行为不变。
+  // executablePath 场景仍用完整 suitePath，避免与默认 Chromium 路径的用例错误复用。
   let browserCtx: BrowserContext | undefined;
   const shouldReuse = config.reuseBrowser !== false && Boolean(suitePath);
-  const cacheKey = shouldReuse && suitePath
-    ? (config.executablePath ? suitePath : suitePath.split(" > ")[0])
-    : suitePath;
+  const cacheKey = suitePath;
 
   if (cacheKey) {
     browserCtx = suiteBrowserCache.get(cacheKey);
@@ -517,10 +524,11 @@ async function cleanupBrowserTest(testContext: TestContext): Promise<void> {
 
 /**
  * 清理套件级别的浏览器缓存
- * @param suitePath 套件路径（支持完整路径或根 describe 名；复用时浏览器可能以根 key 存储）
+ * @param suitePath 套件路径（应与 setup 时 getFullSuiteName 一致；完整路径未命中时再尝试根 describe 名以兼容旧调用）
  */
 export function cleanupSuiteBrowser(suitePath: string): Promise<void> {
   const rootKey = suitePath.split(" > ")[0];
+  /** 主键为完整套件路径；根名仅作兼容查找 */
   const browserCtx = suiteBrowserCache.get(suitePath) ??
     suiteBrowserCache.get(rootKey);
   if (browserCtx) {
@@ -696,6 +704,7 @@ export function describe(
           name: afterAllTestName,
           ignore: false,
           parallel: false,
+          timeout: AFTER_ALL_HOOK_TIMEOUT_MS,
           sanitizeOps: false, // 禁用操作清理检查，因为 afterAll 需要清理之前测试创建的资源
           sanitizeResources: false, // 禁用资源清理检查，因为 afterAll 需要清理之前测试创建的资源
           fn: async () => {
@@ -716,18 +725,22 @@ export function describe(
         (async () => {
           const bunTest = await getBunTest();
           if (bunTest) {
-            bunTest(afterAllTestName, async () => {
-              try {
-                await savedAfterAll();
-              } catch (error) {
-                logger.error(
-                  $tr("runner.afterAllHookError", {
-                    error: String(error),
-                  }),
-                );
-                throw error;
-              }
-            });
+            bunTest(
+              afterAllTestName,
+              async () => {
+                try {
+                  await savedAfterAll();
+                } catch (error) {
+                  logger.error(
+                    $tr("runner.afterAllHookError", {
+                      error: String(error),
+                    }),
+                  );
+                  throw error;
+                }
+              },
+              { timeout: AFTER_ALL_HOOK_TIMEOUT_MS },
+            );
           }
         })();
       }

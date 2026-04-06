@@ -8,6 +8,25 @@ and this project adheres to
 
 ---
 
+## [1.1.2] - 2026-04-07
+
+### Fixed
+
+- **Browser suite cache key**: `suiteBrowserCache` now keys on the full
+  `getFullSuiteName` path instead of only the first `">"`-separated segment.
+  When Bun runs multiple test files in order, suite paths can concatenate as
+  `A > B`; the old key made later suites reuse another suite’s Playwright
+  instance, causing stuck navigations, outer test timeouts, and dangling
+  subprocess cleanup. Per-`describe` reuse is unchanged because all `it` calls
+  in the same block share the same full path.
+- **`afterAll` synthetic test timeout**: On Bun, `afterAll` runs as a normal
+  `test()` with a very short default timeout; teardown that includes
+  `cleanupAllBrowsers()` or killed child processes could exceed it and fail the
+  hook. Bun and Deno registrations for the synthetic `afterAll` test now pass an
+  explicit 60s timeout.
+
+---
+
 ## [1.1.1] - 2026-04-03
 
 ### Fixed

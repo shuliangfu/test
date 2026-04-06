@@ -7,6 +7,20 @@
 
 ---
 
+## [1.1.3] - 2026-04-07
+
+### 修复
+
+- **Bun 首个顶层 `describe` 与 `currentSuite` 泄漏**：进程内第一个套件为优先注册
+  cleanup `describe`，将用户 `fn` 推迟到 `getBunTestModule().then(...)`
+  执行；此前 `fn` 结束后未将 `currentSuite` 恢复为
+  `rootSuite`，导致**后续其它测试文件**的顶层 `describe` 错误挂到该套件下（如
+  `preact-hybrid-flat > react-ssg-advanced`）， `beforeAll`、端口与浏览器 e2e
+  错乱并出现超时与 dangling 子进程清理。现对延迟路径用 `try/finally` 包裹
+  `fn()`，与同步 `describe` 一致地 `suiteStack.pop()` 与 `describeDepth--`。
+
+---
+
 ## [1.1.2] - 2026-04-07
 
 ### 修复

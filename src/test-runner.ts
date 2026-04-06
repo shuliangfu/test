@@ -677,7 +677,15 @@ export function describe(
         suiteStack.push(parentSuite);
         currentSuite = suite;
         if (IS_BUN) describeDepth = 1;
-        fn();
+        try {
+          fn();
+        } finally {
+          // 与同步路径中 try/finally 一致：fn 结束后必须 pop，否则 currentSuite 永远留在本套件，
+          // 后续**其它测试文件** load 时下一个顶层 describe 的 parent 会错挂到本套件下（Bun 多文件表现为
+          // 「preact-hybrid-flat > react-ssg-advanced」），beforeAll/端口/浏览器全乱并 60s 超时。
+          currentSuite = suiteStack.pop() || rootSuite;
+          if (IS_BUN) describeDepth--;
+        }
       });
       return;
     }

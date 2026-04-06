@@ -809,10 +809,10 @@ Full test report: [TEST_REPORT.md](./docs/en-US/TEST_REPORT.md)
 
 ## 📋 Changelog
 
-**v1.1.2** (2026-04-07) — **Fixed**: Browser cache uses full suite path (avoids
-cross-suite Playwright reuse under Bun multi-file runs); synthetic `afterAll`
-tests use a 60s timeout on Bun/Deno so slow teardown does not fail the hook.
-Full history: [CHANGELOG.md](./docs/en-US/CHANGELOG.md).
+**v1.1.3** (2026-04-07) — **Fixed**: Bun deferred first `describe` now restores
+`currentSuite` after `fn()`, so later test files do not nest under the first
+suite (broken e2e / timeouts). (See also v1.1.2: full browser cache key + 60s
+`afterAll` timeout.) Full history: [CHANGELOG.md](./docs/en-US/CHANGELOG.md).
 
 ---
 

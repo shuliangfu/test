@@ -783,9 +783,10 @@ skipIf），测试覆盖率达到 100%。详细测试报告请查看
 
 ## 📋 变更日志
 
-**v1.1.2** (2026-04-07) — **修复**：浏览器缓存改为完整套件路径键（避免 Bun
-多文件顺序跑时跨套件错误复用 Playwright）；Bun/Deno 上 `afterAll` 合成用例显式
-60s 超时，避免慢清理误报钩子超时。完整历史见 [CHANGELOG.md](./CHANGELOG.md)。
+**v1.1.3** (2026-04-07) — **修复**：Bun 下首个顶层 `describe` 延迟执行 `fn`
+后恢复 `currentSuite`，避免后续测试文件错误嵌套到第一个套件（e2e
+错乱与超时）。v1.1.2 另有完整浏览器缓存键与 `afterAll` 60s 超时。完整历史见
+[CHANGELOG.md](./CHANGELOG.md)。
 
 ---
 

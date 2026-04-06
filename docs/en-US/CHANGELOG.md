@@ -8,6 +8,22 @@ and this project adheres to
 
 ---
 
+## [1.1.3] - 2026-04-07
+
+### Fixed
+
+- **Bun first top-level `describe` / `currentSuite` leak**: The first suite in a
+  process defers its body via `getBunTestModule().then(...)` so cleanup
+  `describe` can register first. After the deferred `fn()` ran, `currentSuite`
+  was never popped back to `rootSuite`, so later **other test files** attached
+  their top-level `describe` as children of that first suite (e.g.
+  `preact-hybrid-flat > react-ssg-advanced`), breaking `beforeAll`, ports, and
+  browser e2e with timeouts and dangling subprocess kills. The deferred path now
+  wraps `fn()` in `try/finally` and mirrors the synchronous `describe` teardown
+  (`suiteStack.pop()`, `describeDepth--`).
+
+---
+
 ## [1.1.2] - 2026-04-07
 
 ### Fixed

@@ -809,8 +809,10 @@ Full test report: [TEST_REPORT.md](./docs/en-US/TEST_REPORT.md)
 
 ## 📋 Changelog
 
-**v1.1.6** (2026-04-20) — **Changed**: `@dreamer/esbuild` `^1.1.7` for reliable
-Bun + `platform: "node"` browser bundles on Linux CI. Full history:
+**v1.1.7** (2026-04-20) — **Fixed**: Host-side timeout for Playwright
+`page.evaluate` (bounded by `protocolTimeout`) plus page default timeouts, to
+avoid browser tests hanging on stalled CDP calls (common on some macOS CI).
+**Added**: i18n key `browser.evaluateHostTimeout`. Full history:
 [CHANGELOG.md](./docs/en-US/CHANGELOG.md).
 
 ---

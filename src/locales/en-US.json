@@ -138,7 +138,8 @@
     "launchFixHintGeneric": "\n\nIf it keeps failing, try `browserSource: \"system\"`, `npx playwright install {engine}`, or `dumpio: true` for Chromium logs.",
     "launchFixHintSslHandshake": "\n\nExtra: SSL handshake errors in logs often relate to proxies, HTTPS scanning/VPN, or TLS interception tools. Try disabling VPN/global proxy, set `NO_PROXY=localhost,127.0.0.1`, or rerun browser tests on a cleaner network.",
     "moduleLoadTimeout": "Module load timeout: cannot find global \"{globalName}\" or testReady not set. Entry file: {entry}{details}",
-    "moduleLoadTimeoutTestReady": "Module load timeout: testReady not set. Entry file: {entry}{details}"
+    "moduleLoadTimeoutTestReady": "Module load timeout: testReady not set. Entry file: {entry}{details}",
+    "evaluateHostTimeout": "page.evaluate host-side timeout ({ms}ms): often blocked main thread or stuck CDP (seen on some macOS CI). Try reuseBrowser: false, browserSource: \"system\", or reinstall Playwright browsers."
   },
   "bundle": {
     "failed": "Bundle failed: {message}. Entry file: {entry}"

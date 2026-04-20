@@ -7,6 +7,28 @@
 
 ---
 
+## [1.1.7] - 2026-04-20
+
+### 新增
+
+- **i18n**：新增 `browser.evaluateHostTimeout` 中英文文案（宿主侧 evaluate
+  超时）。
+
+### 变更
+
+- **`browser-context`**：`newPage()` 后根据 `protocolTimeout` 调用
+  `setDefaultTimeout` / `setDefaultNavigationTimeout`（默认与 **60s**
+  对齐）；`goto` 使用该上限，不再写死 60s。
+
+### 修复
+
+- **`page.evaluate` 长时间挂起**：对 `evaluate` 增加宿主侧
+  `Promise.race`，上限为 `protocolTimeout`。Playwright 对 `evaluate`
+  未必遵守默认超时；CDP 卡住时可能导致 浏览器测试在部分 CI（尤其 macOS +
+  Deno）中单条用例长时间不结束。
+
+---
+
 ## [1.1.6] - 2026-04-20
 
 ### 变更

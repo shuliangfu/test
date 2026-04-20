@@ -809,10 +809,8 @@ Full test report: [TEST_REPORT.md](./docs/en-US/TEST_REPORT.md)
 
 ## 📋 Changelog
 
-**v1.1.5** (2026-04-20) — **Removed**: `test/scripts/` Playwright probe
-utilities and related tasks. **Changed**: no temporary `[dreamer/test][debug]`
-logs; use `DREAMER_TEST_BROWSER_DUMP_IO` / `dumpio` for diagnostics. **Docs**:
-Deno 2.7.12 + Playwright note in `tests/browser/README.md`. Full history:
+**v1.1.6** (2026-04-20) — **Changed**: `@dreamer/esbuild` `^1.1.7` for reliable
+Bun + `platform: "node"` browser bundles on Linux CI. Full history:
 [CHANGELOG.md](./docs/en-US/CHANGELOG.md).
 
 ---

@@ -8,6 +8,28 @@ and this project adheres to
 
 ---
 
+## [1.1.7] - 2026-04-20
+
+### Added
+
+- **i18n**: `browser.evaluateHostTimeout` strings (en-US / zh-CN) for host-side
+  evaluate timeouts.
+
+### Changed
+
+- **`browser-context`**: After `newPage()`, apply `setDefaultTimeout` /
+  `setDefaultNavigationTimeout` using `protocolTimeout` (default aligned to
+  **60s**). `goto` uses the same cap instead of a hard-coded 60s.
+
+### Fixed
+
+- **`page.evaluate` indefinite hang**: Wrapped `evaluate` with a host-side
+  `Promise.race` bounded by `protocolTimeout`. Playwright does not always honor
+  default timeouts for `evaluate`; stalled CDP calls could leave browser tests
+  running for many minutes on some CI hosts (notably macOS Deno pipelines).
+
+---
+
 ## [1.1.6] - 2026-04-20
 
 ### Changed

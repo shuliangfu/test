@@ -138,7 +138,8 @@
     "launchFixHintGeneric": "\n\n若持续失败，请尝试 `browserSource: \"system\"`、`npx playwright install {engine}`，或设置 `dumpio: true` 查看 Chromium 日志。",
     "launchFixHintSslHandshake": "\n\n额外说明: 日志中出现 SSL handshake 时，常与系统代理、HTTPS 扫描/VPN、或证书替换软件有关。可尝试关闭 VPN/全局代理、`NO_PROXY=localhost,127.0.0.1`，或在无外网劫持的网络下重跑浏览器测试。",
     "moduleLoadTimeout": "模块加载超时: 未找到全局 \"{globalName}\" 或 testReady 未设置。入口: {entry}{details}",
-    "moduleLoadTimeoutTestReady": "模块加载超时: testReady 未设置。入口: {entry}{details}"
+    "moduleLoadTimeoutTestReady": "模块加载超时: testReady 未设置。入口: {entry}{details}",
+    "evaluateHostTimeout": "page.evaluate 宿主侧超时（{ms}ms）：常见于页面主线程阻塞或 CDP 长时间无响应（如部分 macOS CI）。可尝试 reuseBrowser: false、browserSource: \"system\" 或重装 Playwright 浏览器缓存。"
   },
   "bundle": {
     "failed": "打包失败: {message}。入口: {entry}"

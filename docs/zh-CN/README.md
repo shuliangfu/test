@@ -783,9 +783,10 @@ skipIf），测试覆盖率达到 100%。详细测试报告请查看
 
 ## 📋 变更日志
 
-**v1.1.6**（2026-04-20）— **变更**：`@dreamer/esbuild` 升至 `^1.1.7`，Bun 下
-`platform: "node"` 的浏览器相关打包在 Linux CI 上更稳定。完整历史见
-[CHANGELOG.md](./CHANGELOG.md)。
+**v1.1.7**（2026-04-20）— **修复**：为 Playwright `page.evaluate`
+增加宿主侧超时（与 `protocolTimeout` 对齐）并设置页面默认超时，避免 CDP
+卡住导致浏览器测试长时间挂起（部分 macOS CI）。**新增**：i18n
+`browser.evaluateHostTimeout`。完整历史见 [CHANGELOG.md](./CHANGELOG.md)。
 
 ---
 

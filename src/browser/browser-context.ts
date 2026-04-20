@@ -112,6 +112,40 @@ function appendSslOrProxyHint(msg: string): string {
 }
 
 /**
+ * Playwright 的 `page.evaluate` 在页面 JS 长时间占用主线程或 CDP 卡住时可能永不 resolve，
+ * 且不一定遵守 `setDefaultTimeout`（见上游 issue）。用宿主侧 `Promise.race` 强制上限，
+ * 避免 Deno/Bun 测试在 CI（尤其 macOS）上单条用例挂起数十分钟。
+ *
+ * @param evaluatePromise - `page.evaluate(...)` 返回的 Promise
+ * @param ms - 超时毫秒数（通常与 `protocolTimeout` 一致）
+ * @returns 与 evaluate 相同的返回值
+ */
+async function evaluateWithHostTimeout<T>(
+  evaluatePromise: Promise<T>,
+  ms: number,
+): Promise<T> {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      evaluatePromise,
+      new Promise<never>((_, reject) => {
+        timeoutId = setTimeout(() => {
+          reject(
+            new Error($tr("browser.evaluateHostTimeout", { ms: String(ms) })),
+          );
+        }, ms);
+      }),
+    ]);
+  } catch (err) {
+    /** 超时先返回时忽略 evaluate 后续的 rejection，避免未处理的 Promise */
+    void evaluatePromise.catch(() => {});
+    throw err;
+  } finally {
+    if (timeoutId !== undefined) clearTimeout(timeoutId);
+  }
+}
+
+/**
  * 判断是否为「Playwright 已拉起进程但长时间连不上 CDP」类超时（常见于自带 Chromium 与宿主机不兼容）。
  *
  * @param err - launch 阶段抛出的原始错误
@@ -187,6 +221,12 @@ async function createBrowserContextInternal(
       }),
     );
   }
+
+  /**
+   * 页面级默认超时（毫秒）：与常见 `protocolTimeout: 60_000` 对齐。
+   * `page.evaluate` 另在宿主侧用 {@link evaluateWithHostTimeout} 兜底，避免永不 resolve。
+   */
+  const defaultPageOpTimeoutMs = effectiveConfig.protocolTimeout ?? 60_000;
 
   const launchTimeout = effectiveConfig.protocolTimeout ?? 120000;
   /**
@@ -416,6 +456,9 @@ async function createBrowserContextInternal(
 
   try {
     page = await browser.newPage();
+    /** 多数 Playwright API 与此一致；evaluate  hanging 场景仍依赖宿主 race */
+    page.setDefaultTimeout(defaultPageOpTimeoutMs);
+    page.setDefaultNavigationTimeout(defaultPageOpTimeoutMs);
 
     if (effectiveConfig.entryPoint) {
       const consoleErrors: string[] = [];
@@ -519,12 +562,15 @@ async function createBrowserContextInternal(
     page: currentPage,
     htmlPath,
     async evaluate<T>(fn: () => T | Promise<T>): Promise<T> {
-      return await context.page.evaluate(fn);
+      return await evaluateWithHostTimeout(
+        context.page.evaluate(fn),
+        defaultPageOpTimeoutMs,
+      );
     },
     async goto(url: string): Promise<void> {
       await context.page.goto(url, {
         waitUntil: "domcontentloaded",
-        timeout: 60_000,
+        timeout: defaultPageOpTimeoutMs,
       });
     },
     async waitFor(

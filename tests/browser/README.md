@@ -56,6 +56,12 @@ First run can be slow while Chromium is launched or downloaded.
 **Deno 2.7.11/2.7.10** 或已含该修复的版本后即正常，属于运行时问题，不必改
 `@dreamer/test` 业务代码。
 
+**Bun CI、`buildClientBundle`、`platform: "node"`**：依赖 **`@dreamer/esbuild` ≥
+1.1.7**。更早版本在 Bun 下曾对 node 目标走子进程 `bun build`，Linux Runner
+上对临时入口路径易失败（例如「应该支持 platform 选项」）。请先发布
+**`@dreamer/esbuild@1.1.7`**（或更高），再在 `test/` 执行 **`bun install`**
+刷新锁文件后重跑 CI。
+
 建议按顺序试：
 
 1. **与 CI 使用同一套 Chromium 安装命令**（避免 CLI 与 Deno 解析到的 npm

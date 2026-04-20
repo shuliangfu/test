@@ -22,6 +22,33 @@ import { findChromePath } from "./chrome.ts";
 const BROWSER_CLOSE_TIMEOUT_MS = 8000;
 
 /**
+ * 标记「已尝试过 headed 回退」，避免 launch 失败时无限递归。
+ * 运行时挂在 `BrowserTestConfig` 的 Symbol 属性上（不纳入公开类型）。
+ */
+const HEADED_LAUNCH_FALLBACK_TRIED = Symbol.for(
+  "@dreamer/test:headedChromiumLaunchFallbackTried",
+);
+
+/**
+ * 是否为「稳定版 Google Chrome」路径：此类场景优先用 Playwright 的 `channel: 'chrome'`
+ * （见官方 BrowserType.launch channel 选项），避免仅传 `executablePath` 时在部分 macOS 上
+ * CDP 长时间无响应。
+ *
+ * @param executablePath - `findChromePath()` 或用户显式传入
+ */
+function shouldLaunchGoogleChromeViaChannel(
+  executablePath: string | undefined,
+): boolean {
+  if (!executablePath) return false;
+  const p = executablePath.replace(/\\/g, "/");
+  return (
+    p.includes("Google Chrome.app") ||
+    p.endsWith("/google-chrome") ||
+    p.includes("/Google/Chrome/Application/chrome.exe")
+  );
+}
+
+/**
  * 关闭浏览器：先正常 close，超时则拒绝，避免无限等待
  * Playwright 的 Browser 无 process()，不做进程 kill
  * @param browser - Playwright Browser 实例
@@ -73,37 +100,79 @@ export interface BrowserContext {
 }
 
 /**
- * 创建浏览器测试上下文
+ * Playwright 把子进程 stderr 打进错误信息时，可据此追加网络/SSL 排查说明。
  *
- * 根据配置创建 Playwright 浏览器实例，如果配置了 entryPoint，
- * 会自动打包客户端代码并创建测试页面。
- * browserType 可选 "chromium" | "firefox" | "webkit"；browserSource 仅对 chromium 有效。
+ * @param msg - 完整错误文本
+ */
+function appendSslOrProxyHint(msg: string): string {
+  if (/handshake failed|ssl_client_socket/i.test(msg)) {
+    return $tr("browser.launchFixHintSslHandshake");
+  }
+  return "";
+}
+
+/**
+ * 判断是否为「Playwright 已拉起进程但长时间连不上 CDP」类超时（常见于自带 Chromium 与宿主机不兼容）。
+ *
+ * @param err - launch 阶段抛出的原始错误
+ */
+function isLikelyBundledLaunchTimeout(err: unknown): boolean {
+  const msg = err instanceof Error ? err.message : String(err);
+  return (
+    /Timeout \d+ms exceeded/i.test(msg) ||
+    (/browserType\.launch/i.test(msg) && /\b[Tt]imeout\b/i.test(msg)) ||
+    msg.includes("browser.launch: Timeout") ||
+    // 外层 Promise.race 包装的文案（中英）
+    msg.includes("启动超时") ||
+    (/timed out/i.test(msg) && /launch/i.test(msg))
+  );
+}
+
+/**
+ * 内部实现：`ignoreEnvOverride` 为 true 时不读取 `DREAMER_TEST_BROWSER_SOURCE`，
+ * 避免「自带 Chromium 超时后改用系统 Chrome」的重入被环境变量再次强制为 test。
  *
  * @param config - 浏览器测试配置
- * @returns 浏览器测试上下文
+ * @param ignoreEnvOverride - 是否忽略环境变量中的 browserSource
  */
-export async function createBrowserContext(
+async function createBrowserContextInternal(
   config: BrowserTestConfig,
+  ignoreEnvOverride: boolean,
 ): Promise<BrowserContext> {
+  /**
+   * 允许仅用环境变量切换浏览器来源，无需改每个测试文件：
+   * `DREAMER_TEST_BROWSER_SOURCE=system` — 强制系统 Chrome/Chromium；
+   * `DREAMER_TEST_BROWSER_SOURCE=test` — 强制 Playwright 自带浏览器。
+   */
+  const envBrowserSource = ignoreEnvOverride
+    ? undefined
+    : getEnv("DREAMER_TEST_BROWSER_SOURCE")?.trim();
+  const effectiveConfig: BrowserTestConfig =
+    envBrowserSource === "system" || envBrowserSource === "test"
+      ? { ...config, browserSource: envBrowserSource }
+      : config;
+
   const playwright = getPlaywright();
-  const engine = config.browserType ?? "chromium";
+  const engine = effectiveConfig.browserType ?? "chromium";
   const browserName = engine === "chromium"
     ? "Chromium"
     : engine === "firefox"
     ? "Firefox"
     : "WebKit";
 
-  const wantSystem = engine === "chromium" && config.browserSource === "test"
+  const wantSystem = engine === "chromium" &&
+      effectiveConfig.browserSource === "test"
     ? false
-    : (config.browserSource === "system" ||
-      config.preferSystemChrome !== false);
+    : (effectiveConfig.browserSource === "system" ||
+      effectiveConfig.preferSystemChrome !== false);
   const executablePath = engine === "chromium"
-    ? (config.executablePath ?? (wantSystem ? findChromePath() : undefined))
+    ? (effectiveConfig.executablePath ??
+      (wantSystem ? findChromePath() : undefined))
     : undefined;
 
   if (
     engine === "chromium" &&
-    config.browserSource === "system" &&
+    effectiveConfig.browserSource === "system" &&
     !executablePath
   ) {
     throw new Error($tr("browser.noSystemChrome"));
@@ -119,12 +188,22 @@ export async function createBrowserContext(
     );
   }
 
-  const launchTimeout = config.protocolTimeout ?? 120000;
-  const dumpio = config.dumpio === true;
-  // CI 下（尤其 Windows）启动较慢，允许更长超时
+  const launchTimeout = effectiveConfig.protocolTimeout ?? 120000;
+  /**
+   * 为 true 时把 Chromium 的 stdout/stderr 接到 Playwright，便于看子进程是否报
+   * `Remote debugging` 被策略拦截等。测试里可设 `dumpio: true`；本机排错也可设
+   * 环境变量 `DREAMER_TEST_BROWSER_DUMP_IO=1` 而不用改每个用例。
+   */
+  const dumpio = effectiveConfig.dumpio === true ||
+    getEnv("DREAMER_TEST_BROWSER_DUMP_IO") === "1";
+  /**
+   * Playwright `launch({ timeout })` 上限：取自 `protocolTimeout`（默认 120s），
+   * 非 CI 再 `min(180s, …)`。曾用 `min(90s, …)` 与默认 120s 矛盾，易误报 90s 超时。
+   */
+  const maxLaunchMs = 180_000;
   const effectiveLaunchTimeout = getEnv("CI") === "true"
-    ? Math.max(120000, launchTimeout)
-    : Math.min(90000, launchTimeout);
+    ? Math.max(120_000, Math.min(maxLaunchMs, launchTimeout))
+    : Math.min(maxLaunchMs, launchTimeout);
 
   let launchOptions: Parameters<typeof playwright.chromium.launch>[0];
   if (engine === "chromium") {
@@ -149,27 +228,78 @@ export async function createBrowserContext(
       "--disable-breakpad",
       "--mute-audio",
     ];
-    const rawArgs = config.args?.length
-      ? [...requiredArgs, ...config.args]
+    const rawArgs = effectiveConfig.args?.length
+      ? [...requiredArgs, ...effectiveConfig.args]
       : defaultArgs;
     const args = rawArgs.filter((a) => !["--single-process"].includes(a));
-    launchOptions = {
-      headless: config.headless !== false,
-      ...(executablePath ? { executablePath } : {}),
+    /**
+     * 始终 `stdio: 'pipe'`：避免浏览器子进程继承 Deno 测试进程的 stdio，
+     * 在少数环境下会引发 CDP 握手长时间不返回（表现卡在 `launcher.launch`）。
+     * `dumpio: true` 时同样走 pipe，由 Playwright 转发日志。
+     */
+    const launchBase = {
+      headless: effectiveConfig.headless !== false,
       args,
       timeout: effectiveLaunchTimeout,
-      ...(dumpio ? { stdio: "pipe" as const } : {}),
+      stdio: "pipe" as const,
     };
+    if (shouldLaunchGoogleChromeViaChannel(executablePath)) {
+      launchOptions = {
+        ...launchBase,
+        channel: "chrome",
+      };
+    } else {
+      /**
+       * Playwright 默认在未指定 `channel` 的 **headless** 下使用独立的 `chromium-headless-shell`；
+       * 在部分 macOS 环境会出现子进程已起但 CDP 长时间无法握手（表现卡在 `launch`）。
+       *
+       * 策略（按优先级）：
+       * 1. **无自定义路径**且已安装自带 Chromium：使用 `chromium.executablePath()` 指向缓存中的
+       *    「Chrome for Testing」**完整二进制**显式启动（比单独依赖 `channel: 'chromium'` 在少数宿主机上更稳定）。
+       * 2. 否则若仍为无路径 headless：回退 `channel: 'chromium'`（New Headless），见
+       *    https://playwright.dev/docs/browsers#chromium-new-headless-mode
+       * 3. 其他情况：`executablePath` 仅来自用户/系统探测。
+       */
+      const bundledChromeForTestingPath =
+        typeof playwright.chromium.executablePath === "function"
+          ? playwright.chromium.executablePath()
+          : undefined;
+
+      const useExplicitBundledExe = effectiveConfig.headless !== false &&
+        executablePath === undefined &&
+        Boolean(
+          bundledChromeForTestingPath &&
+            existsSync(bundledChromeForTestingPath),
+        );
+
+      if (useExplicitBundledExe && bundledChromeForTestingPath) {
+        launchOptions = {
+          ...launchBase,
+          executablePath: bundledChromeForTestingPath,
+        };
+      } else {
+        const usePlaywrightNewHeadless = effectiveConfig.headless !== false &&
+          executablePath === undefined;
+
+        launchOptions = {
+          ...launchBase,
+          ...(executablePath ? { executablePath } : {}),
+          ...(usePlaywrightNewHeadless ? { channel: "chromium" as const } : {}),
+        };
+      }
+    }
   } else {
     launchOptions = {
-      headless: config.headless !== false,
+      headless: effectiveConfig.headless !== false,
       timeout: effectiveLaunchTimeout,
-      ...(dumpio ? { stdio: "pipe" as const } : {}),
     };
   }
 
   if (dumpio) {
-    const exeInfo = engine === "chromium" && executablePath
+    const exeInfo = engine === "chromium" &&
+        shouldLaunchGoogleChromeViaChannel(executablePath)
+      ? "channel=chrome"
+      : engine === "chromium" && executablePath
       ? `executablePath=${executablePath}`
       : engine;
     writeStderrSync(
@@ -179,13 +309,13 @@ export async function createBrowserContext(
     );
   }
 
-  // CI（尤其 Windows runner）下启动较慢，延长超时避免误报
-  const baseTimeoutMs = engine === "chromium"
-    ? (config.browserSource === "test" ? 60000 : 45000)
-    : 60000;
+  /**
+   * 外层 `Promise.race` 必须 **不短于** 上面传给 `launch({ timeout })` 的
+   * `effectiveLaunchTimeout`。否则外圈先触发会误报「浏览器启动超时」。
+   */
   const launchTimeoutMs = getEnv("CI") === "true"
-    ? Math.max(baseTimeoutMs, 120000)
-    : baseTimeoutMs;
+    ? Math.max(120_000, effectiveLaunchTimeout + 15_000)
+    : effectiveLaunchTimeout + 15_000;
 
   const launcher = engine === "chromium"
     ? playwright.chromium
@@ -212,6 +342,7 @@ export async function createBrowserContext(
         )
       ),
     ]);
+
     if (dumpio) {
       writeStderrSync(
         new TextEncoder().encode(
@@ -220,11 +351,63 @@ export async function createBrowserContext(
       );
     }
   } catch (err) {
+    const systemPath = engine === "chromium" ? findChromePath() : undefined;
+    const shouldRetrySystem = engine === "chromium" &&
+      effectiveConfig.browserSource === "test" &&
+      Boolean(systemPath) &&
+      isLikelyBundledLaunchTimeout(err);
+
+    if (shouldRetrySystem && systemPath) {
+      writeStderrSync(
+        new TextEncoder().encode(
+          $tr("browser.retryBundledTimeoutWithSystem") + "\n",
+        ),
+      );
+      return createBrowserContextInternal(
+        {
+          ...effectiveConfig,
+          browserSource: "system",
+        },
+        true,
+      );
+    }
+
+    /**
+     * 仍无头超时：在非 CI 下再用 **有头模式** 试一轮（可能短暂出现窗口）。
+     * 部分 macOS / 终端组合下仅无头 CDP 会挂死，headed 可绕开。
+     */
+    const configWithFlags = effectiveConfig as
+      & BrowserTestConfig
+      & Record<symbol, boolean | undefined>;
+    const shouldRetryHeaded = engine === "chromium" &&
+      getEnv("CI") !== "true" &&
+      effectiveConfig.headless !== false &&
+      configWithFlags[HEADED_LAUNCH_FALLBACK_TRIED] !== true &&
+      isLikelyBundledLaunchTimeout(err);
+
+    if (shouldRetryHeaded) {
+      console.warn(
+        "[dreamer/test] 无头模式 launch 超时或连接超时，非 CI 下将用 headed 再试一次（可能短暂出现浏览器窗口）",
+      );
+      return createBrowserContextInternal(
+        Object.assign({}, effectiveConfig, {
+          headless: false,
+          [HEADED_LAUNCH_FALLBACK_TRIED]: true,
+        }) as BrowserTestConfig,
+        ignoreEnvOverride,
+      );
+    }
+
     const msg = err instanceof Error ? err.message : String(err);
-    const needHint = msg.includes("Executable doesn't exist") ||
-      msg.includes("browserType.launch") ||
-      msg.includes(engine);
-    const hint = needHint ? $tr("browser.launchFixHint", { engine }) : "";
+    const missingExecutable = msg.includes("Executable doesn't exist");
+    const baseHint = missingExecutable
+      ? $tr("browser.launchFixHint", { engine })
+      : isLikelyBundledLaunchTimeout(err)
+      ? $tr("browser.launchFixHintTimeoutBundled", { engine })
+      : /browserType\.launch/i.test(msg) || msg.includes(engine)
+      ? $tr("browser.launchFixHintGeneric", { engine })
+      : "";
+    const hint = baseHint + appendSslOrProxyHint(msg);
     throw new Error($tr("browser.launchFailed", { message: msg, hint }));
   }
 
@@ -234,7 +417,7 @@ export async function createBrowserContext(
   try {
     page = await browser.newPage();
 
-    if (config.entryPoint) {
+    if (effectiveConfig.entryPoint) {
       const consoleErrors: string[] = [];
       page.on("console", (msg: { type: () => string; text: () => string }) => {
         if (msg.type() === "error") {
@@ -246,26 +429,28 @@ export async function createBrowserContext(
       });
 
       const bundle = await buildClientBundle({
-        entryPoint: config.entryPoint,
-        globalName: config.globalName,
-        browserMode: config.browserMode,
+        entryPoint: effectiveConfig.entryPoint,
+        globalName: effectiveConfig.globalName,
+        browserMode: effectiveConfig.browserMode,
       });
 
       htmlPath = await createTestPage({
         bundleCode: bundle,
-        bodyContent: config.bodyContent,
-        template: config.htmlTemplate ??
-          (config.browserMode === false ? DEFAULT_TEMPLATE_IIFE : undefined),
+        bodyContent: effectiveConfig.bodyContent,
+        template: effectiveConfig.htmlTemplate ??
+          (effectiveConfig.browserMode === false
+            ? DEFAULT_TEMPLATE_IIFE
+            : undefined),
       });
 
-      const loadTimeout = (config.moduleLoadTimeout || 10000) + 10000;
+      const loadTimeout = (effectiveConfig.moduleLoadTimeout || 10000) + 10000;
       await page.goto(`file://${htmlPath}`, {
         waitUntil: "domcontentloaded",
         timeout: loadTimeout,
       });
 
-      const moduleLoadTimeout = config.moduleLoadTimeout || 10000;
-      const globalName = config.globalName;
+      const moduleLoadTimeout = effectiveConfig.moduleLoadTimeout || 10000;
+      const globalName = effectiveConfig.globalName;
       if (globalName) {
         try {
           await page.waitForFunction(
@@ -293,7 +478,7 @@ export async function createBrowserContext(
             throw new Error(
               $tr("browser.moduleLoadTimeout", {
                 globalName,
-                entry: config.entryPoint,
+                entry: effectiveConfig.entryPoint,
                 details: errorDetails,
               }),
             );
@@ -311,7 +496,7 @@ export async function createBrowserContext(
             : "";
           throw new Error(
             $tr("browser.moduleLoadTimeoutTestReady", {
-              entry: config.entryPoint,
+              entry: effectiveConfig.entryPoint,
               details: errorDetails,
             }),
           );
@@ -368,4 +553,20 @@ export async function createBrowserContext(
   };
 
   return context;
+}
+
+/**
+ * 创建浏览器测试上下文
+ *
+ * 根据配置创建 Playwright 浏览器实例，如果配置了 entryPoint，
+ * 会自动打包客户端代码并创建测试页面。
+ * browserType 可选 "chromium" | "firefox" | "webkit"；browserSource 仅对 chromium 有效。
+ *
+ * @param config - 浏览器测试配置
+ * @returns 浏览器测试上下文
+ */
+export function createBrowserContext(
+  config: BrowserTestConfig,
+): Promise<BrowserContext> {
+  return createBrowserContextInternal(config, false);
 }

@@ -27,7 +27,7 @@ jobs:
           node-version: "20"
 
       - name: Install Playwright Chromium
-        run: npx playwright@1.58.2 install chromium
+        run: npx playwright@1.59.1 install chromium
 
       - name: Cache dependencies
         run: deno cache src/mod.ts tests/ 2>/dev/null || true
@@ -55,7 +55,7 @@ jobs:
           node-version: "20"
 
       - name: Install Playwright Chromium
-        run: npx playwright@1.58.2 install chromium
+        run: npx playwright@1.59.1 install chromium
 
       - name: Cache dependencies
         run: deno cache src/mod.ts tests/ 2>/dev/null || true
@@ -83,7 +83,7 @@ jobs:
           node-version: "20"
 
       - name: Install Playwright Chromium
-        run: npx playwright@1.58.2 install chromium
+        run: npx playwright@1.59.1 install chromium
 
       - name: Cache dependencies
         run: deno cache src/mod.ts tests/
@@ -114,7 +114,7 @@ jobs:
         run: bun install
 
       - name: Install Playwright Chromium
-        run: npx playwright@1.58.2 install chromium
+        run: npx playwright@1.59.1 install chromium
         timeout-minutes: 5
 
       - uses: denoland/setup-deno@v2
@@ -150,7 +150,7 @@ jobs:
         run: bun install
 
       - name: Install Playwright Chromium
-        run: npx playwright@1.58.2 install chromium
+        run: npx playwright@1.59.1 install chromium
         timeout-minutes: 5
 
       - uses: denoland/setup-deno@v2

@@ -133,6 +133,10 @@
     "launchTimedOutHint": "浏览器在 {seconds}s 后启动超时。可尝试 `dumpio: false` 或执行 `npx playwright install {engine}`。",
     "launchFailed": "{message}{hint}",
     "launchFixHint": "\n\n修复: 执行 `npx playwright install {engine}`（或 `npx playwright install` 安装所有浏览器）。",
+    "retryBundledTimeoutWithSystem": "[dreamer/test] Playwright 自带 Chromium 启动超时，已自动改用系统 Chrome/Chromium 再试一次。",
+    "launchFixHintTimeoutBundled": "\n\n说明: 浏览器进程已启动但 CDP 连接超时，常见于缓存损坏或与宿主机不兼容。可尝试：① 设置 `browserSource: \"system\"` 或环境变量 `DREAMER_TEST_BROWSER_SOURCE=system`；② 删除 Playwright 缓存目录后重装（如 macOS：`~/Library/Caches/ms-playwright`）；③ 检查安全软件是否拦截本地调试端口。",
+    "launchFixHintGeneric": "\n\n若持续失败，请尝试 `browserSource: \"system\"`、`npx playwright install {engine}`，或设置 `dumpio: true` 查看 Chromium 日志。",
+    "launchFixHintSslHandshake": "\n\n额外说明: 日志中出现 SSL handshake 时，常与系统代理、HTTPS 扫描/VPN、或证书替换软件有关。可尝试关闭 VPN/全局代理、`NO_PROXY=localhost,127.0.0.1`，或在无外网劫持的网络下重跑浏览器测试。",
     "moduleLoadTimeout": "模块加载超时: 未找到全局 \"{globalName}\" 或 testReady 未设置。入口: {entry}{details}",
     "moduleLoadTimeoutTestReady": "模块加载超时: testReady 未设置。入口: {entry}{details}"
   },

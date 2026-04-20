@@ -783,10 +783,10 @@ skipIf），测试覆盖率达到 100%。详细测试报告请查看
 
 ## 📋 变更日志
 
-**v1.1.3** (2026-04-07) — **修复**：Bun 下首个顶层 `describe` 延迟执行 `fn`
-后恢复 `currentSuite`，避免后续测试文件错误嵌套到第一个套件（e2e
-错乱与超时）。v1.1.2 另有完整浏览器缓存键与 `afterAll` 60s 超时。完整历史见
-[CHANGELOG.md](./CHANGELOG.md)。
+**v1.1.5** (2026-04-20) — **移除**：`test/scripts/` 临时 Playwright 探针及相关
+`deno task`。**变更**：不再输出 `[dreamer/test][debug]`；请用
+`DREAMER_TEST_BROWSER_DUMP_IO` / `dumpio`。**文档**：`tests/browser/README.md`
+补充 Deno 2.7.12 与 Playwright 说明。完整历史见 [CHANGELOG.md](./CHANGELOG.md)。
 
 ---
 

@@ -15,6 +15,7 @@ import {
   expect,
   it,
 } from "../../src/mod.ts";
+import { PLAYWRIGHT_BROWSER_IT_TIMEOUT_MS } from "./_timeouts.ts";
 
 /** 入口路径：相对 test 包根目录，执行 deno test 时 cwd 为 test/ */
 const entryPath = "tests/browser/fixtures/minimal-entry.ts";
@@ -23,7 +24,7 @@ const entryPath = "tests/browser/fixtures/minimal-entry.ts";
 const fullSuiteBrowserConfig = {
   sanitizeOps: false,
   sanitizeResources: false,
-  timeout: 60_000,
+  timeout: PLAYWRIGHT_BROWSER_IT_TIMEOUT_MS,
   browser: {
     enabled: true,
     headless: true,

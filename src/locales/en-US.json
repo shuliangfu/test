@@ -133,6 +133,10 @@
     "launchTimedOutHint": "Browser launch timed out after {seconds}s. Try `dumpio: false` or run `npx playwright install {engine}`.",
     "launchFailed": "{message}{hint}",
     "launchFixHint": "\n\nFix: Run `npx playwright install {engine}` (or `npx playwright install` for all browsers).",
+    "retryBundledTimeoutWithSystem": "[dreamer/test] Bundled Chromium launch timed out; retrying once with system Chrome/Chromium.",
+    "launchFixHintTimeoutBundled": "\n\nNote: The browser process started but CDP timed out (often a bad cache or host incompatibility). Try: ① `browserSource: \"system\"` or env `DREAMER_TEST_BROWSER_SOURCE=system`; ② delete the Playwright browser cache and reinstall (e.g. macOS `~/Library/Caches/ms-playwright`); ③ check security software blocking local debugging ports.",
+    "launchFixHintGeneric": "\n\nIf it keeps failing, try `browserSource: \"system\"`, `npx playwright install {engine}`, or `dumpio: true` for Chromium logs.",
+    "launchFixHintSslHandshake": "\n\nExtra: SSL handshake errors in logs often relate to proxies, HTTPS scanning/VPN, or TLS interception tools. Try disabling VPN/global proxy, set `NO_PROXY=localhost,127.0.0.1`, or rerun browser tests on a cleaner network.",
     "moduleLoadTimeout": "Module load timeout: cannot find global \"{globalName}\" or testReady not set. Entry file: {entry}{details}",
     "moduleLoadTimeoutTestReady": "Module load timeout: testReady not set. Entry file: {entry}{details}"
   },

@@ -8,6 +8,54 @@ and this project adheres to
 
 ---
 
+## [1.1.5] - 2026-04-20
+
+### Removed
+
+- **Ad-hoc `test/scripts/` Playwright utilities** (smoke/launch-debug helpers)
+  and the `deno task` entries that pointed at them. Use
+  `npx playwright install`, the built-in browser tests, and
+  `DREAMER_TEST_BROWSER_DUMP_IO` for diagnostics instead.
+
+### Changed
+
+- **No temporary `[dreamer/test][debug]` console output** in `browser-context`
+  or `test-runner`. Use `dumpio: true` or `DREAMER_TEST_BROWSER_DUMP_IO=1` for
+  Chromium stderr.
+
+### Fixed
+
+- **`package.json` version field** now matches `deno.json` (`1.1.5`).
+
+### Docs
+
+- **`tests/browser/README.md`**: notes Deno **2.7.12** Playwright regressions
+  and points to upstream issues; troubleshooting no longer references removed
+  scripts.
+
+---
+
+## [1.1.4] - 2026-04-11
+
+### Fixed
+
+- **Playwright launch race vs outer timeout**: The `Promise.race` around
+  `chromium.launch()` used a fixed 60s cap for bundled (`browserSource: "test"`)
+  Chromium while `launch({ timeout })` already allowed up to 90s (non-CI),
+  causing false "browser launch timed out" errors. The outer race now waits at
+  least `effectiveLaunchTimeout + 15s` (and 120s+ on CI).
+- **Non-CI launch timeout cap**: `effectiveLaunchTimeout` for non-CI was
+  `min(90s, protocolTimeout)` while the default `protocolTimeout` is 120s, so
+  Playwright still aborted at 90s (`Timeout 90000ms exceeded`) on slow first
+  launch. Non-CI now clamps `protocolTimeout` up to **180s** (CI still at least
+  120s) so cold starts can align with caller-configured waits.
+- **Google Chrome via `channel: 'chrome'`**: When the resolved system binary is
+  Google Chrome (macOS/Windows/Linux common paths), launch with Playwright’s
+  `channel: 'chrome'` instead of `executablePath` plus the full custom arg list,
+  reducing stuck CDP handshakes on some hosts.
+
+---
+
 ## [1.1.3] - 2026-04-07
 
 ### Fixed

@@ -809,10 +809,11 @@ Full test report: [TEST_REPORT.md](./docs/en-US/TEST_REPORT.md)
 
 ## 📋 Changelog
 
-**v1.1.3** (2026-04-07) — **Fixed**: Bun deferred first `describe` now restores
-`currentSuite` after `fn()`, so later test files do not nest under the first
-suite (broken e2e / timeouts). (See also v1.1.2: full browser cache key + 60s
-`afterAll` timeout.) Full history: [CHANGELOG.md](./docs/en-US/CHANGELOG.md).
+**v1.1.5** (2026-04-20) — **Removed**: `test/scripts/` Playwright probe
+utilities and related tasks. **Changed**: no temporary `[dreamer/test][debug]`
+logs; use `DREAMER_TEST_BROWSER_DUMP_IO` / `dumpio` for diagnostics. **Docs**:
+Deno 2.7.12 + Playwright note in `tests/browser/README.md`. Full history:
+[CHANGELOG.md](./docs/en-US/CHANGELOG.md).
 
 ---
 

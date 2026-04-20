@@ -11,6 +11,7 @@ import {
   expect,
   it,
 } from "../../src/mod.ts";
+import { PLAYWRIGHT_BROWSER_IT_TIMEOUT_MS } from "./_timeouts.ts";
 
 describe("浏览器测试上下文管理", () => {
   afterAll(async () => {
@@ -33,7 +34,7 @@ describe("浏览器测试上下文管理", () => {
 
       // 清理
       await ctx.close();
-    }, { timeout: 15000 });
+    }, { timeout: PLAYWRIGHT_BROWSER_IT_TIMEOUT_MS });
 
     it("应该支持 headless 模式", async () => {
       const ctx = await createBrowserContext({
@@ -47,7 +48,7 @@ describe("浏览器测试上下文管理", () => {
       expect(ctx.page).toBeDefined();
 
       await ctx.close();
-    });
+    }, { timeout: PLAYWRIGHT_BROWSER_IT_TIMEOUT_MS });
 
     it("应该支持自定义 Chrome 路径（如果提供）", async () => {
       // 注意：这个测试可能在某些环境中失败，因为 Chrome 路径可能不存在
@@ -67,7 +68,7 @@ describe("浏览器测试上下文管理", () => {
         // 如果路径不存在，应该抛出错误
         expect(error).toBeDefined();
       }
-    });
+    }, { timeout: 30_000 });
 
     it("应该支持自定义启动参数", async () => {
       const ctx = await createBrowserContext({
@@ -82,7 +83,7 @@ describe("浏览器测试上下文管理", () => {
       expect(ctx.page).toBeDefined();
 
       await ctx.close();
-    });
+    }, { timeout: PLAYWRIGHT_BROWSER_IT_TIMEOUT_MS });
 
     it("应该能够执行浏览器代码（evaluate）", async () => {
       const ctx = await createBrowserContext({
@@ -99,7 +100,7 @@ describe("浏览器测试上下文管理", () => {
       expect(result).toBe(2);
 
       await ctx.close();
-    }, { timeout: 30000 });
+    }, { timeout: PLAYWRIGHT_BROWSER_IT_TIMEOUT_MS });
 
     it("应该能够导航到 URL（goto）", async () => {
       const ctx = await createBrowserContext({
@@ -110,11 +111,11 @@ describe("浏览器测试上下文管理", () => {
       });
 
       await ctx.goto("about:blank");
-      const url = await ctx.evaluate(() => window.location.href);
+      const url = await ctx.evaluate(() => globalThis.location.href);
       expect(url).toBe("about:blank");
 
       await ctx.close();
-    }, { timeout: 15000 });
+    }, { timeout: PLAYWRIGHT_BROWSER_IT_TIMEOUT_MS });
 
     it("应该能够等待条件（waitFor）", async () => {
       const ctx = await createBrowserContext({
@@ -144,7 +145,7 @@ describe("浏览器测试上下文管理", () => {
       expect(condition).toBe(true);
 
       await ctx.close();
-    });
+    }, { timeout: PLAYWRIGHT_BROWSER_IT_TIMEOUT_MS });
 
     it("应该能够创建包含 entryPoint 的上下文", async () => {
       // 创建临时入口文件
@@ -175,7 +176,7 @@ describe("浏览器测试上下文管理", () => {
       expect(moduleValue).toBe("Hello, World!");
 
       await ctx.close();
-    }, { timeout: 15000 });
+    }, { timeout: PLAYWRIGHT_BROWSER_IT_TIMEOUT_MS });
 
     it("应该支持自定义 globalName", async () => {
       const entryFile = await makeTempFile({ suffix: ".js" });
@@ -199,7 +200,7 @@ describe("浏览器测试上下文管理", () => {
       expect(value).toBe("value");
 
       await ctx.close();
-    }, { timeout: 25000 });
+    }, { timeout: PLAYWRIGHT_BROWSER_IT_TIMEOUT_MS });
 
     it("应该支持自定义 bodyContent", async () => {
       const entryFile = await makeTempFile({ suffix: ".js" });
@@ -220,7 +221,7 @@ describe("浏览器测试上下文管理", () => {
       expect(hasCustom).toBe(true);
 
       await ctx.close();
-    }, { timeout: 15000 });
+    }, { timeout: PLAYWRIGHT_BROWSER_IT_TIMEOUT_MS });
 
     it("应该支持自定义 HTML 模板", async () => {
       const entryFile = await makeTempFile({ suffix: ".js" });
@@ -257,7 +258,7 @@ describe("浏览器测试上下文管理", () => {
       expect(title).toBe("Custom");
 
       await ctx.close();
-    }, { timeout: 15000 });
+    }, { timeout: PLAYWRIGHT_BROWSER_IT_TIMEOUT_MS });
 
     it("应该支持自定义 moduleLoadTimeout", async () => {
       const entryFile = await makeTempFile({ suffix: ".js" });
@@ -280,7 +281,7 @@ describe("浏览器测试上下文管理", () => {
       expect(value).toBe("object");
 
       await ctx.close();
-    }, { timeout: 15000 });
+    }, { timeout: PLAYWRIGHT_BROWSER_IT_TIMEOUT_MS });
 
     it("应该能够正确关闭浏览器", async () => {
       const ctx = await createBrowserContext({
@@ -301,6 +302,7 @@ describe("浏览器测试上下文管理", () => {
         // 预期的错误：浏览器已关闭
       }
     }, {
+      timeout: PLAYWRIGHT_BROWSER_IT_TIMEOUT_MS,
       sanitizeOps: false,
       sanitizeResources: false,
     });

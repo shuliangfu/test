@@ -50,6 +50,10 @@ export interface BrowserTestConfig {
    * - 未传：先尝试系统 Chrome（findChromePath），没有则用 Playwright 对应引擎（需已安装）
    * - "system"：仅用系统 Chrome/Chromium；若未找到则抛错
    * - "test"：仅用 Playwright 自带浏览器（不尝试系统浏览器）
+   *
+   * 可用环境变量 `DREAMER_TEST_BROWSER_SOURCE=system|test` 覆盖（便于本地一键切换）。
+   * 当 `browserSource` 为 `test` 且自带 Chromium 连接超时、但本机已安装 Chrome 时，
+   * 运行器会自动改用系统 Chrome 再试一次。
    */
   browserSource?: "system" | "test";
   /**
@@ -62,6 +66,7 @@ export interface BrowserTestConfig {
   args?: string[];
   /**
    * 为 true 时将 Chromium 的 stdio 设为 pipe，并打印 "[dreamer/test] Launching Chromium (...)" 等调试行（Playwright）。
+   * 也可用环境变量 `DREAMER_TEST_BROWSER_DUMP_IO=1` 在不改代码时强制开启同等行为。
    */
   dumpio?: boolean;
   /**

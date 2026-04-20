@@ -881,31 +881,33 @@ export function test(
 
         // 检查是否启用浏览器测试（支持从 describe 的 suite.options 继承）
         let browserCtx: BrowserContext | undefined;
-        let browserSetupError: Error | undefined;
-        if (hasBrowserTest(options, suite.options)) {
-          const browserConfig = getBrowserConfig(options, suite.options);
-          if (browserConfig && browserConfig.enabled) {
-            const suitePath = getFullSuiteName(suite);
-            try {
-              await setupBrowserTest(browserConfig, testContext, suitePath);
-              browserCtx = (testContext as TestContext & {
-                _browserContext?: BrowserContext;
-              })
-                ._browserContext;
-              // 同步 sanitize 选项到 Deno.TestContext
-              t.sanitizeOps = false;
-              t.sanitizeResources = false;
-            } catch (error) {
-              browserSetupError = error instanceof Error
-                ? error
-                : new Error(String(error));
-              testContext.browserSetupError = browserSetupError;
+
+        /**
+         * 浏览器初始化与用户断言在同一异步流程内，并与 `options.timeout` 一并赛跑；
+         * 否则 setup 可占满 Playwright 的 120s，而 `fn` 侧 15s 超时先触发，表现为「假卡住」。
+         */
+        const runBrowserTestBody = async (): Promise<void> => {
+          if (hasBrowserTest(options, suite.options)) {
+            const browserConfig = getBrowserConfig(options, suite.options);
+            if (browserConfig && browserConfig.enabled) {
+              const suitePath = getFullSuiteName(suite);
+              try {
+                await setupBrowserTest(browserConfig, testContext, suitePath);
+                browserCtx = (testContext as TestContext & {
+                  _browserContext?: BrowserContext;
+                })
+                  ._browserContext;
+                t.sanitizeOps = false;
+                t.sanitizeResources = false;
+              } catch (error) {
+                const browserSetupError = error instanceof Error
+                  ? error
+                  : new Error(String(error));
+                testContext.browserSetupError = browserSetupError;
+              }
             }
           }
-        }
 
-        try {
-          // 若浏览器初始化失败，按 onSetupError 决定：默认 'throw'；'pass' 则继续并由测试读取 browserSetupError
           const browserSetupErr = testContext.browserSetupError;
           if (browserSetupErr) {
             const cfg = getBrowserConfig(options, suite.options);
@@ -913,10 +915,20 @@ export function test(
               throw browserSetupErr;
             }
           }
-          // 执行测试函数，如果函数内部修改了 sanitizeOps 或 sanitizeResources，
-          // 需要同步到 Deno.TestContext
-          // Deno 的 timeout 在异步/浏览器场景下不可靠，在运行器内用 Promise.race 强制到点失败
+
+          await fn(testContext);
+
+          if (testContext.sanitizeOps !== undefined) {
+            t.sanitizeOps = testContext.sanitizeOps;
+          }
+          if (testContext.sanitizeResources !== undefined) {
+            t.sanitizeResources = testContext.sanitizeResources;
+          }
+        };
+
+        try {
           try {
+            // Deno 的 timeout 在异步/浏览器场景下不可靠，在运行器内用 Promise.race 强制到点失败
             if (options?.timeout) {
               let timeoutId: ReturnType<typeof setTimeout> | undefined;
               const timeoutPromise = new Promise<never>((_, reject) => {
@@ -937,21 +949,14 @@ export function test(
               });
               try {
                 await Promise.race([
-                  Promise.resolve(fn(testContext)),
+                  runBrowserTestBody(),
                   timeoutPromise,
                 ]);
               } finally {
                 if (timeoutId != null) clearTimeout(timeoutId);
               }
             } else {
-              await fn(testContext);
-            }
-            // 同步测试上下文中的 sanitize 选项到 Deno.TestContext
-            if (testContext.sanitizeOps !== undefined) {
-              t.sanitizeOps = testContext.sanitizeOps;
-            }
-            if (testContext.sanitizeResources !== undefined) {
-              t.sanitizeResources = testContext.sanitizeResources;
+              await runBrowserTestBody();
             }
           } catch (error) {
             const filePart = t.origin
@@ -1074,30 +1079,34 @@ export function test(
 
             // 检查是否启用浏览器测试（支持从 describe 的 suite.options 继承）
             let browserCtx: BrowserContext | undefined;
-            let browserSetupError: Error | undefined;
-            if (hasBrowserTest(options, suite.options)) {
-              const browserConfig = getBrowserConfig(options, suite.options);
-              if (browserConfig && browserConfig.enabled) {
-                const suitePath = getFullSuiteName(suite);
-                try {
-                  await setupBrowserTest(browserConfig, testContext, suitePath);
-                  browserCtx = (testContext as TestContext & {
-                    _browserContext?: BrowserContext;
-                  })
-                    ._browserContext;
-                  // 浏览器测试需要禁用资源清理检查
-                  testContext.sanitizeOps = false;
-                  testContext.sanitizeResources = false;
-                } catch (error) {
-                  browserSetupError = error instanceof Error
-                    ? error
-                    : new Error(String(error));
-                  testContext.browserSetupError = browserSetupError;
+
+            /** 与 Deno 路径一致：`setupBrowserTest` 与用户 `fn` 一并参与超时赛跑 */
+            const runBrowserTestBody = async (): Promise<void> => {
+              if (hasBrowserTest(options, suite.options)) {
+                const browserConfig = getBrowserConfig(options, suite.options);
+                if (browserConfig && browserConfig.enabled) {
+                  const suitePath = getFullSuiteName(suite);
+                  try {
+                    await setupBrowserTest(
+                      browserConfig,
+                      testContext,
+                      suitePath,
+                    );
+                    browserCtx = (testContext as TestContext & {
+                      _browserContext?: BrowserContext;
+                    })
+                      ._browserContext;
+                    testContext.sanitizeOps = false;
+                    testContext.sanitizeResources = false;
+                  } catch (error) {
+                    const browserSetupError = error instanceof Error
+                      ? error
+                      : new Error(String(error));
+                    testContext.browserSetupError = browserSetupError;
+                  }
                 }
               }
-            }
 
-            try {
               const browserSetupErr = testContext.browserSetupError;
               if (browserSetupErr) {
                 const cfg = getBrowserConfig(options, suite.options);
@@ -1105,7 +1114,11 @@ export function test(
                   throw browserSetupErr;
                 }
               }
-              // 与 Deno 一致：在运行器内用 Promise.race 强制超时，避免运行时不可靠
+
+              await fn(testContext);
+            };
+
+            try {
               if (options?.timeout) {
                 let timeoutId: ReturnType<typeof setTimeout> | undefined;
                 const timeoutPromise = new Promise<never>((_, reject) => {
@@ -1125,14 +1138,14 @@ export function test(
                 });
                 try {
                   await Promise.race([
-                    Promise.resolve(fn(testContext)),
+                    runBrowserTestBody(),
                     timeoutPromise,
                   ]);
                 } finally {
                   if (timeoutId != null) clearTimeout(timeoutId);
                 }
               } else {
-                await fn(testContext);
+                await runBrowserTestBody();
               }
               // 测试通过，统计数量
               testStats.passed++;

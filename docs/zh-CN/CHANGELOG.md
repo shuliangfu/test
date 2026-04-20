@@ -7,6 +7,51 @@
 
 ---
 
+## [1.1.5] - 2026-04-20
+
+### 移除
+
+- **`test/scripts/`** 下的临时 Playwright 探针脚本及对应的 `deno task`。请改用
+  `npx playwright install`、内置浏览器测试，以及环境变量
+  `DREAMER_TEST_BROWSER_DUMP_IO` 做排查。
+
+### 变更
+
+- **`browser-context` / `test-runner`** 不再输出临时 `[dreamer/test][debug]`
+  控制台日志；需要 Chromium 子进程日志时请使用 `dumpio: true` 或
+  `DREAMER_TEST_BROWSER_DUMP_IO=1`。
+
+### 修复
+
+- **`package.json` 的 `version`** 已与 `deno.json` 对齐（`1.1.5`）。
+
+### 文档
+
+- **`tests/browser/README.md`**：补充 Deno **2.7.12** 与 Playwright
+  的已知问题说明并链至上游 issue；移除对已删脚本的引用。
+
+---
+
+## [1.1.4] - 2026-04-11
+
+### 修复
+
+- **Playwright 启动竞态与外层超时**：包裹 `chromium.launch()` 的 `Promise.race`
+  对 bundled（`browserSource: "test"`）Chromium 曾固定 60s，而
+  `launch({ timeout })` 在非 CI 下已允许最长
+  90s，导致误报「浏览器启动超时」。外层 race 现至少等待
+  `effectiveLaunchTimeout + 15s`（CI 下不少于 120s）。
+- **非 CI 下 launch 上限与 protocolTimeout 不一致**：`effectiveLaunchTimeout`
+  曾为 `min(90s, protocolTimeout)`，而默认 `protocolTimeout` 为 120s，Playwright
+  仍会在 90s 报 `Timeout 90000ms exceeded`。非 CI 现改为将 `protocolTimeout`
+  上限放宽至 **180s** （CI 仍至少 120s），便于与调用方配置一致。
+- **Google Chrome 使用 `channel: 'chrome'`**：当解析到的系统二进制为 Google
+  Chrome （常见 macOS/Windows/Linux 路径）时，改用 Playwright 的
+  `channel: 'chrome'` 启动， 不再仅依赖 `executablePath` +
+  大包参数，减轻部分环境下 CDP 握手卡死。
+
+---
+
 ## [1.1.3] - 2026-04-07
 
 ### 修复

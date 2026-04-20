@@ -13,6 +13,7 @@ import {
   expect,
   it,
 } from "../../src/mod.ts";
+import { PLAYWRIGHT_BROWSER_IT_TIMEOUT_MS } from "./_timeouts.ts";
 
 describe("测试运行器浏览器集成", () => {
   afterAll(async () => {
@@ -31,7 +32,7 @@ describe("测试运行器浏览器集成", () => {
         expect(typeof t.browser?.waitFor).toBe("function");
       }
     }, {
-      timeout: 15000,
+      timeout: PLAYWRIGHT_BROWSER_IT_TIMEOUT_MS,
       browser: {
         enabled: true,
         headless: true,
@@ -52,7 +53,7 @@ describe("测试运行器浏览器集成", () => {
         expect(t.browser).toBeDefined();
       }
     }, {
-      timeout: 15000,
+      timeout: PLAYWRIGHT_BROWSER_IT_TIMEOUT_MS,
       browser: {
         enabled: true,
         headless: true,
@@ -68,7 +69,7 @@ describe("测试运行器浏览器集成", () => {
         expect(t.browser).toBeDefined();
       }
     }, {
-      timeout: 15000,
+      timeout: PLAYWRIGHT_BROWSER_IT_TIMEOUT_MS,
       browser: {
         enabled: true,
         headless: true,
@@ -83,7 +84,7 @@ describe("测试运行器浏览器集成", () => {
         expect(t.browser).toBeUndefined();
       }
     }, {
-      timeout: 15000,
+      timeout: 15_000,
       browser: {
         enabled: false,
       },
@@ -98,7 +99,7 @@ describe("测试运行器浏览器集成", () => {
         firstBrowser = t.browser.browser;
       }
     }, {
-      timeout: 15000,
+      timeout: PLAYWRIGHT_BROWSER_IT_TIMEOUT_MS,
       browser: {
         enabled: true,
         headless: true,
@@ -116,7 +117,7 @@ describe("测试运行器浏览器集成", () => {
         }
       }
     }, {
-      timeout: 15000,
+      timeout: PLAYWRIGHT_BROWSER_IT_TIMEOUT_MS,
       browser: {
         enabled: true,
         headless: true,
@@ -132,7 +133,7 @@ describe("测试运行器浏览器集成", () => {
         expect(t.browser?.page).toBeDefined();
       }
     }, {
-      timeout: 15000,
+      timeout: PLAYWRIGHT_BROWSER_IT_TIMEOUT_MS,
       browser: {
         enabled: true,
         headless: true,
@@ -151,7 +152,7 @@ describe("测试运行器浏览器集成", () => {
         expect(t.browser?.page).toBeDefined();
       }
     }, {
-      timeout: 15000,
+      timeout: PLAYWRIGHT_BROWSER_IT_TIMEOUT_MS,
       browser: {
         enabled: true,
         headless: true,
@@ -175,7 +176,7 @@ describe("测试运行器浏览器集成", () => {
         expect(t.browser).toBeDefined();
       }
     }, {
-      timeout: 15000,
+      timeout: PLAYWRIGHT_BROWSER_IT_TIMEOUT_MS,
       browser: {
         enabled: true,
         headless: true,
@@ -195,7 +196,7 @@ describe("测试运行器浏览器集成", () => {
         expect(t.browser).toBeDefined();
       }
     }, {
-      timeout: 15000,
+      timeout: PLAYWRIGHT_BROWSER_IT_TIMEOUT_MS,
       browser: {
         enabled: true,
         headless: true,
@@ -214,7 +215,7 @@ describe("测试运行器浏览器集成", () => {
         expect(result).toBe(4);
       }
     }, {
-      timeout: 30000, // 浏览器启动 + evaluate 在 CI/高负载下可能超过 15s，放宽到 30s
+      timeout: PLAYWRIGHT_BROWSER_IT_TIMEOUT_MS, // 须覆盖 Playwright launch，见 ./_timeouts.ts
       browser: {
         enabled: true,
         headless: true,
@@ -233,7 +234,7 @@ describe("测试运行器浏览器集成", () => {
         expect(url).toBe("about:blank");
       }
     }, {
-      timeout: 30000,
+      timeout: PLAYWRIGHT_BROWSER_IT_TIMEOUT_MS,
       browser: {
         enabled: true,
         headless: true,
@@ -263,7 +264,7 @@ describe("测试运行器浏览器集成", () => {
         expect(condition).toBe(true);
       }
     }, {
-      timeout: 30000,
+      timeout: PLAYWRIGHT_BROWSER_IT_TIMEOUT_MS,
       browser: {
         enabled: true,
         headless: true,
@@ -281,7 +282,7 @@ describe("测试运行器浏览器集成", () => {
           expect(t.browser).toBeDefined();
         }
       }, {
-        timeout: 15000,
+        timeout: PLAYWRIGHT_BROWSER_IT_TIMEOUT_MS,
         browser: {
           enabled: true,
           headless: true,
@@ -300,7 +301,7 @@ describe("测试运行器浏览器集成", () => {
             await new Promise((resolve) => setTimeout(resolve, 500));
           }
         }, {
-          timeout: 15000,
+          timeout: PLAYWRIGHT_BROWSER_IT_TIMEOUT_MS,
           browser: {
             enabled: true,
             headless: true,
@@ -322,7 +323,7 @@ describe("测试运行器浏览器集成", () => {
         expect(browserId).toBeDefined();
       }
     }, {
-      timeout: 15000,
+      timeout: PLAYWRIGHT_BROWSER_IT_TIMEOUT_MS,
       browser: {
         enabled: true,
         headless: true,
@@ -355,7 +356,7 @@ describe("测试运行器浏览器集成", () => {
         expect(t.browser).toBeUndefined();
       }
     }, {
-      timeout: 15000,
+      timeout: PLAYWRIGHT_BROWSER_IT_TIMEOUT_MS,
       browser: {
         enabled: true,
         headless: true,

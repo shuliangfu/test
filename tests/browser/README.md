@@ -4,10 +4,17 @@ Tests that use `@dreamer/test` browser integration (Playwright + Chromium).
 
 ## How to run
 
-- **Install Chromium** (first time or if you see "Executable doesn't exist"):
+- **Install Chromium**（版本须与 `deno.json` 里 `npm:playwright@…` 一致，当前与
+  CI 对齐为 **1.59.x**）:
 
   ```bash
-  npx playwright install chromium
+  npx playwright@1.59.1 install chromium
+  ```
+
+  或使用项目任务（在 `test/` 目录）：
+
+  ```bash
+  deno task pw:install
   ```
 
 - **Recommended** (run browser tests sequentially to avoid multiple Chromium
@@ -37,6 +44,55 @@ Tests that use `@dreamer/test` browser integration (Playwright + Chromium).
 
 First run can be slow while Chromium is launched or downloaded.
 
+## CI 能通过、本机卡在 `launcher.launch`（升级 Playwright 仍无效）
+
+这说明**多半不是「版本号单独错了」**，而是 **本机环境与 GitHub Runner
+的差异**（macOS 终端、代理/证书、缓存、安全软件等）。Playwright 从 1.58.x 升到
+1.59.x 仍卡，符合这一点。
+
+**Deno 2.7.12 已知与 Playwright 冲突**（`browserType.launch` 超时，见
+[deno#33229](https://github.com/denoland/deno/issues/33229) 等；修复在
+[deno#33208](https://github.com/denoland/deno/pull/33208)）。若本机浏览器测试一直超时、换
+**Deno 2.7.11/2.7.10** 或已含该修复的版本后即正常，属于运行时问题，不必改
+`@dreamer/test` 业务代码。
+
+建议按顺序试：
+
+1. **与 CI 使用同一套 Chromium 安装命令**（避免 CLI 与 Deno 解析到的 npm
+   版本漂移）：
+
+   ```bash
+   cd test && deno task pw:install
+   ```
+
+2. **对照 CI 的超时与环境**：Runner 会带 `CI=true`。在本机模拟一条最小用例：
+
+   ```bash
+   cd test && deno task test:browser:ci-like
+   ```
+
+   （Windows 可在 PowerShell
+   里：`$env:CI='true'; deno test -A --no-check tests/browser/browser-context.test.ts --filter 应该创建浏览器上下文`）
+
+3. **强制走系统 Chrome**（绕过 Playwright 缓存里的自带 Chromium）：
+
+   ```bash
+   DREAMER_TEST_BROWSER_SOURCE=system deno test -A tests/browser/browser-context.test.ts --filter 应该创建浏览器上下文
+   ```
+
+4. **需要 Playwright 自身日志时**（终端里看 launch、CDP）：
+
+   ```bash
+   DEBUG=pw:api deno test -A tests/browser/browser-context.test.ts --filter 应该创建浏览器上下文
+   ```
+
+5. **不改测试代码即可打开 Chromium 子进程日志**：设置
+   `DREAMER_TEST_BROWSER_DUMP_IO=1` 后再跑浏览器测试（等价于在各处写
+   `dumpio: true`），便于确认是否为企业策略禁用 remote debugging 等。
+
+若 **只有本机卡、CI 全绿**，且第 3 步能过，则问题集中在 **自带 Chromium
+目录/本机对子进程**；可再清 `~/Library/Caches/ms-playwright` 后重跑第 1 步。
+
 ## 如何指定“用浏览器跑测试”
 
 在 `describe` 的第二个参数里启用并配置 `browser` 即可：
@@ -64,7 +120,7 @@ describe("我的浏览器测试", {
 ## 如何指定浏览器引擎（browserType）
 
 - **chromium**（默认）：Playwright Chromium，先执行
-  `npx playwright install chromium`
+  `npx playwright@1.59.1 install chromium`（或与 `deno.json` 中版本一致）
 - **firefox**：Playwright Firefox，先执行 `npx playwright install firefox`
 - **webkit**：Playwright WebKit，先执行 `npx playwright install webkit`
 

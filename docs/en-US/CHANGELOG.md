@@ -8,6 +8,17 @@ and this project adheres to
 
 ---
 
+## [1.1.6] - 2026-04-20
+
+### Changed
+
+- **Dependency**: `@dreamer/esbuild` raised to `^1.1.7` (JSR and npm). Aligns
+  browser bundling with esbuild’s fix where **Bun** + `platform: "node"` uses
+  the esbuild pipeline instead of a subprocess `bun build`, avoiding flaky
+  failures on Linux CI with temporary entry paths.
+
+---
+
 ## [1.1.5] - 2026-04-20
 
 ### Removed

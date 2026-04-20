@@ -783,10 +783,9 @@ skipIf），测试覆盖率达到 100%。详细测试报告请查看
 
 ## 📋 变更日志
 
-**v1.1.5** (2026-04-20) — **移除**：`test/scripts/` 临时 Playwright 探针及相关
-`deno task`。**变更**：不再输出 `[dreamer/test][debug]`；请用
-`DREAMER_TEST_BROWSER_DUMP_IO` / `dumpio`。**文档**：`tests/browser/README.md`
-补充 Deno 2.7.12 与 Playwright 说明。完整历史见 [CHANGELOG.md](./CHANGELOG.md)。
+**v1.1.6**（2026-04-20）— **变更**：`@dreamer/esbuild` 升至 `^1.1.7`，Bun 下
+`platform: "node"` 的浏览器相关打包在 Linux CI 上更稳定。完整历史见
+[CHANGELOG.md](./CHANGELOG.md)。
 
 ---
 

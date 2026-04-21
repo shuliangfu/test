@@ -1,6 +1,6 @@
 {
   "name": "@dreamer/test",
-  "version": "1.1.7",
+  "version": "1.1.8",
   "description": "A testing utility library compatible with Deno and Bun: mock tools, assertion enhancements, test utilities, and browser test integration.",
   "license": "Apache-2.0",
   "private": true,
@@ -16,7 +16,7 @@
     "test": "bun test tests/"
   },
   "dependencies": {
-    "@dreamer/esbuild": "npm:@jsr/dreamer__esbuild@^1.1.7",
+    "@dreamer/esbuild": "npm:@jsr/dreamer__esbuild@^1.1.9",
     "@dreamer/i18n": "npm:@jsr/dreamer__i18n@1.0.1",
     "@dreamer/logger": "npm:@jsr/dreamer__logger@^1.0.3",
     "@dreamer/runtime-adapter": "npm:@jsr/dreamer__runtime-adapter@^1.0.18",

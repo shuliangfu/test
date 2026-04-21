@@ -783,10 +783,9 @@ skipIf），测试覆盖率达到 100%。详细测试报告请查看
 
 ## 📋 变更日志
 
-**v1.1.7**（2026-04-20）— **修复**：为 Playwright `page.evaluate`
-增加宿主侧超时（与 `protocolTimeout` 对齐）并设置页面默认超时，避免 CDP
-卡住导致浏览器测试长时间挂起（部分 macOS CI）。**新增**：i18n
-`browser.evaluateHostTimeout`。完整历史见 [CHANGELOG.md](./CHANGELOG.md)。
+**v1.1.8**（2026-04-21）— **变更**：将 `@dreamer/esbuild` 提升至
+`^1.1.9`，使嵌套浏览器打包与 PostCSS / cssnano peer 一致。完整历史见
+[CHANGELOG.md](./CHANGELOG.md)。
 
 ---
 

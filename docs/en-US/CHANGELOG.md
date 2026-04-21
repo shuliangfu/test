@@ -8,6 +8,16 @@ and this project adheres to
 
 ---
 
+## [1.1.8] - 2026-04-21
+
+### Changed
+
+- **Dependencies**: raise `@dreamer/esbuild` to `^1.1.9` in `deno.json` and
+  `package.json` so nested browser bundling aligns with updated PostCSS /
+  cssnano peer expectations.
+
+---
+
 ## [1.1.7] - 2026-04-20
 
 ### Added

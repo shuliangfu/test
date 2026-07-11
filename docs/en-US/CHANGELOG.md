@@ -8,6 +8,26 @@ and this project adheres to
 
 ---
 
+## [1.1.9] - 2026-07-11
+
+### Fixed
+
+- **`closeBrowserWithTimeout` SIGKILL on timeout**: When `browser.close()` hangs
+  (common on CI headless), the function now forcefully kills the Chrome process
+  via `browser._process.kill("SIGKILL")` before rejecting. This prevents zombie
+  processes from interfering with subsequent test suites and eliminates "killed
+  N dangling processes" cascading failures.
+- **`context.goto` host-side timeout**: Wrapped `page.goto` with
+  `evaluateWithHostTimeout` for host-side `Promise.race` protection. Playwright
+  `page.goto` may not honor internal timeouts when Chrome hangs; this ensures
+  goto operations never block indefinitely.
+- **`context.waitFor` host-side timeout**: Wrapped `page.waitForFunction` with
+  `evaluateWithHostTimeout` for host-side `Promise.race` protection. Similar to
+  goto, `waitForFunction` can hang when Chrome stalls; this adds a reliable
+  upper bound matching the requested timeout.
+
+---
+
 ## [1.1.8] - 2026-04-21
 
 ### Changed

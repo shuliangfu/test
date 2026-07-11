@@ -7,6 +7,24 @@
 
 ---
 
+## [1.1.9] - 2026-07-11
+
+### 修复
+
+- **`closeBrowserWithTimeout` 超时后 SIGKILL**：当 `browser.close()` 在 CI
+  headless 下挂起时，函数现在在 reject 前通过 `browser._process.kill("SIGKILL")`
+  强制终止 Chrome 进程。防止僵尸进程干扰后续测试套件，消除「killed N dangling
+  processes」连锁失败。
+- **`context.goto` 宿主侧超时**：对 `page.goto` 增加 `evaluateWithHostTimeout`
+  宿主侧 `Promise.race` 保护。Playwright 的 `page.goto` 在 Chrome 挂起时未必遵守
+  内部超时，此修复确保导航操作不会无限阻塞。
+- **`context.waitFor` 宿主侧超时**：对 `page.waitForFunction` 增加
+  `evaluateWithHostTimeout` 宿主侧 `Promise.race` 保护。与 goto 类似，
+  `waitForFunction` 在 Chrome 卡死时可能挂起，此修复为其增加与请求超时匹配的可靠
+  上限。
+
+---
+
 ## [1.1.8] - 2026-04-21
 
 ### 变更

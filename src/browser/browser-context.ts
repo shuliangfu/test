@@ -49,8 +49,13 @@ function shouldLaunchGoogleChromeViaChannel(
 }
 
 /**
- * 关闭浏览器：先正常 close，超时则拒绝，避免无限等待
- * Playwright 的 Browser 无 process()，不做进程 kill
+ * 关闭浏览器：先正常 close，超时则强制 kill Chrome 进程再拒绝。
+ *
+ * 【Why】Playwright 的 browser.close() 在 Chrome 挂起时不返回也不超时。
+ *   若仅 reject 而不杀进程，Chrome 僵尸进程会占用 CDP 端口，导致后续套件
+ *   启动新浏览器时出现 WebSocket 握手失败洪流，连锁误杀所有后续测试。
+ *   Playwright Browser 内部持有 _process（ChildProcess），可用 SIGKILL 强杀。
+ * 【Invariant】仅在 close 超时后 kill；正常 close 成功时不触发。
  * @param browser - Playwright Browser 实例
  */
 async function closeBrowserWithTimeout(
@@ -63,7 +68,24 @@ async function closeBrowserWithTimeout(
       BROWSER_CLOSE_TIMEOUT_MS,
     )
   );
-  await Promise.race([closePromise, timeoutPromise]);
+  try {
+    await Promise.race([closePromise, timeoutPromise]);
+  } catch (err) {
+    /** 超时后忽略 close 后续的 rejection，避免未处理的 Promise */
+    void closePromise.catch(() => {});
+    /** 强制 kill Chrome 进程，防止僵尸进程干扰后续套件 */
+    try {
+      const proc = (browser as Record<string, unknown>)?._process as
+        | { kill(signal?: string): void }
+        | undefined;
+      if (proc && typeof proc.kill === "function") {
+        proc.kill("SIGKILL");
+      }
+    } catch {
+      // ignore — 尽力而为
+    }
+    throw err;
+  }
 }
 
 /**

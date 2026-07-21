@@ -7,6 +7,32 @@
 
 ---
 
+## [1.1.10] - 2026-07-21
+
+### 修复
+
+- **Bun 钩子改为原生 API**：`beforeAll` / `afterAll` / `beforeEach` /
+  `afterEach` 走 `bun:test`，不再伪装成 `test("…(afterAll)")`，避免 teardown
+  中途执行杀掉 dev server。
+- **同步 Bun describe 嵌套**：通过 `import.meta.require` 加载 `bun:test`
+  并用原生 `describe` 嵌套，避免异步 import 导致多文件 suite 栈串套。
+- **Bun 钩子默认超时 60s**：避免默认约 5s 导致 beforeAll（起服）/ afterEach
+  （关浏览器）超时并触发 `killed dangling processes` 连锁失败。
+- **`cleanupAllBrowsers` 不再清空 `beforeAllExecutedMap`**：afterEach 清空会导致
+  beforeAll 重复执行、端口堆积。
+- **尊重 `reuseBrowser: false`**：禁用复用时不再从缓存取 Playwright 实例。
+- **Bun 上只读 `Error.message`**：为失败追加文件路径时不再二次抛 TypeError。
+- **短 `options.timeout`**：宿主侧 race 不再对小超时减 5s（如 200ms 单测）。
+- **`closeBrowserWithTimeout`**：挂起并 SIGKILL 后不再向上抛，避免 afterEach /
+  afterAll 钩子失败拖垮套件。
+
+### 变更
+
+- Bun 用例体内不再手动重跑套件钩子（由原生钩子负责生命周期）；Deno 路径不变
+  （beforeAll Map + afterAll Deno.test）。
+
+---
+
 ## [1.1.9] - 2026-07-11
 
 ### 修复

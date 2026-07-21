@@ -783,8 +783,8 @@ skipIf），测试覆盖率达到 100%。详细测试报告请查看
 
 ## 📋 变更日志
 
-**v1.1.8**（2026-04-21）— **变更**：将 `@dreamer/esbuild` 提升至
-`^1.1.9`，使嵌套浏览器打包与 PostCSS / cssnano peer 一致。完整历史见
+**v1.1.10**（2026-07-21）— **修复**：Bun 原生钩子与同步 `describe` 嵌套、钩子
+60s 超时、`reuseBrowser: false`、错误信息与浏览器关闭清理更安全。完整历史见
 [CHANGELOG.md](./CHANGELOG.md)。
 
 ---

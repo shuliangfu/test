@@ -54,11 +54,15 @@ const suiteBrowserCache = new Map<string, BrowserContext>();
 const beforeAllExecutedMap = new Map<string, boolean>();
 
 /**
- * Bun 将 `afterAll` 注册为普通 `test()`，默认超时约 5s；含 Socket.IO / Playwright 关闭时
- * `kill(9)` + `cleanupAllBrowsers()` 易超过 5s，导致 `(afterAll)` 误报超时。
- * Deno 侧 `Deno.test` 同样传入，避免慢机/CI 上钩子超时。
+ * 套件钩子超时：Bun 原生 beforeAll/afterAll/beforeEach/afterEach **默认仅 5s**。
+ * e2e 的 beforeAll 起 dev server + 就绪等待、afterEach 关 Playwright、afterAll kill
+ * 进程树均可能 >5s，否则会出现 `a beforeEach/afterEach hook timed out` →
+ * `killed dangling processes` → SIGTERM 误杀 dev server → 后续 ConnectionRefused。
+ * Deno 的伪装 afterAll 用例也用此值。
  */
-const AFTER_ALL_HOOK_TIMEOUT_MS = 60_000;
+const HOOK_TIMEOUT_MS = 60_000;
+/** @deprecated 使用 HOOK_TIMEOUT_MS；保留别名避免漏改 */
+const AFTER_ALL_HOOK_TIMEOUT_MS = HOOK_TIMEOUT_MS;
 
 /**
  * Bun 环境下标记是否在 describe 块内（使用计数器支持嵌套）
@@ -66,7 +70,7 @@ const AFTER_ALL_HOOK_TIMEOUT_MS = 60_000;
 let describeDepth = 0;
 
 /**
- * Bun 下是否已在首个顶层 describe 中注册 cleanup describe（避免 setTimeout 在 test 执行时触发导致 "Cannot call describe() inside a test"）
+ * Bun 下是否已在当前进程注册过文件级 cleanup afterAll
  */
 let bunCleanupDescribeScheduled = false;
 
@@ -98,56 +102,128 @@ export function syncPendingHooksToCurrentSuite(): void {
   currentSuite.hooksOptions = pendingSuiteHooks.options;
 }
 
-/** 缓存 Bun test 函数，避免重复动态 import */
-let cachedBunTest: Promise<any> | null = null;
-/** 缓存 Bun describe/test 模块，用于在 describe 内注册 cleanup test，满足 Bun 要求「test() 必须在 describe() 内调用」 */
-let cachedBunTestModule: Promise<{ test: any; describe: any } | null> | null =
-  null;
+/**
+ * Bun 测试 API（同步）。
+ *
+ * 【Why 同步】旧实现用 `await import("bun:test")` 再注册 describe/test，导致：
+ * 1) 首个顶层 describe 异步展开，多文件加载时 suite 栈串套；
+ * 2) afterAll 被伪装成普通 `test("…(afterAll)")`，执行顺序不保证，e2e 会中途杀 dev server。
+ * 现用 `import.meta.require("bun:test")` 同步取 API，并走原生 beforeAll/afterAll/beforeEach/afterEach。
+ */
+type BunTestApi = {
+  test:
+    & ((
+      name: string,
+      fn: () => void | Promise<void>,
+      options?: { timeout?: number },
+    ) => void)
+    & {
+      skip?: (
+        name: string,
+        fn: () => void | Promise<void>,
+        options?: { timeout?: number },
+      ) => void;
+      only?: (
+        name: string,
+        fn: () => void | Promise<void>,
+        options?: { timeout?: number },
+      ) => void;
+    };
+  describe: (name: string, fn: () => void) => void;
+  beforeAll: (
+    fn: () => void | Promise<void>,
+    options?: { timeout?: number },
+  ) => void;
+  afterAll: (
+    fn: () => void | Promise<void>,
+    options?: { timeout?: number },
+  ) => void;
+  beforeEach: (
+    fn: () => void | Promise<void>,
+    options?: { timeout?: number },
+  ) => void;
+  afterEach: (
+    fn: () => void | Promise<void>,
+    options?: { timeout?: number },
+  ) => void;
+};
+
+/** undefined=未初始化；null=不可用 */
+let bunTestApiSync: BunTestApi | null | undefined;
 
 /**
- * 获取 Bun 的 test 函数（结果缓存，仅首次解析 bun:test）
+ * 同步获取 bun:test（仅 IS_BUN）。Deno 路径永不调用。
  */
-async function getBunTest(): Promise<any> {
-  if (!IS_BUN) {
-    return null;
+export function getBunTestApiSync(): BunTestApi | null {
+  if (!IS_BUN) return null;
+  if (bunTestApiSync !== undefined) return bunTestApiSync;
+  try {
+    const metaReq =
+      (import.meta as { require?: (id: string) => unknown }).require;
+    let mod: Partial<BunTestApi> | null = null;
+    if (metaReq) {
+      mod = metaReq("bun:test") as Partial<BunTestApi>;
+    } else {
+      const gRequire = (globalThis as { require?: (id: string) => unknown })
+        .require;
+      if (typeof gRequire === "function") {
+        mod = gRequire("bun:test") as Partial<BunTestApi>;
+      }
+    }
+    if (mod?.test && mod?.describe && mod.beforeAll && mod.afterAll) {
+      bunTestApiSync = {
+        test: mod.test as BunTestApi["test"],
+        describe: mod.describe,
+        beforeAll: mod.beforeAll,
+        afterAll: mod.afterAll,
+        beforeEach: mod.beforeEach!,
+        afterEach: mod.afterEach!,
+      };
+    } else {
+      bunTestApiSync = null;
+    }
+  } catch {
+    bunTestApiSync = null;
   }
-  if (cachedBunTest !== null) {
-    return await cachedBunTest;
-  }
-  cachedBunTest = (async () => {
-    const mod = await getBunTestModule();
-    return mod?.test ?? null;
-  })();
-  return cachedBunTest;
+  return bunTestApiSync;
 }
 
 /**
- * 获取 Bun 的 describe 与 test（用于在 describe 内注册 cleanup，避免 "Cannot call test() inside a test"）
+ * 在当前 Bun describe 作用域注册原生钩子（由 test-utils 的 beforeAll 等调用）。
+ * Deno 下为 no-op。
  */
-async function getBunTestModule(): Promise<
-  {
-    test: any;
-    describe: any;
-  } | null
-> {
-  if (!IS_BUN) {
-    return null;
-  }
-  if (cachedBunTestModule !== null) {
-    return await cachedBunTestModule;
-  }
-  cachedBunTestModule = (async () => {
-    try {
-      // @ts-ignore: bun:test 是 Bun 特有的模块
-      const mod = await import("bun:test" as string);
-      return mod?.test && mod?.describe
-        ? { test: mod.test, describe: mod.describe }
-        : null;
-    } catch {
-      return null;
+export function registerBunNativeHook(
+  kind: "beforeAll" | "afterAll" | "beforeEach" | "afterEach",
+  fn: (...args: never[]) => void | Promise<void>,
+  options?: { timeout?: number },
+): void {
+  if (!IS_BUN) return;
+  const bun = getBunTestApiSync();
+  if (!bun) return;
+  const hookOptions = options?.timeout != null
+    ? { timeout: options.timeout }
+    : undefined;
+  try {
+    // 所有钩子默认 HOOK_TIMEOUT_MS，避免 Bun 5s 默认误杀 e2e
+    const opts = hookOptions ?? { timeout: HOOK_TIMEOUT_MS };
+    if (kind === "beforeAll") {
+      bun.beforeAll(fn as () => void | Promise<void>, opts);
+    } else if (kind === "afterAll") {
+      bun.afterAll(fn as () => void | Promise<void>, opts);
+    } else if (kind === "beforeEach") {
+      bun.beforeEach(fn as () => void | Promise<void>, opts);
+    } else {
+      bun.afterEach(fn as () => void | Promise<void>, opts);
     }
-  })();
-  return cachedBunTestModule;
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    // 元测试在 it() 内调用 beforeAll 等：只保留 suite 状态，不抛
+    if (/inside a test/i.test(msg)) return;
+    logger.error(
+      $tr("runner.afterAllHookError", { error: String(err) }),
+    );
+    throw err;
+  }
 }
 
 /**
@@ -288,17 +364,28 @@ async function setupBrowserTest(
   // 「A > B」，B 与 A 会共用同一 Playwright 实例键，造成跨示例污染、goto 挂死直至外层超时，并触发 killed dangling processes。
   // 同一 describe 内各 it 的 suite 相同，完整路径仍一致，故套件内复用浏览器的行为不变。
   // executablePath 场景仍用完整 suitePath，避免与默认 Chromium 路径的用例错误复用。
+  //
+  // 【Invariant】reuseBrowser === false 时**不得**从 cache 取实例：否则 e2e Bun
+  // 配置的「每用例新浏览器」会静默失效，与已关闭页面/僵尸 Chromium 交叉污染。
   let browserCtx: BrowserContext | undefined;
   const shouldReuse = config.reuseBrowser !== false && Boolean(suitePath);
   const cacheKey = suitePath;
 
-  if (cacheKey) {
+  if (shouldReuse && cacheKey) {
     browserCtx = suiteBrowserCache.get(cacheKey);
   }
 
   // 如果缓存中没有或不应该复用，创建新的浏览器实例
   if (!browserCtx) {
     try {
+      // reuseBrowser=false：若 cache 里仍有旧实例（未走 afterEach 清），先关掉再新建
+      if (!shouldReuse && cacheKey) {
+        const stale = suiteBrowserCache.get(cacheKey);
+        if (stale) {
+          suiteBrowserCache.delete(cacheKey);
+          await stale.close().catch(() => {});
+        }
+      }
       browserCtx = await createBrowserContext(config);
 
       // 无论是否复用，都保存到缓存，以便在所有测试完成后统一清理
@@ -542,10 +629,15 @@ export function cleanupSuiteBrowser(suitePath: string): Promise<void> {
 /**
  * 清理所有浏览器实例
  * 在所有测试完成后调用，确保所有浏览器实例都被关闭。
- * 同时清空 beforeAll 执行标记，避免 watch/重复运行下 Map 无限增长。
+ *
+ * 【Why 不在此处 clear beforeAllExecutedMap】
+ * e2e 在 Bun 下会在 **afterEach** 调用本函数以关掉 Playwright（见 dweb
+ * `browser-render-utils`），若同时清空 beforeAll 标记，同一套件后续 it 会再次
+ * 执行 beforeAll → 再起一个 dev server，而旧进程仍占端口，导致
+ * 「Port N is in use, using N+1」堆积、浏览器/端口连锁失败。
+ * beforeAll 标记仅在进程退出信号路径中清空（见下方 SIGINT/SIGTERM）。
  */
 export async function cleanupAllBrowsers(): Promise<void> {
-  beforeAllExecutedMap.clear();
   const closePromises: Promise<void>[] = [];
   for (const [suitePath, browserCtx] of suiteBrowserCache.entries()) {
     suiteBrowserCache.delete(suitePath);
@@ -561,11 +653,20 @@ export async function cleanupAllBrowsers(): Promise<void> {
   await Promise.all(closePromises);
 }
 
+/**
+ * 重置 beforeAll 执行标记（watch / 进程退出用）。
+ * 勿在套件 afterEach 中调用。
+ */
+export function resetBeforeAllExecutedMap(): void {
+  beforeAllExecutedMap.clear();
+}
+
 // 使用 runtime-adapter 注册 SIGINT/SIGTERM：关闭所有浏览器后退出，与 browser-context 的 activeBrowsers 清理互补
 // 手动终止进程（Ctrl+C）时确保关闭打开的浏览器
 try {
   const handleSignalCleanup = () => {
     void cleanupAllBrowsers().then(() => {
+      resetBeforeAllExecutedMap();
       exit(130); // 130 = 被 SIGINT 终止
     });
   };
@@ -635,6 +736,71 @@ export function describe(
     );
   }
 
+  /**
+   * Bun：必须用原生 `describe` 嵌套，才能让原生 beforeAll/afterAll 作用域正确。
+   * 同步 require，避免旧版 async import 导致的多文件 suite 串套。
+   */
+  if (IS_BUN) {
+    const bun = getBunTestApiSync();
+    if (!bun?.describe) {
+      throw new Error($tr("runner.bunTestMustBeInDescribe", { name }));
+    }
+
+    const runSuiteBody = (): void => {
+      const suite: TestSuite = {
+        name,
+        fn,
+        tests: [],
+        suites: [],
+        parent: currentSuite,
+        beforeAll: currentSuite.beforeAll,
+        afterAll: currentSuite.afterAll,
+        beforeEach: currentSuite.beforeEach,
+        afterEach: currentSuite.afterEach,
+        options,
+      };
+      currentSuite.suites.push(suite);
+      suiteStack.push(currentSuite);
+      currentSuite = suite;
+      describeDepth++;
+      try {
+        fn();
+      } finally {
+        // Bun afterAll 已在 afterAll() 调用时注册为原生钩子，切勿再伪装成 test
+        clearPendingSuiteHooks();
+        currentSuite = suiteStack.pop() || rootSuite;
+        describeDepth--;
+      }
+    };
+
+    // 每个测试文件首次进入时注册文件级 afterAll，统一关浏览器
+    // （须在 describe 外、且非 it 内；失败则忽略）
+    if (!bunCleanupDescribeScheduled) {
+      bunCleanupDescribeScheduled = true;
+      try {
+        bun.afterAll(async () => {
+          await cleanupAllBrowsers();
+        }, { timeout: HOOK_TIMEOUT_MS });
+      } catch {
+        // 非 test 上下文或已在 it 内时忽略
+      }
+    }
+
+    // 元测试在 it() 内调用 describe 时原生 API 会抛错 → 仅执行回调
+    try {
+      bun.describe(name, runSuiteBody);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (/inside a test/i.test(msg)) {
+        runSuiteBody();
+        return;
+      }
+      throw err;
+    }
+    return;
+  }
+
+  // ---------- Deno / 其它 ----------
   const suite: TestSuite = {
     name,
     fn: fn,
@@ -654,104 +820,44 @@ export function describe(
   suiteStack.push(currentSuite);
   currentSuite = suite;
 
-  if (IS_BUN) describeDepth++;
-
   try {
-    // Bun：在首个顶层 describe 中先注册 cleanup describe 再执行用户 fn，避免 setTimeout 在 test 执行时触发导致 "Cannot call describe() inside a test"（Windows CI）
-    if (
-      IS_BUN &&
-      describeDepth === 1 &&
-      !bunCleanupDescribeScheduled
-    ) {
-      bunCleanupDescribeScheduled = true;
-      const parentSuite = currentSuite.parent ?? rootSuite;
-      void getBunTestModule().then((mod) => {
-        if (mod?.describe && mod?.test) {
-          mod.describe("\uFFFF@dreamer/test cleanup", () => {
-            mod.test("\uFFFF@dreamer/test cleanup browsers", async () => {
-              await cleanupAllBrowsers();
-            });
-          });
-        }
-        // 恢复当前 describe 上下文，再执行用户 fn，使内部 describe/test 挂到正确 suite
-        suiteStack.push(parentSuite);
-        currentSuite = suite;
-        if (IS_BUN) describeDepth = 1;
-        try {
-          fn();
-        } finally {
-          // 与同步路径中 try/finally 一致：fn 结束后必须 pop，否则 currentSuite 永远留在本套件，
-          // 后续**其它测试文件** load 时下一个顶层 describe 的 parent 会错挂到本套件下（Bun 多文件表现为
-          // 「preact-hybrid-flat > react-ssg-advanced」），beforeAll/端口/浏览器全乱并 60s 超时。
-          currentSuite = suiteStack.pop() || rootSuite;
-          if (IS_BUN) describeDepth--;
-        }
-      });
-      return;
-    }
     fn();
   } finally {
     const savedAfterAll = suite.afterAll;
     const parentAfterAll = suite.parent?.afterAll;
     currentSuite = suiteStack.pop() || rootSuite;
-    if (IS_BUN) describeDepth--;
 
     // 清空当前钩子，避免钩子被错误继承到其他套件
     clearPendingSuiteHooks();
 
-    // 如果有 afterAll 钩子，且这个套件定义了自己的 afterAll（不是从父套件继承的），
-    // 注册一个特殊的测试用例来执行它
-    // 这个测试用例会在所有其他测试完成后执行
-    if (savedAfterAll && savedAfterAll !== parentAfterAll) {
+    // Deno：afterAll 无原生钩子，注册为顺序执行的特殊用例（须排在同套件 it 之后）
+    if (
+      IS_DENO &&
+      savedAfterAll &&
+      savedAfterAll !== parentAfterAll
+    ) {
       const suiteFullName = getFullSuiteName(suite);
       const afterAllTestName = `${suiteFullName} (afterAll)`;
-
-      if (IS_DENO) {
-        // Deno 环境：注册一个特殊的测试用例来执行 afterAll
-        (globalThis as any).Deno.test({
-          name: afterAllTestName,
-          ignore: false,
-          parallel: false,
-          timeout: AFTER_ALL_HOOK_TIMEOUT_MS,
-          sanitizeOps: false, // 禁用操作清理检查，因为 afterAll 需要清理之前测试创建的资源
-          sanitizeResources: false, // 禁用资源清理检查，因为 afterAll 需要清理之前测试创建的资源
-          fn: async () => {
-            try {
-              await savedAfterAll();
-            } catch (error) {
-              logger.error(
-                $tr("runner.afterAllHookError", {
-                  error: String(error),
-                }),
-              );
-              throw error;
-            }
-          },
-        });
-      } else if (IS_BUN) {
-        // Bun 环境：注册一个特殊的测试用例来执行 afterAll
-        (async () => {
-          const bunTest = await getBunTest();
-          if (bunTest) {
-            bunTest(
-              afterAllTestName,
-              async () => {
-                try {
-                  await savedAfterAll();
-                } catch (error) {
-                  logger.error(
-                    $tr("runner.afterAllHookError", {
-                      error: String(error),
-                    }),
-                  );
-                  throw error;
-                }
-              },
-              { timeout: AFTER_ALL_HOOK_TIMEOUT_MS },
+      (globalThis as { Deno?: { test: (opts: unknown) => void } }).Deno?.test({
+        name: afterAllTestName,
+        ignore: false,
+        parallel: false,
+        timeout: AFTER_ALL_HOOK_TIMEOUT_MS,
+        sanitizeOps: false,
+        sanitizeResources: false,
+        fn: async () => {
+          try {
+            await savedAfterAll();
+          } catch (error) {
+            logger.error(
+              $tr("runner.afterAllHookError", {
+                error: String(error),
+              }),
             );
+            throw error;
           }
-        })();
-      }
+        },
+      });
     }
   }
 }
@@ -1008,192 +1114,119 @@ export function test(
     }
     (globalThis as any).Deno.test(testOptions);
   } else if (IS_BUN) {
-    // Bun 环境下，检查是否在 describe 块内
-    if (describeDepth > 0) {
-      // 在 describe 块内，直接注册测试
-      const fullName = getFullTestName(name);
-      const suite = currentSuite;
+    // Bun：须在 describe 内；钩子由原生 beforeAll/afterAll/beforeEach/afterEach 执行，此处不再手动跑
+    if (describeDepth <= 0) {
+      throw new Error($tr("runner.bunTestMustBeInDescribe", { name }));
+    }
+    const bun = getBunTestApiSync();
+    if (!bun?.test) {
+      throw new Error($tr("runner.bunTestMustBeInDescribe", { name }));
+    }
 
-      // 直接获取 Bun.test 函数并注册测试
-      // Bun 的 test() API 使用函数参数形式：test(name, fn, options?)
-      (async () => {
-        const bunTest = await getBunTest();
-        if (bunTest) {
-          const testFn = async () => {
-            // 收集所有父套件（从根到当前套件）
-            const allSuites = collectParentSuites(suite);
+    const fullName = getFullTestName(name);
+    const suite = currentSuite;
+    /** 嵌套 describe 下用短名，避免 "A > B > A > B > test" 重复前缀 */
+    const registerName = name;
 
-            // 执行所有父套件的 beforeAll（只执行一次，通过全局 Map 跟踪）
-            // 注意：只执行定义了自己的 beforeAll 的套件，跳过继承的套件
-            for (const parentSuite of allSuites) {
-              if (parentSuite.beforeAll) {
-                // 检查这个套件是否定义了自己的 beforeAll（不是从父套件继承的）
-                const parentBeforeAll = parentSuite.parent?.beforeAll;
-                const hasOwnBeforeAll =
-                  parentSuite.beforeAll !== parentBeforeAll;
+    const testFn = async () => {
+      const testContext = createTestContext(fullName);
+      const inherited = mergeInheritedSanitize(suite, options);
+      if (inherited.sanitizeOps !== undefined) {
+        testContext.sanitizeOps = inherited.sanitizeOps;
+      }
+      if (inherited.sanitizeResources !== undefined) {
+        testContext.sanitizeResources = inherited.sanitizeResources;
+      }
 
-                // 只执行定义了自己的 beforeAll 的套件
-                if (hasOwnBeforeAll) {
-                  // 使用套件的完整路径作为唯一标识符
-                  const suiteKey = getFullSuiteName(parentSuite);
-                  // 检查全局 Map，确保只执行一次
-                  const hasExecuted =
-                    beforeAllExecutedMap.get(suiteKey) === true;
-                  if (!hasExecuted) {
-                    await parentSuite.beforeAll();
-                    // 在全局 Map 中标记为已执行
-                    beforeAllExecutedMap.set(suiteKey, true);
-                  }
-                }
-              }
-            }
+      let browserCtx: BrowserContext | undefined;
+      let timedOut = false;
 
-            // 执行所有父套件的 beforeEach（从根到当前套件）
-            // Bun 环境下需要创建模拟的 TestContext
-            for (const parentSuite of allSuites) {
-              if (parentSuite.beforeEach) {
-                const hooksOpts = parentSuite.hooksOptions;
-                const mockContext = createTestContext(fullName);
-                if (hooksOpts) {
-                  if (hooksOpts.sanitizeOps !== undefined) {
-                    mockContext.sanitizeOps = hooksOpts.sanitizeOps;
-                  }
-                  if (hooksOpts.sanitizeResources !== undefined) {
-                    mockContext.sanitizeResources = hooksOpts.sanitizeResources;
-                  }
-                }
-                await parentSuite.beforeEach(mockContext);
-              }
-            }
-
-            const testContext = createTestContext(fullName);
-            // 应用套件选项
-            if (suite.options) {
-              if (suite.options.sanitizeOps !== undefined) {
-                testContext.sanitizeOps = suite.options.sanitizeOps;
-              }
-              if (suite.options.sanitizeResources !== undefined) {
-                testContext.sanitizeResources = suite.options.sanitizeResources;
-              }
-            }
-
-            // 检查是否启用浏览器测试（支持从 describe 的 suite.options 继承）
-            let browserCtx: BrowserContext | undefined;
-
-            /** 与 Deno 路径一致：`setupBrowserTest` 与用户 `fn` 一并参与超时赛跑 */
-            const runBrowserTestBody = async (): Promise<void> => {
-              if (hasBrowserTest(options, suite.options)) {
-                const browserConfig = getBrowserConfig(options, suite.options);
-                if (browserConfig && browserConfig.enabled) {
-                  const suitePath = getFullSuiteName(suite);
-                  try {
-                    await setupBrowserTest(
-                      browserConfig,
-                      testContext,
-                      suitePath,
-                    );
-                    browserCtx = (testContext as TestContext & {
-                      _browserContext?: BrowserContext;
-                    })
-                      ._browserContext;
-                    testContext.sanitizeOps = false;
-                    testContext.sanitizeResources = false;
-                  } catch (error) {
-                    const browserSetupError = error instanceof Error
-                      ? error
-                      : new Error(String(error));
-                    testContext.browserSetupError = browserSetupError;
-                  }
-                }
-              }
-
-              const browserSetupErr = testContext.browserSetupError;
-              if (browserSetupErr) {
-                const cfg = getBrowserConfig(options, suite.options);
-                if (cfg?.onSetupError !== "pass") {
-                  throw browserSetupErr;
-                }
-              }
-
-              await fn(testContext);
-            };
-
+      const runBrowserTestBody = async (): Promise<void> => {
+        if (hasBrowserTest(options, suite.options)) {
+          const browserConfig = getBrowserConfig(options, suite.options);
+          if (browserConfig && browserConfig.enabled) {
+            const suitePath = getFullSuiteName(suite);
             try {
-              if (options?.timeout) {
-                let timeoutId: ReturnType<typeof setTimeout> | undefined;
-                const timeoutPromise = new Promise<never>((_, reject) => {
-                  timeoutId = setTimeout(
-                    () => {
-                      const fileSuffix = testFilePath
-                        ? `\n  at ${testFilePath}`
-                        : "";
-                      reject(
-                        new Error(
-                          `Test timeout: ${options.timeout}ms (test: ${fullName})${fileSuffix}`,
-                        ),
-                      );
-                    },
-                    options.timeout,
-                  );
-                });
-                try {
-                  await Promise.race([
-                    runBrowserTestBody(),
-                    timeoutPromise,
-                  ]);
-                } finally {
-                  if (timeoutId != null) clearTimeout(timeoutId);
-                }
-              } else {
-                await runBrowserTestBody();
-              }
-              // 测试通过，统计数量
-              testStats.passed++;
-              testStats.total++;
+              await setupBrowserTest(
+                browserConfig,
+                testContext,
+                suitePath,
+              );
+              browserCtx = (testContext as TestContext & {
+                _browserContext?: BrowserContext;
+              })._browserContext;
+              testContext.sanitizeOps = false;
+              testContext.sanitizeResources = false;
             } catch (error) {
-              // 测试失败，统计数量，并在错误信息中追加测试文件路径
-              testStats.failed++;
-              testStats.total++;
-              augmentErrorWithFilePath(error, testFilePath);
-              throw error; // 重新抛出错误，让 Bun 捕获
-            } finally {
-              // 清理浏览器上下文
-              if (browserCtx) {
-                await cleanupBrowserTest(testContext);
-              }
-              // 执行所有父套件的 afterEach（从当前套件到根套件，与 beforeEach 顺序相反）
-              for (let i = allSuites.length - 1; i >= 0; i--) {
-                const parentSuite = allSuites[i];
-                if (parentSuite.afterEach) {
-                  const hooksOpts = parentSuite.hooksOptions;
-                  const mockContext = createTestContext(fullName);
-                  if (hooksOpts) {
-                    if (hooksOpts.sanitizeOps !== undefined) {
-                      mockContext.sanitizeOps = hooksOpts.sanitizeOps;
-                    }
-                    if (hooksOpts.sanitizeResources !== undefined) {
-                      mockContext.sanitizeResources =
-                        hooksOpts.sanitizeResources;
-                    }
-                  }
-                  await parentSuite.afterEach(mockContext);
-                }
-              }
+              testContext.browserSetupError = error instanceof Error
+                ? error
+                : new Error(String(error));
             }
-          };
-
-          // Bun 的 test() 使用函数参数形式
-          if (options?.timeout) {
-            bunTest(fullName, testFn, { timeout: options.timeout });
-          } else {
-            bunTest(fullName, testFn);
           }
         }
-      })();
+
+        const browserSetupErr = testContext.browserSetupError;
+        if (browserSetupErr) {
+          const cfg = getBrowserConfig(options, suite.options);
+          if (cfg?.onSetupError !== "pass") {
+            throw browserSetupErr;
+          }
+        }
+
+        await fn(testContext);
+      };
+
+      try {
+        if (options?.timeout) {
+          let timeoutId: ReturnType<typeof setTimeout> | undefined;
+          /**
+           * 长超时（e2e ≥15s）：宿主 race 比 Bun test timeout 短 5s，保证我们先
+           * reject 并跑 finally 清理浏览器，避免 Bun 硬杀导致 dangling 连锁。
+           * 短超时（unit 如 200ms）：直接用完整 timeout，不可再减 5s（否则变 1ms）。
+           */
+          const hostTimeoutMs = options.timeout >= 15_000
+            ? options.timeout - 5_000
+            : options.timeout;
+          const timeoutPromise = new Promise<never>((_, reject) => {
+            timeoutId = setTimeout(() => {
+              timedOut = true;
+              const fileSuffix = testFilePath ? `\n  at ${testFilePath}` : "";
+              reject(
+                new Error(
+                  `Test timeout: ${options.timeout}ms (test: ${fullName})${fileSuffix}`,
+                ),
+              );
+            }, hostTimeoutMs);
+          });
+          try {
+            await Promise.race([runBrowserTestBody(), timeoutPromise]);
+          } finally {
+            if (timeoutId != null) clearTimeout(timeoutId);
+          }
+        } else {
+          await runBrowserTestBody();
+        }
+        if (!timedOut) {
+          testStats.passed++;
+          testStats.total++;
+        }
+      } catch (error) {
+        testStats.failed++;
+        testStats.total++;
+        augmentErrorWithFilePath(error, testFilePath);
+        throw error;
+      } finally {
+        // 仅清理本用例浏览器页面；用户 afterEach 由 Bun 原生钩子执行
+        if (browserCtx) {
+          await cleanupBrowserTest(testContext);
+        }
+      }
+    };
+
+    if (options?.timeout) {
+      bun.test(registerName, testFn, { timeout: options.timeout });
     } else {
-      // 不在 describe 块内（可能在测试执行期间），在 Bun 中这是不允许的
-      // 抛出友好的错误提示
-      throw new Error($tr("runner.bunTestMustBeInDescribe", { name }));
+      bun.test(registerName, testFn);
     }
   }
   // 其他环境：手动顺序执行
@@ -1275,6 +1308,10 @@ function getTestFilePathFromStack(): string | undefined {
  * 在错误信息末尾追加测试文件路径，便于定位失败用例所在文件
  * @param error - 捕获的异常（可为 Error 或任意值）
  * @param filePath - 测试文件路径（Deno 的 origin 格式化后或栈解析结果），无则不变
+ *
+ * 【Bun】部分 Error（如 Playwright / 宿主超时）的 `message` 为只读，直接
+ * `error.message +=` 会抛 `TypeError: Attempted to assign to readonly property`，
+ * 掩盖真实失败原因。失败时用 defineProperty 或忽略，绝不二次抛错。
  */
 function augmentErrorWithFilePath(
   error: unknown,
@@ -1282,9 +1319,21 @@ function augmentErrorWithFilePath(
 ): void {
   if (!filePath) return;
   const suffix = `\n  at ${filePath}`;
-  if (error instanceof Error) {
-    if (!error.message.endsWith(suffix)) {
-      error.message += suffix;
+  if (!(error instanceof Error)) return;
+  if (error.message.endsWith(suffix)) return;
+  const next = error.message + suffix;
+  try {
+    error.message = next;
+  } catch {
+    try {
+      Object.defineProperty(error, "message", {
+        value: next,
+        writable: true,
+        configurable: true,
+        enumerable: false,
+      });
+    } catch {
+      // 无法改写时保留原错误，避免掩盖真实失败
     }
   }
 }
@@ -1358,20 +1407,20 @@ test.skip = function (
       },
     });
   } else if (IS_BUN) {
-    // Bun 环境下，注册跳过测试
-    // Bun 的 test.skip() 使用函数参数形式：test.skip(name, fn, options?)
+    const bun = getBunTestApiSync();
     const fullName = getFullTestName(name);
-    (async () => {
-      const bunTest = await getBunTest();
-      if (bunTest && bunTest.skip) {
-        bunTest.skip(fullName, async () => {
-          // 跳过测试，使用 warn 级别（黄色）输出
-          logger.warn($tr("runner.skipped", { name: fullName }));
-          const testContext = createTestContext(fullName);
-          await fn(testContext);
-        }, options);
-      }
-    })();
+    if (bun?.test?.skip) {
+      const skipOpts = options?.timeout
+        ? { timeout: options.timeout }
+        : undefined;
+      const skipFn = async () => {
+        logger.warn($tr("runner.skipped", { name: fullName }));
+        const testContext = createTestContext(fullName);
+        await fn(testContext);
+      };
+      if (skipOpts) bun.test.skip(name, skipFn, skipOpts);
+      else bun.test.skip(name, skipFn);
+    }
   }
   // 其他环境：skip 测试会在 runSuite 中处理
 };
@@ -1477,98 +1526,65 @@ test.only = function (
       },
     });
   } else if (IS_BUN) {
-    // Bun 环境下，注册 only 测试
-    // Bun 的 test.only() 使用函数参数形式：test.only(name, fn, options?)
+    // only：与普通 it 相同（原生钩子 + 浏览器 setup），仅用 test.only 注册
+    const bun = getBunTestApiSync();
+    if (!bun?.test?.only) return;
     const fullName = getFullTestName(name);
     const suite = currentSuite;
-    (async () => {
-      const bunTest = await getBunTest();
-      if (bunTest && bunTest.only) {
-        const testFn = async () => {
-          // 执行 beforeAll（只执行一次，通过检查标志）
-          if (suite.beforeAll) {
-            // 检查标志，确保只执行一次
-            // 使用严格相等检查，避免 undefined 或 false 被误判
-            const hasExecuted = (suite as any)._beforeAllExecuted === true;
-            if (!hasExecuted) {
-              await suite.beforeAll();
-              // 直接设置属性，确保标志被正确设置
-              (suite as any)._beforeAllExecuted = true;
-            }
-          }
-
-          // 执行 beforeEach
-          if (suite.beforeEach) {
-            await suite.beforeEach();
-          }
-
-          const testContext = createTestContext(fullName);
-          // 应用套件选项
-          if (suite.options) {
-            if (suite.options.sanitizeOps !== undefined) {
-              testContext.sanitizeOps = suite.options.sanitizeOps;
-            }
-            if (suite.options.sanitizeResources !== undefined) {
-              testContext.sanitizeResources = suite.options.sanitizeResources;
-            }
-          }
-
-          // 检查是否启用浏览器测试（支持从 suite.options 继承）
-          let browserCtx: BrowserContext | undefined;
-          if (hasBrowserTest(options, suite.options)) {
-            const browserConfig = getBrowserConfig(options, suite.options);
-            if (browserConfig && browserConfig.enabled) {
-              const suitePath = getFullSuiteName(suite);
-              try {
-                await setupBrowserTest(browserConfig, testContext, suitePath);
-                browserCtx = (testContext as TestContext & {
-                  _browserContext?: BrowserContext;
-                })
-                  ._browserContext;
-                testContext.sanitizeOps = false;
-                testContext.sanitizeResources = false;
-              } catch (error) {
-                testContext.browserSetupError = error instanceof Error
-                  ? error
-                  : new Error(String(error));
-              }
-            }
-          }
-
-          try {
-            const browserSetupErr = testContext.browserSetupError;
-            if (browserSetupErr) {
-              const cfg = getBrowserConfig(options, suite.options);
-              if (cfg?.onSetupError !== "pass") {
-                throw browserSetupErr;
-              }
-            }
-            await fn(testContext);
-            testStats.passed++;
-            testStats.total++;
-          } catch (error) {
-            augmentErrorWithFilePath(error, testFilePath);
-            testStats.failed++;
-            testStats.total++;
-            throw error;
-          } finally {
-            if (browserCtx) {
-              await cleanupBrowserTest(testContext);
-            }
-            if (suite.afterEach) {
-              await suite.afterEach();
-            }
-          }
-        };
-
-        // Bun 的 test.only() 使用函数参数形式
-        if (options?.timeout) {
-          bunTest.only(fullName, testFn, { timeout: options.timeout });
-        } else {
-          bunTest.only(fullName, testFn);
+    const testFn = async () => {
+      const testContext = createTestContext(fullName);
+      if (suite.options) {
+        if (suite.options.sanitizeOps !== undefined) {
+          testContext.sanitizeOps = suite.options.sanitizeOps;
+        }
+        if (suite.options.sanitizeResources !== undefined) {
+          testContext.sanitizeResources = suite.options.sanitizeResources;
         }
       }
-    })();
+      let browserCtx: BrowserContext | undefined;
+      if (hasBrowserTest(options, suite.options)) {
+        const browserConfig = getBrowserConfig(options, suite.options);
+        if (browserConfig?.enabled) {
+          try {
+            await setupBrowserTest(
+              browserConfig,
+              testContext,
+              getFullSuiteName(suite),
+            );
+            browserCtx = (testContext as TestContext & {
+              _browserContext?: BrowserContext;
+            })._browserContext;
+            testContext.sanitizeOps = false;
+            testContext.sanitizeResources = false;
+          } catch (error) {
+            testContext.browserSetupError = error instanceof Error
+              ? error
+              : new Error(String(error));
+          }
+        }
+      }
+      try {
+        if (testContext.browserSetupError) {
+          const cfg = getBrowserConfig(options, suite.options);
+          if (cfg?.onSetupError !== "pass") throw testContext.browserSetupError;
+        }
+        await fn(testContext);
+        testStats.passed++;
+        testStats.total++;
+      } catch (error) {
+        augmentErrorWithFilePath(error, testFilePath);
+        testStats.failed++;
+        testStats.total++;
+        throw error;
+      } finally {
+        if (browserCtx) await cleanupBrowserTest(testContext);
+      }
+    };
+    if (options?.timeout) {
+      bun.test.only(name, testFn, { timeout: options.timeout });
+    } else {
+      bun.test.only(name, testFn);
+    }
   }
   // 其他环境：only 测试会在 runAllTests 中处理
 };

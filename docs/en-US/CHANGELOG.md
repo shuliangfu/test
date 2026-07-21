@@ -8,6 +8,37 @@ and this project adheres to
 
 ---
 
+## [1.1.10] - 2026-07-21
+
+### Fixed
+
+- **Bun hooks run as native APIs**: `beforeAll` / `afterAll` / `beforeEach` /
+  `afterEach` register through `bun:test` instead of fake `test("…(afterAll)")`
+  cases, so teardown no longer runs mid-suite and kills dev servers.
+- **Synchronous Bun describe nesting**: Load `bun:test` via
+  `import.meta.require` and nest with native `describe`, avoiding async import
+  suite-stack corruption across files.
+- **Hook default timeout 60s on Bun**: Avoid Bun’s ~5s hook default timing out
+  long beforeAll (dev server) / afterEach (browser close) and cascading
+  `killed dangling processes`.
+- **`cleanupAllBrowsers` no longer clears `beforeAllExecutedMap`**: Clearing the
+  map from afterEach caused duplicate beforeAll and stacked ports.
+- **`reuseBrowser: false` honored**: Do not reuse cached Playwright instances
+  when reuse is disabled.
+- **Readonly `Error.message` on Bun**: Safe path when appending test file paths
+  to failures (no secondary TypeError).
+- **Short `options.timeout`**: Host race no longer subtracts 5s from small
+  timeouts (e.g. 200ms unit tests).
+- **`closeBrowserWithTimeout`**: After SIGKILL on hang, do not rethrow so
+  afterEach/afterAll hooks do not fail the suite.
+
+### Changed
+
+- Bun test bodies no longer re-run suite hooks manually (native hooks own
+  lifecycle); Deno path unchanged (beforeAll map + afterAll Deno.test).
+
+---
+
 ## [1.1.9] - 2026-07-11
 
 ### Fixed

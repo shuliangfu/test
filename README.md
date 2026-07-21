@@ -809,9 +809,10 @@ Full test report: [TEST_REPORT.md](./docs/en-US/TEST_REPORT.md)
 
 ## 📋 Changelog
 
-**v1.1.8** (2026-04-21) — **Changed**: Raised `@dreamer/esbuild` to `^1.1.9` for
-nested browser bundling alignment (PostCSS / cssnano peers). Full history:
-[CHANGELOG.md](./docs/en-US/CHANGELOG.md).
+**v1.1.10** (2026-07-21) — **Fixed**: Bun native hooks
+(`beforeAll`/`afterAll`/…), sync `bun:test` describe nesting, 60s hook timeouts,
+`reuseBrowser: false`, safer error augmentation and browser close cleanup. Full
+history: [CHANGELOG.md](./docs/en-US/CHANGELOG.md).
 
 ---
 

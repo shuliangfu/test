@@ -70,7 +70,7 @@ async function closeBrowserWithTimeout(
   );
   try {
     await Promise.race([closePromise, timeoutPromise]);
-  } catch (err) {
+  } catch (_err) {
     /** 超时后忽略 close 后续的 rejection，避免未处理的 Promise */
     void closePromise.catch(() => {});
     /** 强制 kill Chrome 进程，防止僵尸进程干扰后续套件 */
@@ -84,7 +84,10 @@ async function closeBrowserWithTimeout(
     } catch {
       // ignore — 尽力而为
     }
-    throw err;
+    /**
+     * 不再向上抛：afterEach/afterAll 关浏览器超时已 SIGKILL 进程，
+     * 再抛会导致钩子失败并连锁误杀后续套件。关闭目标已达成。
+     */
   }
 }
 
@@ -590,18 +593,23 @@ async function createBrowserContextInternal(
       );
     },
     async goto(url: string): Promise<void> {
-      await context.page.goto(url, {
-        waitUntil: "domcontentloaded",
-        timeout: defaultPageOpTimeoutMs,
-      });
+      return await evaluateWithHostTimeout(
+        context.page.goto(url, {
+          waitUntil: "domcontentloaded",
+          timeout: defaultPageOpTimeoutMs,
+        }),
+        defaultPageOpTimeoutMs,
+      );
     },
     async waitFor(
       fn: () => boolean,
       options?: { timeout?: number },
     ): Promise<void> {
-      await context.page.waitForFunction(fn, {
-        timeout: options?.timeout || 10000,
-      });
+      const timeoutMs = options?.timeout || 10000;
+      return await evaluateWithHostTimeout(
+        context.page.waitForFunction(fn, { timeout: timeoutMs }),
+        timeoutMs,
+      );
     },
     async close(): Promise<void> {
       try {

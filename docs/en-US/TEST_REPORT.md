@@ -8,7 +8,7 @@ utilities, assertion enhancements, test utility functions, browser test
 integration, and other features, and is compatible with both Deno and Bun
 runtimes.
 
-**Test Date**: 2026-02-20 **Test Version**: 1.0.11 **Test Framework**: Deno
+**Test Date**: 2026-07-21 **Test Version**: 1.1.10 **Test Framework**: Deno
 built-in test framework + Bun test framework
 
 ## 🎯 Test Objectives
@@ -27,16 +27,16 @@ built-in test framework + Bun test framework
 
 ### Overall Statistics
 
-| Metric               | Value                  |
-| -------------------- | ---------------------- |
-| Number of test files | 20                     |
-| Total test cases     | 401                    |
-| Passed cases         | 399                    |
-| Skipped cases        | 2                      |
-| Failed cases         | 0                      |
-| Pass rate            | 100%                   |
-| Test execution time  | 16 seconds (Deno)      |
-| Code coverage        | Comprehensive coverage |
+| Metric               | Value                                  |
+| -------------------- | -------------------------------------- |
+| Number of test files | 21                                     |
+| Total test cases     | Deno 406 / Bun 367 (incl. skip/ignore) |
+| Passed cases         | Deno **404** / Bun **365**             |
+| Skipped / ignored    | Deno **2** ignored / Bun **2** skip    |
+| Failed cases         | **0** (both runtimes)                  |
+| Pass rate            | 100% of non-skipped                    |
+| Test execution time  | ~60s (Deno) / ~45s (Bun) full `tests/` |
+| Code coverage        | Comprehensive coverage                 |
 
 ### Test File List
 

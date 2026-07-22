@@ -22,7 +22,7 @@
     "@dreamer/esbuild": "npm:@jsr/dreamer__esbuild@^1.2.0",
     "@dreamer/i18n": "npm:@jsr/dreamer__i18n@1.0.1",
     "@dreamer/logger": "npm:@jsr/dreamer__logger@^1.0.3",
-    "@dreamer/runtime-adapter": "npm:@jsr/dreamer__runtime-adapter@^1.2.0",
+    "@dreamer/runtime-adapter": "npm:@jsr/dreamer__runtime-adapter@^1.2.1",
     "playwright": "1.59.1"
   },
   "devDependencies": {

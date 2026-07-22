@@ -835,6 +835,11 @@ Full test report: [TEST_REPORT.md](./docs/en-US/TEST_REPORT.md)
 
 ## 📋 Changelog
 
+**v1.2.1** (2026-07-22) — **Changed**: `@dreamer/runtime-adapter` `^1.2.0` →
+`^1.2.1` to pick up the unified test suite, `serve()` Promise, and WebSocket
+upgrade fixes. Dependency-bump patch; no test code changes. Verified three-end
+(Deno / Bun / Node, 0 failed).
+
 **v1.2.0** (2026-07-22) — **Added**: Node.js cross-runtime backend (`node:test`
 via the `IS_BUN || IS_NODE` path), `npm run test:node` (tsx), and 3 CI Node jobs
 (9 total: 3 runtimes × 3 OS). **Fixed**: Node 22 `cancelledByParent` for

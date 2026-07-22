@@ -8,6 +8,23 @@ and this project adheres to
 
 ---
 
+## [1.2.1] - 2026-07-22
+
+### Changed
+
+- **`@dreamer/runtime-adapter`**: bumped `^1.2.0` → `^1.2.1` (deno.json +
+  package.json) to pick up runtime-adapter 1.2.1's unified test suite, `serve()`
+  Promise, and WebSocket upgrade fixes. Dependency-bump patch; no test code
+  changes.
+
+### Verified
+
+- Deno: 295 passed (non-browser main suite `tests/*.test.ts`), 0 failed
+- Bun: 278 passed, 0 failed
+- Node: 277 passed, 0 failed, 1 skipped
+
+---
+
 ## [1.2.0] - 2026-07-22
 
 ### Added

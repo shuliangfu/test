@@ -7,6 +7,22 @@
 
 ---
 
+## [1.2.1] - 2026-07-22
+
+### 变更
+
+- **`@dreamer/runtime-adapter`**：`^1.2.0` → `^1.2.1`（deno.json 与 package.json
+  同步），接入 runtime-adapter 1.2.1 的统一测试套件、`serve()` Promise 化与
+  WebSocket 升级修复。本版为依赖升级 patch，测试代码无改动。
+
+### 验证
+
+- Deno：295 通过（非 browser 主套件 `tests/*.test.ts`），0 失败
+- Bun：278 通过，0 失败
+- Node：277 通过，0 失败，1 skipped
+
+---
+
 ## [1.2.0] - 2026-07-22
 
 ### 新增

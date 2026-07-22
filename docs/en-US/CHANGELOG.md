@@ -8,6 +8,25 @@ and this project adheres to
 
 ---
 
+## [1.2.3] - 2026-07-22
+
+### Fixed
+
+- **Node `test:node` exit code 1 on Linux CI**: all tests passed (277 pass, 0
+  fail) but the process exited with code 1 due to lingering handles (spawned
+  subprocess / server sockets from runtime-adapter 1.2.2's `process.ts`
+  `Promise.all` timing change). Added `--test-force-exit` to `test:node` and
+  `test:node:browser` scripts (matching runtime-adapter's pattern), forcing
+  clean exit after tests complete.
+
+### Verified
+
+- Deno: 404 passed, 0 failed, 2 ignored (`deno test -A tests/`)
+- Bun: 365 passed, 0 failed, 2 skipped (`bun test tests/`)
+- Node: 277 passed, 0 failed, 1 skipped (`npm run test:node`, exit code 0)
+
+---
+
 ## [1.2.2] - 2026-07-22
 
 ### Changed

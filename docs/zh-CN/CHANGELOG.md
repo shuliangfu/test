@@ -7,6 +7,24 @@
 
 ---
 
+## [1.2.3] - 2026-07-22
+
+### 修复
+
+- **Node `test:node` 在 Linux CI 退出码 1**：全部测试通过（277 pass，0
+  fail）但进程 退出码为 1，原因是残留句柄（runtime-adapter 1.2.2 `process.ts`
+  `Promise.all` 时序 变更后子进程 / server socket 未及时关闭）。为 `test:node`
+  与 `test:node:browser` 脚本添加 `--test-force-exit`（与 runtime-adapter
+  一致），测试完成后强制干净退出。
+
+### 验证
+
+- Deno：404 通过，0 失败，2 ignored（`deno test -A tests/`）
+- Bun：365 通过，0 失败，2 skipped（`bun test tests/`）
+- Node：277 通过，0 失败，1 skipped（`npm run test:node`，退出码 0）
+
+---
+
 ## [1.2.2] - 2026-07-22
 
 ### 变更

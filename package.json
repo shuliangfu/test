@@ -1,6 +1,6 @@
 {
   "name": "@dreamer/test",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "A testing utility library compatible with Deno, Bun, and Node.js: mock tools, assertion enhancements, test utilities, and browser test integration.",
   "license": "Apache-2.0",
   "private": true,
@@ -14,8 +14,8 @@
   },
   "scripts": {
     "test": "bun test tests/",
-    "test:node": "tsx --tsconfig tsconfig.json --test tests/*.test.ts",
-    "test:node:browser": "tsx --tsconfig tsconfig.json --test --test-concurrency=1 tests/browser/*.test.ts",
+    "test:node": "tsx --tsconfig tsconfig.json --test --test-force-exit tests/*.test.ts",
+    "test:node:browser": "tsx --tsconfig tsconfig.json --test --test-force-exit --test-concurrency=1 tests/browser/*.test.ts",
     "test:node:all": "npm run test:node && npm run test:node:browser"
   },
   "dependencies": {

@@ -7,7 +7,7 @@ provides Mock tools, assertion helpers, utilities, and browser integration, and
 targets **Deno / Bun / Node.js**.
 
 **Test Date**: 2026-07-22\
-**Version**: 1.2.2\
+**Version**: 1.2.3\
 **Hosts**: `Deno.test` + `bun:test` + `node:test` (via tsx)
 
 ## 🎯 Test Objectives

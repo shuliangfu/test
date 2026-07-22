@@ -7,6 +7,24 @@
 
 ---
 
+## [1.2.2] - 2026-07-22
+
+### 变更
+
+- **`@dreamer/runtime-adapter`**：`^1.2.1` → `^1.2.2`（deno.json 与 package.json
+  同步），接入 runtime-adapter 1.2.2 的 `spawn ENOENT` unhandledRejection
+  修复、显式 `Buffer` 导入、CI Deno v2.9 与 Node CI 任务。
+- **CI：Deno `v2.5` → `v2.9`**（6 处）：对齐本地开发环境与 runtime-adapter CI，
+  解决 Deno 2.5 类型诊断。
+
+### 验证
+
+- Deno：404 通过，0 失败，2 ignored（`deno test -A tests/`）
+- Bun：365 通过，0 失败，2 skipped（`bun test tests/`）
+- Node：277 通过，0 失败，1 skipped（`npm run test:node`）
+
+---
+
 ## [1.2.1] - 2026-07-22
 
 ### 变更

@@ -8,6 +8,25 @@ and this project adheres to
 
 ---
 
+## [1.2.2] - 2026-07-22
+
+### Changed
+
+- **`@dreamer/runtime-adapter`**: bumped `^1.2.1` → `^1.2.2` (deno.json +
+  package.json) to pick up runtime-adapter 1.2.2's `spawn ENOENT`
+  unhandledRejection fix, explicit `Buffer` import, and CI Deno v2.9 / Node CI
+  jobs.
+- **CI: Deno `v2.5` → `v2.9`** (6 occurrences): aligns with the local dev
+  environment and the runtime-adapter CI; resolves Deno 2.5 type diagnostics.
+
+### Verified
+
+- Deno: 404 passed, 0 failed, 2 ignored (`deno test -A tests/`)
+- Bun: 365 passed, 0 failed, 2 skipped (`bun test tests/`)
+- Node: 277 passed, 0 failed, 1 skipped (`npm run test:node`)
+
+---
+
 ## [1.2.1] - 2026-07-22
 
 ### Changed

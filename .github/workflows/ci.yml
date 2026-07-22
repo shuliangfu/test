@@ -223,3 +223,62 @@ jobs:
           $nonBrowser = Get-ChildItem -Path tests -Filter "*.test.ts" -File | ForEach-Object { "tests/" + $_.Name }
           bun test @nonBrowser
         timeout-minutes: 10
+
+  # ─────────────────────────────────────────────────────────────
+  # Node.js 三端测试
+  # test:node 脚本：tsx --tsconfig tsconfig.json --test tests/*.test.ts
+  #   - tsx 作为 TypeScript loader，驱动 Node 原生 node:test runner
+  #   - 仅跑 tests/*.test.ts（非 browser 用例），browser 用例依赖 @dreamer/esbuild
+  #     其 JSR npm 版传递依赖旧 runtime-adapter，在 Node 暂跳过
+  #   - runtime-adapter 1.2.0 已发布至 JSR 且含 IS_NODE，npm install 直接解析
+  # ─────────────────────────────────────────────────────────────
+  test-linux-node:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install dependencies (Node)
+        run: npm install
+
+      - name: Test (Node)
+        run: npm run test:node
+        timeout-minutes: 10
+
+  test-macos-node:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install dependencies (Node)
+        run: npm install
+
+      - name: Test (Node, macOS)
+        run: npm run test:node
+        timeout-minutes: 10
+
+  test-windows-node:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install dependencies (Node)
+        run: npm install
+
+      # Node 原生 node:test runner（v21+）支持 glob 模式匹配，
+      # tsx 将 --test 与 tests/*.test.ts 透传给 node，由 node 展开 glob，
+      # 无需依赖 shell 通配符，Windows cmd.exe 不展开 * 亦无影响。
+      - name: Test (Node, Windows)
+        run: npm run test:node
+        timeout-minutes: 10

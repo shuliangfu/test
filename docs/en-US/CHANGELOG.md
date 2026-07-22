@@ -8,7 +8,17 @@ and this project adheres to
 
 ---
 
-## [1.1.10] - 2026-07-21
+## [1.1.10] - 2026-07-22
+
+### Added
+
+- **Node.js backend (`node:test`)**: `getNodeTestApiSync()` /
+  `getNativeTestApiSync()` adapt `describe` / `it` / hooks to native
+  `node:test` (signature and `before`/`after` naming differences handled
+  inside). Shares the `IS_BUN || IS_NODE` path with Bun.
+- **engines.node**: `package.json` declares `node >= 22`.
+- **`npm run test:node`**: `tsx` + `node:test` for `tests/*.test.ts` (uses
+  `NODE_OPTIONS=--preserve-symlinks` for monorepo `file:` deps).
 
 ### Fixed
 

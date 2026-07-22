@@ -8,6 +8,9 @@
 import {
   existsSync,
   getEnv,
+  IS_BUN,
+  IS_DENO,
+  IS_NODE,
   removeSync,
   writeStderrSync,
 } from "@dreamer/runtime-adapter";
@@ -18,8 +21,24 @@ import { getPlaywright } from "./dependencies.ts";
 import { createTestPage, DEFAULT_TEMPLATE_IIFE } from "./page.ts";
 import { findChromePath } from "./chrome.ts";
 
-/** 关闭浏览器时等待的最长时间（毫秒），超时则放弃等待，避免卡住 */
-const BROWSER_CLOSE_TIMEOUT_MS = 8000;
+/**
+ * 关闭浏览器时等待的最长时间（毫秒）。
+ * 超时后 forceKill；过长会在半死 CDP 路径上把整文件拖成「假死」。
+ */
+const BROWSER_CLOSE_TIMEOUT_MS = 4_000;
+
+/**
+ * `browser.newPage()` 宿主侧上限。
+ * Bun/Node 上连续 launch→close→launch 时，第二次 launch 可能“成功”但 CDP 已死，
+ * `newPage()` 永不 resolve 且不跑 Playwright 自身 timeout（0% CPU、无子进程）。
+ */
+const NEW_PAGE_HOST_TIMEOUT_MS = 10_000;
+
+/**
+ * close 后略等，降低「profile/CDP 端口未释放」导致的下一次 newPage 挂死。
+ * Bun 与 Node 均需要；Deno 路径较少出现半死 CDP。
+ */
+const POST_CLOSE_COOLDOWN_MS = 80;
 
 /**
  * 标记「已尝试过 headed 回退」，避免 launch 失败时无限递归。
@@ -27,6 +46,13 @@ const BROWSER_CLOSE_TIMEOUT_MS = 8000;
  */
 const HEADED_LAUNCH_FALLBACK_TRIED = Symbol.for(
   "@dreamer/test:headedChromiumLaunchFallbackTried",
+);
+
+/**
+ * 标记「create 失败后已整轮重试过一次」（newPage / entryPoint goto 等），避免无限递归。
+ */
+const CREATE_RETRY_TRIED = Symbol.for(
+  "@dreamer/test:createBrowserContextRetryTried",
 );
 
 /**
@@ -49,45 +75,87 @@ function shouldLaunchGoogleChromeViaChannel(
 }
 
 /**
- * 关闭浏览器：先正常 close，超时则强制 kill Chrome 进程再拒绝。
+ * 尽力销毁管道并 SIGKILL Playwright 持有的浏览器子进程。
  *
- * 【Why】Playwright 的 browser.close() 在 Chrome 挂起时不返回也不超时。
- *   若仅 reject 而不杀进程，Chrome 僵尸进程会占用 CDP 端口，导致后续套件
- *   启动新浏览器时出现 WebSocket 握手失败洪流，连锁误杀所有后续测试。
- *   Playwright Browser 内部持有 _process（ChildProcess），可用 SIGKILL 强杀。
- * 【Invariant】仅在 close 超时后 kill；正常 close 成功时不触发。
- * @param browser - Playwright Browser 实例
+ * 【Why】Playwright 的 browser.close() 在 Chrome 挂起时不返回也不超时；
+ * Bun 上 close 常“成功”但留下半死 CDP/子进程，下一次 `newPage` 永久挂起。
+ * 若 `stdio: 'pipe'` 后 SIGKILL 而不 destroy stdout/stderr，事件环还会假死。
+ * 禁止关闭 `browser._connection`（多次 launch 可能复用连接）。
  */
+function forceKillBrowserProcess(
+  browser: { close(): Promise<void> },
+): void {
+  try {
+    const b = browser as Record<string, unknown>;
+    /**
+     * 只杀本 Browser 的子进程与 stdio 管道。
+     * 禁止碰 `browser._connection`：Playwright 在多次 launch 间可能复用连接，
+     * 关掉会污染后续 launch（报 Target page/context/browser has been closed）。
+     */
+    const proc = (b._process ??
+      (typeof b.process === "function"
+        ? (b.process as () => unknown)()
+        : undefined)) as {
+      kill?: (signal?: string) => void;
+      unref?: () => void;
+      stdout?: { destroy?: () => void };
+      stderr?: { destroy?: () => void };
+      stdin?: { destroy?: () => void };
+    } | undefined;
+    if (!proc) return;
+    try {
+      proc.stdout?.destroy?.();
+    } catch { /* ignore */ }
+    try {
+      proc.stderr?.destroy?.();
+    } catch { /* ignore */ }
+    try {
+      proc.stdin?.destroy?.();
+    } catch { /* ignore */ }
+    try {
+      proc.unref?.();
+    } catch { /* ignore */ }
+    if (typeof proc.kill === "function") {
+      proc.kill("SIGKILL");
+    }
+  } catch {
+    // ignore — 尽力而为
+  }
+}
+
 async function closeBrowserWithTimeout(
   browser: { close(): Promise<void> },
 ): Promise<void> {
   const closePromise = browser.close();
-  const timeoutPromise = new Promise<void>((_, reject) =>
-    setTimeout(
-      () => reject(new Error($tr("browser.closeTimeout"))),
-      BROWSER_CLOSE_TIMEOUT_MS,
-    )
-  );
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  let timedOut = false;
+  const timeoutPromise = new Promise<void>((_, reject) => {
+    timeoutId = setTimeout(() => {
+      timedOut = true;
+      reject(new Error($tr("browser.closeTimeout")));
+    }, BROWSER_CLOSE_TIMEOUT_MS);
+  });
   try {
     await Promise.race([closePromise, timeoutPromise]);
   } catch (_err) {
     /** 超时后忽略 close 后续的 rejection，避免未处理的 Promise */
     void closePromise.catch(() => {});
-    /** 强制 kill Chrome 进程，防止僵尸进程干扰后续套件 */
-    try {
-      const proc = (browser as Record<string, unknown>)?._process as
-        | { kill(signal?: string): void }
-        | undefined;
-      if (proc && typeof proc.kill === "function") {
-        proc.kill("SIGKILL");
-      }
-    } catch {
-      // ignore — 尽力而为
-    }
     /**
-     * 不再向上抛：afterEach/afterAll 关浏览器超时已 SIGKILL 进程，
+     * 不再向上抛：afterEach/afterAll 关浏览器超时已处理进程，
      * 再抛会导致钩子失败并连锁误杀后续套件。关闭目标已达成。
      */
+  } finally {
+    if (timeoutId !== undefined) clearTimeout(timeoutId);
+    /**
+     * 掐 Playwright 连接 + 销毁管道 + 必要时 SIGKILL。
+     * 否则 Bun 事件环可能永不退出；下一次 newPage 也可能永久挂起。
+     * `timedOut` 仅用于语义记录（force 路径不区分）。
+     */
+    void timedOut;
+    forceKillBrowserProcess(browser);
+  }
+  if ((IS_BUN || IS_NODE) && POST_CLOSE_COOLDOWN_MS > 0) {
+    await new Promise<void>((r) => setTimeout(r, POST_CLOSE_COOLDOWN_MS));
   }
 }
 
@@ -137,37 +205,52 @@ function appendSslOrProxyHint(msg: string): string {
 }
 
 /**
- * Playwright 的 `page.evaluate` 在页面 JS 长时间占用主线程或 CDP 卡住时可能永不 resolve，
- * 且不一定遵守 `setDefaultTimeout`（见上游 issue）。用宿主侧 `Promise.race` 强制上限，
- * 避免 Deno/Bun 测试在 CI（尤其 macOS）上单条用例挂起数十分钟。
+ * 宿主侧 `Promise.race` 超时：Playwright 部分 API（evaluate / newPage / close）在
+ * CDP 半死时永不 resolve，且不遵守 `setDefaultTimeout`。
  *
- * @param evaluatePromise - `page.evaluate(...)` 返回的 Promise
- * @param ms - 超时毫秒数（通常与 `protocolTimeout` 一致）
- * @returns 与 evaluate 相同的返回值
+ * @param promise - 可能挂死的 Playwright Promise
+ * @param ms - 超时毫秒
+ * @param errorMessage - 超时错误文案
  */
-async function evaluateWithHostTimeout<T>(
-  evaluatePromise: Promise<T>,
+async function withBrowserHostTimeout<T>(
+  promise: Promise<T>,
   ms: number,
+  errorMessage: string,
 ): Promise<T> {
   let timeoutId: ReturnType<typeof setTimeout> | undefined;
   try {
     return await Promise.race([
-      evaluatePromise,
+      promise,
       new Promise<never>((_, reject) => {
         timeoutId = setTimeout(() => {
-          reject(
-            new Error($tr("browser.evaluateHostTimeout", { ms: String(ms) })),
-          );
+          reject(new Error(errorMessage));
         }, ms);
       }),
     ]);
   } catch (err) {
-    /** 超时先返回时忽略 evaluate 后续的 rejection，避免未处理的 Promise */
-    void evaluatePromise.catch(() => {});
+    /** 超时先返回时忽略原 Promise 后续 rejection，避免未处理的 Promise */
+    void promise.catch(() => {});
     throw err;
   } finally {
     if (timeoutId !== undefined) clearTimeout(timeoutId);
   }
+}
+
+/**
+ * Playwright 的 `page.evaluate` 在页面 JS 长时间占用主线程或 CDP 卡住时可能永不 resolve。
+ *
+ * @param evaluatePromise - `page.evaluate(...)` 返回的 Promise
+ * @param ms - 超时毫秒数（通常与 `protocolTimeout` 一致）
+ */
+function evaluateWithHostTimeout<T>(
+  evaluatePromise: Promise<T>,
+  ms: number,
+): Promise<T> {
+  return withBrowserHostTimeout(
+    evaluatePromise,
+    ms,
+    $tr("browser.evaluateHostTimeout", { ms: String(ms) }),
+  );
 }
 
 /**
@@ -211,7 +294,7 @@ async function createBrowserContextInternal(
       ? { ...config, browserSource: envBrowserSource }
       : config;
 
-  const playwright = getPlaywright();
+  const playwright = await getPlaywright();
   const engine = effectiveConfig.browserType ?? "chromium";
   const browserName = engine === "chromium"
     ? "Chromium"
@@ -262,10 +345,12 @@ async function createBrowserContextInternal(
   const dumpio = effectiveConfig.dumpio === true ||
     getEnv("DREAMER_TEST_BROWSER_DUMP_IO") === "1";
   /**
-   * Playwright `launch({ timeout })` 上限：取自 `protocolTimeout`（默认 120s），
-   * 非 CI 再 `min(180s, …)`。曾用 `min(90s, …)` 与默认 120s 矛盾，易误报 90s 超时。
+   * Playwright `launch({ timeout })` 上限。
+   * 非 CI 默认 cap 45s：避免 bundled → system → headed 各等 120s+ 叠到 295s，
+   * 把整条用例拖到 PLAYWRIGHT_BROWSER_IT_TIMEOUT_MS（300s）假死。
+   * CI 仍给足 120s+ 预算。
    */
-  const maxLaunchMs = 180_000;
+  const maxLaunchMs = getEnv("CI") === "true" ? 180_000 : 45_000;
   const effectiveLaunchTimeout = getEnv("CI") === "true"
     ? Math.max(120_000, Math.min(maxLaunchMs, launchTimeout))
     : Math.min(maxLaunchMs, launchTimeout);
@@ -296,17 +381,22 @@ async function createBrowserContextInternal(
     const rawArgs = effectiveConfig.args?.length
       ? [...requiredArgs, ...effectiveConfig.args]
       : defaultArgs;
-    const args = rawArgs.filter((a) => !["--single-process"].includes(a));
+    /** 禁止 --user-data-dir：Playwright 要求走 launchPersistentContext */
+    const args = rawArgs.filter((a) =>
+      !["--single-process"].includes(a) && !a.startsWith("--user-data-dir")
+    );
     /**
-     * 始终 `stdio: 'pipe'`：避免浏览器子进程继承 Deno 测试进程的 stdio，
-     * 在少数环境下会引发 CDP 握手长时间不返回（表现卡在 `launcher.launch`）。
-     * `dumpio: true` 时同样走 pipe，由 Playwright 转发日志。
+     * Deno：强制 `stdio: 'pipe'`，避免继承测试进程 stdio 导致 CDP 握手卡住。
+     * Bun/Node：不要默认 pipe——pipe + 后续 SIGKILL 会留下未读 stdout/stderr，
+     * 事件环永不排空，表现为用例已 pass 后进程仍假死、整 suite「等很久」。
+     * `dumpio: true` 时仍用 pipe 以便 Playwright 转发日志。
      */
-    const launchBase = {
+    const useStdioPipe = dumpio || IS_DENO;
+    const launchBase: Parameters<typeof playwright.chromium.launch>[0] = {
       headless: effectiveConfig.headless !== false,
       args,
       timeout: effectiveLaunchTimeout,
-      stdio: "pipe" as const,
+      ...(useStdioPipe ? { stdio: "pipe" as const } : {}),
     };
     if (shouldLaunchGoogleChromeViaChannel(executablePath)) {
       launchOptions = {
@@ -380,7 +470,7 @@ async function createBrowserContextInternal(
    */
   const launchTimeoutMs = getEnv("CI") === "true"
     ? Math.max(120_000, effectiveLaunchTimeout + 15_000)
-    : effectiveLaunchTimeout + 15_000;
+    : effectiveLaunchTimeout + 5_000;
 
   const launcher = engine === "chromium"
     ? playwright.chromium
@@ -438,14 +528,15 @@ async function createBrowserContextInternal(
     }
 
     /**
-     * 仍无头超时：在非 CI 下再用 **有头模式** 试一轮（可能短暂出现窗口）。
-     * 部分 macOS / 终端组合下仅无头 CDP 会挂死，headed 可绕开。
+     * 仍无头超时：默认 **不再** 自动 headed 重试（再叠一轮 45s+ 易把用例拖到 5 分钟）。
+     * 需要时设 `DREAMER_TEST_BROWSER_HEADED_FALLBACK=1` 显式开启。
      */
     const configWithFlags = effectiveConfig as
       & BrowserTestConfig
       & Record<symbol, boolean | undefined>;
     const shouldRetryHeaded = engine === "chromium" &&
       getEnv("CI") !== "true" &&
+      getEnv("DREAMER_TEST_BROWSER_HEADED_FALLBACK") === "1" &&
       effectiveConfig.headless !== false &&
       configWithFlags[HEADED_LAUNCH_FALLBACK_TRIED] !== true &&
       isLikelyBundledLaunchTimeout(err);
@@ -480,8 +571,43 @@ async function createBrowserContextInternal(
   let htmlPath: string = "";
 
   try {
-    page = await browser.newPage();
-    /** 多数 Playwright API 与此一致；evaluate  hanging 场景仍依赖宿主 race */
+    /**
+     * Bun 串行 create/close 复现：第二次 launch 日志已 “launched” 但进程已死，
+     * `newPage()` 无限挂起（sample 显示 kevent 空等、无 chromium 子进程）。
+     * 必须宿主 timeout + 强杀，并允许整轮重试一次。
+     */
+    if (
+      typeof (browser as { isConnected?: () => boolean }).isConnected ===
+        "function" &&
+      !(browser as { isConnected: () => boolean }).isConnected()
+    ) {
+      throw new Error($tr("browser.browserDisconnectedAfterLaunch"));
+    }
+
+    try {
+      page = await withBrowserHostTimeout(
+        browser.newPage(),
+        NEW_PAGE_HOST_TIMEOUT_MS,
+        $tr("browser.newPageHostTimeout", {
+          ms: String(NEW_PAGE_HOST_TIMEOUT_MS),
+        }),
+      );
+    } catch (newPageErr) {
+      await closeBrowserWithTimeout(browser);
+      const cfgFlags = effectiveConfig as BrowserTestConfig &
+        Record<symbol, boolean | undefined>;
+      if (cfgFlags[CREATE_RETRY_TRIED] !== true) {
+        return createBrowserContextInternal(
+          Object.assign({}, effectiveConfig, {
+            [CREATE_RETRY_TRIED]: true,
+          }) as BrowserTestConfig,
+          ignoreEnvOverride,
+        );
+      }
+      throw newPageErr;
+    }
+
+    /** 多数 Playwright API 与此一致；evaluate hanging 场景仍依赖宿主 race */
     page.setDefaultTimeout(defaultPageOpTimeoutMs);
     page.setDefaultNavigationTimeout(defaultPageOpTimeoutMs);
 
@@ -518,45 +644,70 @@ async function createBrowserContextInternal(
       });
 
       const moduleLoadTimeout = effectiveConfig.moduleLoadTimeout || 10000;
+      // 宿主 race 略大于 Playwright 超时：CDP/waitForFunction 在 Bun 上偶发不按时 resolve
+      const hostWaitMs = moduleLoadTimeout + 2000;
       const globalName = effectiveConfig.globalName;
+
+      // goto 后立即探测：已就绪则跳过 waitForFunction（避免 Playwright 永不返回）
+      const readyProbe = globalName
+        ? await page.evaluate((name: string) => ({
+          hasGlobal: typeof (window as any)[name] !== "undefined",
+          hasTestReady: (window as any).testReady === true,
+        }), globalName).catch(() => ({ hasGlobal: false, hasTestReady: false }))
+        : await page.evaluate(() => ({
+          hasGlobal: true,
+          hasTestReady: (window as any).testReady === true,
+        })).catch(() => ({ hasGlobal: true, hasTestReady: false }));
+
       if (globalName) {
-        try {
-          await page.waitForFunction(
-            (name: string) => {
-              return (
-                typeof (globalThis as any).window[name] !== "undefined" &&
-                (globalThis as any).window.testReady === true
-              );
-            },
-            globalName,
-            { timeout: moduleLoadTimeout },
-          );
-        } catch (_error) {
+        if (!(readyProbe.hasGlobal && readyProbe.hasTestReady)) {
           try {
-            await page.waitForFunction(
-              (name: string) =>
-                typeof (globalThis as any).window[name] !== "undefined",
-              globalName,
-              { timeout: 2000 },
-            );
-          } catch (_retryError) {
-            const errorDetails = consoleErrors.length > 0
-              ? `\nBrowser console errors: ${consoleErrors.join("\n")}`
-              : "";
-            throw new Error(
-              $tr("browser.moduleLoadTimeout", {
+            await evaluateWithHostTimeout(
+              page.waitForFunction(
+                (name: string) => {
+                  return (
+                    typeof (window as any)[name] !== "undefined" &&
+                    (window as any).testReady === true
+                  );
+                },
                 globalName,
-                entry: effectiveConfig.entryPoint,
-                details: errorDetails,
-              }),
+                { timeout: moduleLoadTimeout },
+              ),
+              hostWaitMs,
             );
+          } catch (_error) {
+            try {
+              await evaluateWithHostTimeout(
+                page.waitForFunction(
+                  (name: string) =>
+                    typeof (window as any)[name] !== "undefined",
+                  globalName,
+                  { timeout: 2000 },
+                ),
+                3000,
+              );
+            } catch (_retryError) {
+              const errorDetails = consoleErrors.length > 0
+                ? `\nBrowser console errors: ${consoleErrors.join("\n")}`
+                : "";
+              throw new Error(
+                $tr("browser.moduleLoadTimeout", {
+                  globalName,
+                  entry: effectiveConfig.entryPoint,
+                  details: errorDetails,
+                }),
+              );
+            }
           }
         }
-      } else {
+      } else if (!readyProbe.hasTestReady) {
         try {
-          await page.waitForFunction(
-            () => (globalThis as any).window.testReady === true,
-            { timeout: moduleLoadTimeout },
+          await evaluateWithHostTimeout(
+            page.waitForFunction(
+              () => (window as any).testReady === true,
+              { timeout: moduleLoadTimeout },
+            ),
+            hostWaitMs,
           );
         } catch (_error) {
           const errorDetails = consoleErrors.length > 0
@@ -572,10 +723,20 @@ async function createBrowserContextInternal(
       }
     }
   } catch (error) {
-    try {
-      await browser.close();
-    } catch {
-      // ignore
+    await closeBrowserWithTimeout(browser).catch(() => {});
+    /**
+     * entryPoint 的 `page.goto(file://…)` 在 Bun 串行用例中偶发 20s 超时；
+     * 与 newPage 半死类似，整轮重试一次通常即可恢复。
+     */
+    const cfgFlags = effectiveConfig as BrowserTestConfig &
+      Record<symbol, boolean | undefined>;
+    if (cfgFlags[CREATE_RETRY_TRIED] !== true) {
+      return createBrowserContextInternal(
+        Object.assign({}, effectiveConfig, {
+          [CREATE_RETRY_TRIED]: true,
+        }) as BrowserTestConfig,
+        ignoreEnvOverride,
+      );
     }
     throw error;
   }
@@ -613,7 +774,12 @@ async function createBrowserContextInternal(
     },
     async close(): Promise<void> {
       try {
-        await context.page.close();
+        // page.close 与 browser.close 一样可能永不返回；限时避免 afterAll 卡死
+        const pageClose = context.page.close().catch(() => {});
+        await Promise.race([
+          pageClose,
+          new Promise<void>((r) => setTimeout(r, BROWSER_CLOSE_TIMEOUT_MS)),
+        ]);
       } catch {
         // ignore
       }

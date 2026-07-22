@@ -20,15 +20,19 @@ import { PLAYWRIGHT_BROWSER_IT_TIMEOUT_MS } from "./_timeouts.ts";
 /** 入口路径：相对 test 包根目录，执行 deno test 时 cwd 为 test/ */
 const entryPath = "tests/browser/fixtures/minimal-entry.ts";
 
-/** 全量跑用的浏览器配置（entryPoint + globalName + browserMode: false，复用浏览器） */
+/**
+ * 全量跑配置：entryPoint + globalName + browserMode:false，套件内复用浏览器。
+ * timeout 用 60s 而非 300s：launch/goto/wait 均有宿主兜底，5 分钟只掩盖假死。
+ */
 const fullSuiteBrowserConfig = {
   sanitizeOps: false,
   sanitizeResources: false,
-  timeout: PLAYWRIGHT_BROWSER_IT_TIMEOUT_MS,
+  timeout: 60_000,
   browser: {
     enabled: true,
     headless: true,
-    browserSource: "test" as const,
+    /** 优先系统 Chrome，减轻「先跑 integration 再 full-suite」时 bundled Chromium 启动叠超时 */
+    browserSource: "system" as const,
     entryPoint: entryPath,
     globalName: "FullSuiteClient",
     browserMode: false,

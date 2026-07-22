@@ -7,7 +7,16 @@
 
 ---
 
-## [1.1.10] - 2026-07-21
+## [1.1.10] - 2026-07-22
+
+### 新增
+
+- **Node.js 后端（`node:test`）**：`getNodeTestApiSync()` / `getNativeTestApiSync()`
+  将 `describe` / `it` / hooks 适配到 Node 原生 `node:test`（签名与
+  `before`/`after` 命名差异在内部抹平）。与 Bun 路径共用 `IS_BUN || IS_NODE` 分支。
+- **engines.node**：`package.json` 声明 `node >= 22`。
+- **`npm run test:node`**：`tsx` + `node:test` 跑 `tests/*.test.ts`（需
+  `NODE_OPTIONS=--preserve-symlinks` 以正确解析 monorepo `file:` 依赖）。
 
 ### 修复
 

@@ -139,7 +139,9 @@
     "launchFixHintSslHandshake": "\n\nExtra: SSL handshake errors in logs often relate to proxies, HTTPS scanning/VPN, or TLS interception tools. Try disabling VPN/global proxy, set `NO_PROXY=localhost,127.0.0.1`, or rerun browser tests on a cleaner network.",
     "moduleLoadTimeout": "Module load timeout: cannot find global \"{globalName}\" or testReady not set. Entry file: {entry}{details}",
     "moduleLoadTimeoutTestReady": "Module load timeout: testReady not set. Entry file: {entry}{details}",
-    "evaluateHostTimeout": "page.evaluate host-side timeout ({ms}ms): often blocked main thread or stuck CDP (seen on some macOS CI). Try reuseBrowser: false, browserSource: \"system\", or reinstall Playwright browsers."
+    "evaluateHostTimeout": "page.evaluate host-side timeout ({ms}ms): often blocked main thread or stuck CDP (seen on some macOS CI). Try reuseBrowser: false, browserSource: \"system\", or reinstall Playwright browsers.",
+    "newPageHostTimeout": "browser.newPage host-side timeout ({ms}ms): launch appeared to succeed but CDP never answered (seen under Bun when serial launch/close leaves a half-dead Browser). Retrying once or use browserSource: \"system\".",
+    "browserDisconnectedAfterLaunch": "Browser disconnected immediately after launch (isConnected=false); cannot create page."
   },
   "bundle": {
     "failed": "Bundle failed: {message}. Entry file: {entry}"

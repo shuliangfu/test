@@ -2,41 +2,41 @@
 
 ## 📋 Test Overview
 
-This report provides a detailed record of the test coverage and test results for
-the `@dreamer/test` testing utility library. The library provides complete Mock
-utilities, assertion enhancements, test utility functions, browser test
-integration, and other features, and is compatible with both Deno and Bun
-runtimes.
+This report records test coverage and results for `@dreamer/test`. The library
+provides Mock tools, assertion helpers, utilities, and browser integration, and
+targets **Deno / Bun / Node.js**.
 
-**Test Date**: 2026-07-21 **Test Version**: 1.1.10 **Test Framework**: Deno
-built-in test framework + Bun test framework
+**Test Date**: 2026-07-22  
+**Version**: 1.1.10  
+**Hosts**: `Deno.test` + `bun:test` + `node:test` (via tsx)
 
 ## 🎯 Test Objectives
 
-1. Verify the correctness of all core functionality
-2. Ensure the accuracy and completeness of assertion methods
-3. Verify the correctness of Mock functionality
-4. Ensure cross-runtime compatibility (Deno and Bun)
-5. Verify the correctness of test utility functions
-6. Ensure the correctness of error handling and edge cases
-7. Verify test suite options and hook options functionality
-8. Verify browser test context management functionality
-9. Verify client-side code bundling and loading functionality
+1. Core API correctness
+2. Assertion completeness
+3. Mock correctness
+4. Cross-runtime compatibility (**Deno / Bun / Node**)
+5. Test utilities
+6. Error handling / edges
+7. Suite and hook options
+8. Browser context management
+9. Client bundle load
 
 ## 📊 Test Statistics
 
-### Overall Statistics
+### Summary (re-run 2026-07-22)
 
-| Metric               | Value                                  |
-| -------------------- | -------------------------------------- |
-| Number of test files | 21                                     |
-| Total test cases     | Deno 406 / Bun 367 (incl. skip/ignore) |
-| Passed cases         | Deno **404** / Bun **365**             |
-| Skipped / ignored    | Deno **2** ignored / Bun **2** skip    |
-| Failed cases         | **0** (both runtimes)                  |
-| Pass rate            | 100% of non-skipped                    |
-| Test execution time  | ~60s (Deno) / ~45s (Bun) full `tests/` |
-| Code coverage        | Comprehensive coverage                 |
+| Runtime | Command | Result |
+| ------- | ------- | ------ |
+| **Deno** | `deno test -A tests/` | **404 passed**, 0 failed, 2 ignored (~55s) |
+| **Bun** | `bun test tests/` | Main path + browser; see flaky browser note |
+| **Node** | `npm run test:node` | **277 passed**, 0 failed, 1 skipped (~1.5s) |
+
+| Metric | Value |
+| ------ | ----- |
+| Test files | 21 root + browser subdir |
+| Node coverage | Non-browser main suite (`tests/*.test.ts`) |
+| Code coverage | Core APIs full; browser primarily Deno/Bun |
 
 ### Test File List
 

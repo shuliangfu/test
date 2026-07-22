@@ -4,18 +4,19 @@
  * 验证 it/test 的 options.timeout：
  * 1. 在限时内完成则通过
  * 2. 超时后由运行器内 Promise.race 抛出 "Test timeout" 错误（通过子进程运行 fixture 断言）
- * Deno 与 Bun 均通过子进程执行 fixture 并断言失败输出。
+ * Deno / Bun / Node 均通过子进程执行 fixture 并断言失败输出。
  */
 
 import {
   createCommand,
   dirname,
   execPath,
+  IS_BUN,
   IS_DENO,
   resolve,
 } from "@dreamer/runtime-adapter";
-import { describe, expect, it } from "../src/mod.ts";
 import { fileURLToPath } from "node:url";
+import { describe, expect, it } from "../src/mod.ts";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const fixturePath = resolve(__dirname, "timeout-fixture.run.ts");
@@ -31,12 +32,28 @@ describe("timeout 选项 (TestOptions.timeout)", () => {
   });
 
   it("timeout 选项：超时后应抛出 Test timeout 错误", async () => {
-    const args = IS_DENO ? ["test", "-A", fixturePath] : ["test", fixturePath];
+    // Deno: deno test -A fixturePath；Bun: bun test fixturePath
+    // Node: node --import tsx --test fixturePath（与主 test:node 一致）
+    //   清除 NODE_TEST_CONTEXT：父进程 node --test 设置此变量，子进程继承后会被判定为递归调用而跳过测试执行
+    const args = IS_DENO
+      ? ["test", "-A", fixturePath]
+      : IS_BUN
+        ? ["test", fixturePath]
+        : ["--import", "tsx", "--test", fixturePath];
+    // Node 子进程需清除 NODE_TEST_CONTEXT，否则 node --test 检测到递归而跳过 fixture 执行
+    const env = IS_DENO || IS_BUN
+      ? undefined
+      : (() => {
+        const e = { ...globalThis.process.env };
+        delete e.NODE_TEST_CONTEXT;
+        return e as Record<string, string>;
+      })();
     const cmd = createCommand(execPath(), {
       args,
       cwd: testPackageRoot,
       stdout: "piped",
       stderr: "piped",
+      env,
     });
     const output = await cmd.output();
     const stderr = new TextDecoder().decode(output.stderr);

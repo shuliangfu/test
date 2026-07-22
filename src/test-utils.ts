@@ -3,12 +3,12 @@
  * 提供 Setup/Teardown、参数化测试、基准测试等功能
  */
 
-import { IS_BUN } from "@dreamer/runtime-adapter";
+import { IS_BUN, IS_NODE } from "@dreamer/runtime-adapter";
 import { pendingSuiteHooks } from "./hooks-state.ts";
 import { $tr } from "./i18n.ts";
 import { logger } from "./logger.ts";
 import {
-  registerBunNativeHook,
+  registerNativeHook,
   syncPendingHooksToCurrentSuite,
   test,
 } from "./test-runner.ts";
@@ -42,9 +42,9 @@ function createHookContext(label: string): TestContext {
 export function beforeAll(fn: () => void | Promise<void>): void {
   pendingSuiteHooks.beforeAll = fn;
   syncPendingHooksToCurrentSuite();
-  if (IS_BUN) {
+  if (IS_BUN || IS_NODE) {
     // 默认加长超时：e2e 起服 + sleep 易 >5s
-    registerBunNativeHook("beforeAll", fn as () => void | Promise<void>);
+    registerNativeHook("beforeAll", fn as () => void | Promise<void>);
   }
 }
 
@@ -57,8 +57,8 @@ export function beforeAll(fn: () => void | Promise<void>): void {
 export function afterAll(fn: () => void | Promise<void>): void {
   pendingSuiteHooks.afterAll = fn;
   syncPendingHooksToCurrentSuite();
-  if (IS_BUN) {
-    registerBunNativeHook("afterAll", fn as () => void | Promise<void>);
+  if (IS_BUN || IS_NODE) {
+    registerNativeHook("afterAll", fn as () => void | Promise<void>);
   }
 }
 
@@ -74,8 +74,8 @@ export function beforeEach(
   pendingSuiteHooks.beforeEach = fn;
   pendingSuiteHooks.options = options;
   syncPendingHooksToCurrentSuite();
-  if (IS_BUN) {
-    registerBunNativeHook(
+  if (IS_BUN || IS_NODE) {
+    registerNativeHook(
       "beforeEach",
       async () => {
         const ctx = createHookContext("beforeEach");
@@ -104,8 +104,8 @@ export function afterEach(
   pendingSuiteHooks.afterEach = fn;
   pendingSuiteHooks.options = options;
   syncPendingHooksToCurrentSuite();
-  if (IS_BUN) {
-    registerBunNativeHook(
+  if (IS_BUN || IS_NODE) {
+    registerNativeHook(
       "afterEach",
       async () => {
         const ctx = createHookContext("afterEach");

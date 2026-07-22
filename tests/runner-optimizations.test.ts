@@ -1,7 +1,7 @@
 /**
  * @fileoverview 覆盖 runner 优化：testEach 走统一 `test` 钩子链、`browser.bundleOnly`、类型字段 browserSetupError。
  */
-import { fromFileUrl } from "@dreamer/runtime-adapter";
+import { fromFileUrl, IS_NODE } from "@dreamer/runtime-adapter";
 import { beforeEach, describe, expect, it, testEach } from "../src/mod.ts";
 
 describe("runner / testEach 与父级 beforeEach", () => {
@@ -27,6 +27,13 @@ describe("runner / testEach 与父级 beforeEach", () => {
 });
 
 describe("runner / browser.bundleOnly", () => {
+  /**
+   * Node 跳过：@dreamer/esbuild 的 JSR npm 版仍可能传递依赖旧版 runtime-adapter
+   *（无 IS_NODE），在 Node 上抛错。Deno / Bun 正常执行。
+   * 待 esbuild 升到 runtime-adapter ^1.2.0 后可恢复。
+   */
+  if (IS_NODE) return;
+
   /**
    * 必须使用 fromFileUrl：在 Windows 上 `URL#pathname` 会得到 `/D:/...`，
    * esbuild 与 stat 无法解析；fromFileUrl 得到 `D:/...`，与 CI（含 Windows）一致。

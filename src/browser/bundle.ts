@@ -99,7 +99,7 @@ async function executeBuild(
   options: BundleOptions,
   retryCount = 0,
 ): Promise<string> {
-  const buildBundle = getBuildBundle();
+  const buildBundle = await getBuildBundle();
 
   try {
     // 转换选项格式，适配 @dreamer/esbuild 的 BundleOptions

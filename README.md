@@ -1,6 +1,6 @@
 # @dreamer/test
 
-> A testing utility library compatible with Deno and Bun, providing Mock tools,
+> A testing utility library compatible with Deno, Bun, and Node.js: Mock tools,
 > assertion enhancements, test utility functions, browser test integration, and
 > other advanced features
 
@@ -8,15 +8,25 @@ English | [中文 (Chinese)](./docs/zh-CN/README.md)
 
 [![JSR](https://jsr.io/badges/@dreamer/test)](https://jsr.io/@dreamer/test)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](./LICENSE)
-[![Tests](https://img.shields.io/badge/tests-399%20passed-brightgreen)](./docs/en-US/TEST_REPORT.md)
+[![Tests](https://img.shields.io/badge/tests-Deno%2FBun%2FNode-brightgreen)](./docs/en-US/TEST_REPORT.md)
+[![Node](https://img.shields.io/badge/node-%3E%3D22-brightgreen)](./docs/en-US/TEST_REPORT.md)
 
 ---
 
 ## 🎯 Overview
 
-A testing utility library based on Deno's built-in test framework, providing
-Mock, assertion enhancements, test utility functions, browser test integration,
-and other advanced features to make testing simpler and more powerful.
+A testing utility library that registers into host test APIs:
+
+| Runtime | Host registration |
+| ------- | ----------------- |
+| **Deno** | `Deno.test` |
+| **Bun** | `bun:test` |
+| **Node.js 22+** | `node:test` |
+
+Provides Mock, assertion enhancements, helpers, and browser integration.
+**No custom process-level runner** — execution stays on the host
+(`deno test` / `bun test` / `node --test` via tsx). **No** standalone CLI;
+product entry for dweb projects is **`dweb-cli test`** (host launcher).
 
 ---
 
@@ -32,6 +42,13 @@ deno add jsr:@dreamer/test
 
 ```bash
 bunx jsr add -D @dreamer/test
+```
+
+### Node.js (22+)
+
+```bash
+npx jsr add -D @dreamer/test
+# run tests with host node:test, e.g. tsx --test
 ```
 
 **Import paths**:
@@ -50,12 +67,21 @@ import { createBrowserContext, findChromePath } from "@dreamer/test/browser";
 
 ## 🌍 Compatibility
 
-| Environment       | Version | Status                                    |
-| ----------------- | ------- | ----------------------------------------- |
-| **Deno**          | 2.5+    | ✅ Fully supported                        |
-| **Bun**           | 1.0+    | ✅ Fully supported                        |
-| **Server**        | -       | ✅ Supported (Deno/Bun runtime)           |
-| **Browser tests** | -       | ✅ Supported (via Playwright integration) |
+| Environment       | Version | Status                                         |
+| ----------------- | ------- | ---------------------------------------------- |
+| **Deno**          | 2.5+    | ✅ Fully supported (`Deno.test`)               |
+| **Bun**           | 1.3+    | ✅ Fully supported (`bun:test`)                |
+| **Node.js**       | 22+     | ✅ Supported (`node:test`; see `test:node`)    |
+| **Server**        | -       | ✅ Deno / Bun / Node                           |
+| **Browser tests** | -       | ✅ Playwright (Deno/Bun primary; Node optional)|
+
+### Running package self-tests
+
+```bash
+deno test -A tests/
+bun test tests/
+npm run test:node   # Node 22+; monorepo needs preserve-symlinks
+```
 
 ---
 

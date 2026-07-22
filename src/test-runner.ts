@@ -1,21 +1,24 @@
 /**
  * 测试运行器
  * 提供 describe, test, it 等测试组织函数
- * 兼容 Deno 和 Bun 环境
+ * 兼容 Deno / Bun / Node 环境
  */
 
 import {
   addSignalListener,
   exit,
+  getEnv,
   IS_BUN,
   IS_DENO,
+  IS_NODE,
 } from "@dreamer/runtime-adapter";
+import { createRequire } from "node:module";
 import type { BrowserContext } from "./browser/browser-context.ts";
-import { $tr } from "./i18n.ts";
 import { createBrowserContext } from "./browser/browser-context.ts";
 import { buildClientBundle } from "./browser/bundle.ts";
 import { createTestPage, DEFAULT_TEMPLATE_IIFE } from "./browser/page.ts";
 import { clearPendingSuiteHooks, pendingSuiteHooks } from "./hooks-state.ts";
+import { $tr } from "./i18n.ts";
 import { logger } from "./logger.ts";
 import type {
   BrowserTestConfig,
@@ -65,14 +68,9 @@ const HOOK_TIMEOUT_MS = 60_000;
 const AFTER_ALL_HOOK_TIMEOUT_MS = HOOK_TIMEOUT_MS;
 
 /**
- * Bun 环境下标记是否在 describe 块内（使用计数器支持嵌套）
+ * Bun/Node 环境下标记是否在 describe 块内（使用计数器支持嵌套）
  */
 let describeDepth = 0;
-
-/**
- * Bun 下是否已在当前进程注册过文件级 cleanup afterAll
- */
-let bunCleanupDescribeScheduled = false;
 
 /**
  * 测试统计信息
@@ -189,17 +187,147 @@ export function getBunTestApiSync(): BunTestApi | null {
 }
 
 /**
- * 在当前 Bun describe 作用域注册原生钩子（由 test-utils 的 beforeAll 等调用）。
- * Deno 下为 no-op。
+ * 【Node 后端】node:test 原生 API 句柄（结构与 BunTestApi 一致，调用约定内部适配）。
+ *
+ * Node 的 node:test 与 bun:test 同构（describe/it/before/after/beforeEach/afterEach/
+ * it.skip/it.only），但两处调用约定不同，需在 wrapper 内适配：
+ * - test 签名：Node 为 `test(name, options, fn)`，Bun 为 `test(name, fn, options)`
+ * - 钩子命名：Node 用 `before`/`after`，Bun 用 `beforeAll`/`afterAll`
+ *
+ * wrapper 对外暴露 Bun 兼容签名（name, fn, options），使 describe/test 分支无需区分运行时。
  */
-export function registerBunNativeHook(
+let nodeTestApiSync: BunTestApi | null | undefined;
+
+export function getNodeTestApiSync(): BunTestApi | null {
+  if (!IS_NODE) return null;
+  if (nodeTestApiSync !== undefined) return nodeTestApiSync;
+  try {
+    const req = createRequire(import.meta.url);
+    const nt = req("node:test") as {
+      test:
+        & ((name: string, fn: () => void | Promise<void>) => void)
+        & ((
+          name: string,
+          options: { timeout?: number },
+          fn: () => void | Promise<void>,
+        ) => void)
+        & {
+          skip?: (name: string, fn: () => void | Promise<void>) => void;
+          only?:
+            & ((name: string, fn: () => void | Promise<void>) => void)
+            & ((
+              name: string,
+              options: { timeout?: number },
+              fn: () => void | Promise<void>,
+            ) => void);
+        };
+      describe: (name: string, fn: () => void) => void;
+      before: (
+        fn: () => void | Promise<void>,
+        options?: { timeout?: number },
+      ) => void;
+      after: (
+        fn: () => void | Promise<void>,
+        options?: { timeout?: number },
+      ) => void;
+      beforeEach: (
+        fn: () => void | Promise<void>,
+        options?: { timeout?: number },
+      ) => void;
+      afterEach: (
+        fn: () => void | Promise<void>,
+        options?: { timeout?: number },
+      ) => void;
+    };
+    if (!nt?.test || !nt?.describe || !nt.before || !nt.after) {
+      nodeTestApiSync = null;
+      return nodeTestApiSync;
+    }
+    /** 适配 Node test(name, options, fn) → 对外 test(name, fn, options) */
+    const adaptTest = (
+      base: typeof nt.test,
+    ): BunTestApi["test"] => {
+      const wrapped = ((
+        name: string,
+        fn: () => void | Promise<void>,
+        options?: { timeout?: number },
+      ) => {
+        if (options?.timeout) base(name, { timeout: options.timeout }, fn);
+        else base(name, fn);
+      }) as BunTestApi["test"];
+      return wrapped;
+    };
+    nodeTestApiSync = {
+      test: adaptTest(nt.test),
+      describe: nt.describe,
+      // Node before/after 映射为 Bun beforeAll/afterAll
+      beforeAll: (fn, options) =>
+        nt.before(
+          fn,
+          options?.timeout ? { timeout: options.timeout } : undefined,
+        ),
+      afterAll: (fn, options) =>
+        nt.after(
+          fn,
+          options?.timeout ? { timeout: options.timeout } : undefined,
+        ),
+      beforeEach: (fn, options) =>
+        nt.beforeEach(
+          fn,
+          options?.timeout ? { timeout: options.timeout } : undefined,
+        ),
+      afterEach: (fn, options) =>
+        nt.afterEach(
+          fn,
+          options?.timeout ? { timeout: options.timeout } : undefined,
+        ),
+    };
+    // test.skip / test.only：Node 原生支持，适配为 Bun 签名 (name, fn, options?)
+    const t = nodeTestApiSync.test as BunTestApi["test"];
+    const ntSkip = nt.test.skip;
+    if (ntSkip) {
+      // 跳过的用例不执行，timeout 无意义，忽略
+      t.skip = (name, fn) => ntSkip(name, fn);
+    }
+    const ntOnly = nt.test.only;
+    if (ntOnly) {
+      t.only = (name, fn, options) => {
+        if (options?.timeout) {
+          ntOnly(name, { timeout: options.timeout }, fn);
+        } else {
+          ntOnly(name, fn);
+        }
+      };
+    }
+  } catch {
+    nodeTestApiSync = null;
+  }
+  return nodeTestApiSync;
+}
+
+/**
+ * 统一原生测试 API 调度器：Bun 返回 bun:test，Node 返回 node:test，Deno 返回 null。
+ * 【Why】describe/test 分支用此函数获取原生 API，无需重复 IS_BUN/IS_NODE 判断。
+ */
+export function getNativeTestApiSync(): BunTestApi | null {
+  if (IS_BUN) return getBunTestApiSync();
+  if (IS_NODE) return getNodeTestApiSync();
+  return null;
+}
+
+/**
+ * 在当前 describe 作用域注册原生钩子（由 test-utils 的 beforeAll 等调用）。
+ * Bun/Node 下走原生 before/after/beforeEach/afterEach；Deno 下为 no-op（钩子由 test-runner 在首个 it 前执行）。
+ */
+export function registerNativeHook(
   kind: "beforeAll" | "afterAll" | "beforeEach" | "afterEach",
   fn: (...args: never[]) => void | Promise<void>,
   options?: { timeout?: number },
 ): void {
-  if (!IS_BUN) return;
-  const bun = getBunTestApiSync();
-  if (!bun) return;
+  // Bun/Node 走原生 API；Deno 不走（钩子存入套件树，由首个 it 前触发）
+  if (!IS_BUN && !IS_NODE) return;
+  const native = getNativeTestApiSync();
+  if (!native) return;
   const hookOptions = options?.timeout != null
     ? { timeout: options.timeout }
     : undefined;
@@ -207,13 +335,13 @@ export function registerBunNativeHook(
     // 所有钩子默认 HOOK_TIMEOUT_MS，避免 Bun 5s 默认误杀 e2e
     const opts = hookOptions ?? { timeout: HOOK_TIMEOUT_MS };
     if (kind === "beforeAll") {
-      bun.beforeAll(fn as () => void | Promise<void>, opts);
+      native.beforeAll(fn as () => void | Promise<void>, opts);
     } else if (kind === "afterAll") {
-      bun.afterAll(fn as () => void | Promise<void>, opts);
+      native.afterAll(fn as () => void | Promise<void>, opts);
     } else if (kind === "beforeEach") {
-      bun.beforeEach(fn as () => void | Promise<void>, opts);
+      native.beforeEach(fn as () => void | Promise<void>, opts);
     } else {
-      bun.afterEach(fn as () => void | Promise<void>, opts);
+      native.afterEach(fn as () => void | Promise<void>, opts);
     }
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
@@ -336,6 +464,294 @@ function getBrowserConfig(
 }
 
 /**
+ * 宿主侧限时 Promise：Playwright 的 newPage/goto 在 Bun 上偶发永不 resolve，
+ * 仅靠 Playwright 自带 timeout 不够；setTimeout race 保证 setup 能失败并重建。
+ */
+function withHostTimeout<T>(
+  promise: Promise<T>,
+  ms: number,
+  label: string,
+): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<never>((_, reject) =>
+      setTimeout(
+        () => reject(new Error(`${label} host timeout ${ms}ms`)),
+        ms,
+      )
+    ),
+  ]);
+}
+
+/**
+ * createBrowserContext 宿主预算（CI 更长）。
+ * 本地不宜过长：半死 launch/newPage 时外层 race 要尽快失败并走重试/重建，
+ * 避免整文件长时间无输出像「卡住」。内层另有 launch/newPage 宿主 timeout。
+ */
+function createBrowserBudgetMs(): number {
+  return getEnv("CI") === "true" ? 90_000 : 25_000;
+}
+
+/**
+ * 新建浏览器实例（含一次重试），并写入 suite 缓存。
+ * 其它 suite 泄漏的 Chromium 会先被清掉，避免 launch 叠超时。
+ */
+async function createFreshBrowserContext(
+  config: BrowserTestConfig,
+  cacheKey: string | undefined,
+  shouldReuse: boolean,
+): Promise<BrowserContext> {
+  if (!shouldReuse && cacheKey) {
+    const stale = suiteBrowserCache.get(cacheKey);
+    if (stale) {
+      suiteBrowserCache.delete(cacheKey);
+      await stale.close().catch(() => {});
+    }
+  }
+  if (suiteBrowserCache.size > 0) {
+    await cleanupAllBrowsers().catch(() => {});
+  }
+
+  const createOnce = (budgetMs: number) =>
+    withHostTimeout(
+      createBrowserContext(config),
+      budgetMs,
+      "createBrowserContext",
+    );
+  const budgetMs = createBrowserBudgetMs();
+  let browserCtx: BrowserContext;
+  try {
+    browserCtx = await createOnce(budgetMs);
+  } catch (firstErr) {
+    await cleanupAllBrowsers().catch(() => {});
+    await new Promise((r) => setTimeout(r, 400));
+    try {
+      browserCtx = await createOnce(budgetMs);
+    } catch {
+      throw firstErr;
+    }
+  }
+  if (cacheKey) {
+    suiteBrowserCache.set(cacheKey, browserCtx);
+  }
+  return browserCtx;
+}
+
+/**
+ * 复用已有 Browser：newPage + 可选 entryPoint 重载。
+ *
+ * 【Why 必须有宿主超时】
+ * full-suite / beforeAll 嵌套套件在「第 N 例 pass 后」若卡在 `browser.newPage()`，
+ * Bun 上可能 0% CPU 且永不进入第 N+1 例日志；外层 it timeout 也可能因事件环
+ * 被 CDP 卡住而不触发。newPage/goto/wait 全部 race 后，失败可走「丢弃缓存并重建」。
+ */
+async function attachNewPageOnReusedBrowser(
+  browserCtx: BrowserContext,
+  config: BrowserTestConfig,
+): Promise<void> {
+  const browser = browserCtx.browser as {
+    isConnected?: () => boolean;
+    newPage: () => Promise<any>;
+  };
+  if (typeof browser.isConnected === "function" && !browser.isConnected()) {
+    throw new Error("reused browser is disconnected");
+  }
+
+  const newPage = await withHostTimeout(
+    browser.newPage(),
+    10_000,
+    "browser.newPage",
+  );
+  const defaultPageOpTimeoutMs = config.moduleLoadTimeout
+    ? config.moduleLoadTimeout + 10_000
+    : 60_000;
+  try {
+    newPage.setDefaultTimeout(defaultPageOpTimeoutMs);
+    newPage.setDefaultNavigationTimeout(defaultPageOpTimeoutMs);
+  } catch {
+    // ignore
+  }
+  browserCtx.page = newPage;
+
+  if (!config.entryPoint) return;
+
+  try {
+    const bundle = await buildClientBundle({
+      entryPoint: config.entryPoint,
+      globalName: config.globalName,
+      browserMode: config.browserMode,
+    });
+
+    const template = config.htmlTemplate ??
+      (config.browserMode === false ? DEFAULT_TEMPLATE_IIFE : undefined);
+    const htmlPath = await createTestPage({
+      bundleCode: bundle,
+      bodyContent: config.bodyContent,
+      template,
+    });
+
+    browserCtx.htmlPath = htmlPath;
+
+    const consoleErrors: string[] = [];
+    newPage.on("console", (msg: any) => {
+      if (msg.type() === "error") {
+        consoleErrors.push(msg.text());
+      }
+    });
+    newPage.on("pageerror", (error: any) => {
+      consoleErrors.push(error.message);
+    });
+
+    const loadTimeout = config.moduleLoadTimeout
+      ? config.moduleLoadTimeout + 10_000
+      : 60_000;
+    let diagRightAfterGoto:
+      | { hasGlobal?: boolean; hasTestReady?: boolean }
+      | { error: string } = {};
+    try {
+      /** Playwright Response 最小形态（newPage 为 any 时显式标注，避免 Deno check 推成 unknown） */
+      type GotoResponse = {
+        url(): string;
+        ok(): boolean;
+        status(): number;
+      } | null;
+      const response = await withHostTimeout<GotoResponse>(
+        newPage.goto(`file://${htmlPath}`, {
+          waitUntil: "domcontentloaded",
+          timeout: loadTimeout,
+        }) as Promise<GotoResponse>,
+        loadTimeout + 2000,
+        "page.goto",
+      );
+      // goto 后立即检查：已就绪则跳过 waitForFunction（复用路径下偶发不返回）
+      diagRightAfterGoto = await withHostTimeout(
+        newPage.evaluate((name: string) => ({
+          hasGlobal: typeof (window as any)[name] !== "undefined",
+          hasTestReady: (window as any).testReady === true,
+        }), config.globalName!) as Promise<
+          { hasGlobal?: boolean; hasTestReady?: boolean }
+        >,
+        5_000,
+        "page.evaluate(diag)",
+      ).catch((e: unknown) => ({ error: String(e) }));
+
+      if (
+        response &&
+        !response.url().startsWith("file:") &&
+        !response.ok()
+      ) {
+        const status = response?.status() || "unknown";
+        throw new Error(
+          $tr("runner.pageLoadFailedStatus", {
+            status: String(status),
+            htmlPath,
+          }),
+        );
+      }
+
+      const actualUrl = newPage.url();
+      if (!actualUrl.startsWith("file://")) {
+        throw new Error(
+          $tr("runner.pageUrlIncorrect", {
+            url: actualUrl,
+            htmlPath,
+          }),
+        );
+      }
+    } catch (error) {
+      await closePageWithHostTimeout(newPage);
+      const errorMessage = error instanceof Error
+        ? error.message
+        : String(error);
+      const errorDetails = consoleErrors.length > 0
+        ? `\nBrowser console errors: ${consoleErrors.join("\n")}`
+        : "";
+      throw new Error(
+        $tr("runner.pageLoadFailed", {
+          message: errorMessage,
+          htmlPath,
+          details: errorDetails,
+        }),
+      );
+    }
+
+    const moduleLoadTimeout = config.moduleLoadTimeout || 10000;
+    const hostWaitMs = moduleLoadTimeout + 2000;
+    const globalName = config.globalName;
+    if (globalName) {
+      const alreadyReady = typeof diagRightAfterGoto === "object" &&
+        !("error" in diagRightAfterGoto) &&
+        diagRightAfterGoto.hasGlobal === true &&
+        diagRightAfterGoto.hasTestReady === true;
+      if (!alreadyReady) {
+        try {
+          await withHostTimeout(
+            newPage.waitForFunction(
+              (name: string) => {
+                return typeof (window as any)[name] !== "undefined" &&
+                  (window as any).testReady === true;
+              },
+              globalName,
+              { timeout: moduleLoadTimeout },
+            ),
+            hostWaitMs,
+            "waitForFunction",
+          );
+        } catch (_error) {
+          try {
+            await withHostTimeout(
+              newPage.waitForFunction(
+                (name: string) =>
+                  typeof (window as any)[name] !== "undefined",
+                globalName,
+                { timeout: 2000 },
+              ),
+              3000,
+              "waitForFunction retry",
+            );
+          } catch (_retryError) {
+            const errorDetails = consoleErrors.length > 0
+              ? `\nBrowser console errors: ${consoleErrors.join("\n")}`
+              : "";
+            throw new Error(
+              $tr("runner.moduleLoadTimeout", {
+                globalName: globalName!,
+                entry: config.entryPoint!,
+                details: errorDetails,
+              }),
+            );
+          }
+        }
+      }
+    } else {
+      try {
+        await withHostTimeout(
+          newPage.waitForFunction(
+            () => (window as any).testReady === true,
+            { timeout: moduleLoadTimeout },
+          ),
+          hostWaitMs,
+          "waitForFunction testReady",
+        );
+      } catch (_error) {
+        const errorDetails = consoleErrors.length > 0
+          ? `\nBrowser console errors: ${consoleErrors.join("\n")}`
+          : "";
+        throw new Error(
+          $tr("runner.moduleLoadTimeoutTestReady", {
+            entry: config.entryPoint!,
+            details: errorDetails,
+          }),
+        );
+      }
+    }
+  } catch (error) {
+    await closePageWithHostTimeout(newPage);
+    throw error;
+  }
+}
+
+/**
  * 在测试执行前设置浏览器上下文
  */
 async function setupBrowserTest(
@@ -359,14 +775,8 @@ async function setupBrowserTest(
     return;
   }
 
-  // 如果配置了共享浏览器实例，尝试从缓存获取
-  // 缓存键必须使用完整 getFullSuiteName(suite)：若仅用 split(" > ")[0]，Bun 顺序加载多文件时套件链可能被串成
-  // 「A > B」，B 与 A 会共用同一 Playwright 实例键，造成跨示例污染、goto 挂死直至外层超时，并触发 killed dangling processes。
-  // 同一 describe 内各 it 的 suite 相同，完整路径仍一致，故套件内复用浏览器的行为不变。
-  // executablePath 场景仍用完整 suitePath，避免与默认 Chromium 路径的用例错误复用。
-  //
-  // 【Invariant】reuseBrowser === false 时**不得**从 cache 取实例：否则 e2e Bun
-  // 配置的「每用例新浏览器」会静默失效，与已关闭页面/僵尸 Chromium 交叉污染。
+  // 缓存键必须使用完整 getFullSuiteName(suite)：勿仅用 split(" > ")[0]，否则跨文件串键。
+  // 【Invariant】reuseBrowser === false 时不得从 cache 取实例。
   let browserCtx: BrowserContext | undefined;
   const shouldReuse = config.reuseBrowser !== false && Boolean(suitePath);
   const cacheKey = suitePath;
@@ -375,23 +785,29 @@ async function setupBrowserTest(
     browserCtx = suiteBrowserCache.get(cacheKey);
   }
 
-  // 如果缓存中没有或不应该复用，创建新的浏览器实例
+  if (browserCtx) {
+    try {
+      await attachNewPageOnReusedBrowser(browserCtx, config);
+    } catch (reuseErr) {
+      // 复用路径挂死/失败：丢弃缓存并完整重建（解决 full-suite 第 1 例后假死）
+      if (cacheKey) suiteBrowserCache.delete(cacheKey);
+      await browserCtx.close().catch(() => {});
+      browserCtx = undefined;
+      logger.error(
+        `[dreamer/test] reuse browser failed, recreating: ${
+          reuseErr instanceof Error ? reuseErr.message : String(reuseErr)
+        }`,
+      );
+    }
+  }
+
   if (!browserCtx) {
     try {
-      // reuseBrowser=false：若 cache 里仍有旧实例（未走 afterEach 清），先关掉再新建
-      if (!shouldReuse && cacheKey) {
-        const stale = suiteBrowserCache.get(cacheKey);
-        if (stale) {
-          suiteBrowserCache.delete(cacheKey);
-          await stale.close().catch(() => {});
-        }
-      }
-      browserCtx = await createBrowserContext(config);
-
-      // 无论是否复用，都保存到缓存，以便在所有测试完成后统一清理
-      if (cacheKey) {
-        suiteBrowserCache.set(cacheKey, browserCtx);
-      }
+      browserCtx = await createFreshBrowserContext(
+        config,
+        cacheKey,
+        shouldReuse,
+      );
     } catch (error) {
       const errorMessage = error instanceof Error
         ? error.message
@@ -399,164 +815,6 @@ async function setupBrowserTest(
       throw new Error(
         $tr("runner.browserContextFailed", { message: errorMessage }),
       );
-    }
-  } else {
-    // 复用浏览器实例时，创建新页面
-    const newPage = await browserCtx.browser.newPage();
-    browserCtx.page = newPage;
-
-    // 如果配置了 entryPoint，需要重新加载（browserMode 透传给 build，入口含 JSR 时传 false）
-    if (config.entryPoint) {
-      try {
-        const bundle = await buildClientBundle({
-          entryPoint: config.entryPoint,
-          globalName: config.globalName,
-          browserMode: config.browserMode,
-        });
-
-        const template = config.htmlTemplate ??
-          (config.browserMode === false ? DEFAULT_TEMPLATE_IIFE : undefined);
-        const htmlPath = await createTestPage({
-          bundleCode: bundle,
-          bodyContent: config.bodyContent,
-          template,
-        });
-
-        browserCtx.htmlPath = htmlPath;
-
-        // 在页面加载前设置错误监听器，以便捕获所有运行时错误
-        const consoleErrors: string[] = [];
-        newPage.on("console", (msg: any) => {
-          if (msg.type() === "error") {
-            consoleErrors.push(msg.text());
-          }
-        });
-        newPage.on("pageerror", (error: any) => {
-          consoleErrors.push(error.message);
-        });
-
-        // 加载页面，捕获加载错误
-        // 使用 domcontentloaded：DOM 就绪即触发、内联脚本已执行，比 load 更早且对 file:// 更稳定
-        const loadTimeout = config.moduleLoadTimeout
-          ? config.moduleLoadTimeout + 10_000
-          : 60_000;
-        let diagRightAfterGoto:
-          | { hasGlobal?: boolean; hasTestReady?: boolean }
-          | { error: string } = {};
-        try {
-          const response = await newPage.goto(`file://${htmlPath}`, {
-            waitUntil: "domcontentloaded",
-            timeout: loadTimeout,
-          });
-          // goto 后立即检查：若已就绪则跳过 waitForFunction，避免复用路径下 waitForFunction 不返回的 Playwright 行为
-          diagRightAfterGoto = await newPage.evaluate((name: string) => ({
-            hasGlobal: typeof (window as any)[name] !== "undefined",
-            hasTestReady: (window as any).testReady === true,
-          }), config.globalName!).catch((e: unknown) => ({ error: String(e) }));
-
-          // 检查页面加载是否成功
-          if (!response || !response.ok()) {
-            const status = response?.status() || "unknown";
-            throw new Error(
-              $tr("runner.pageLoadFailedStatus", {
-                status: String(status),
-                htmlPath,
-              }),
-            );
-          }
-
-          // 验证页面 URL 是否正确
-          const actualUrl = newPage.url();
-          if (!actualUrl.startsWith("file://")) {
-            throw new Error(
-              $tr("runner.pageUrlIncorrect", {
-                url: actualUrl,
-                htmlPath,
-              }),
-            );
-          }
-        } catch (error) {
-          // 如果页面加载失败，关闭页面并抛出错误
-          await newPage.close().catch(() => {});
-          const errorMessage = error instanceof Error
-            ? error.message
-            : String(error);
-          const errorDetails = consoleErrors.length > 0
-            ? `\nBrowser console errors: ${consoleErrors.join("\n")}`
-            : "";
-          throw new Error(
-            $tr("runner.pageLoadFailed", {
-              message: errorMessage,
-              htmlPath,
-              details: errorDetails,
-            }),
-          );
-        }
-
-        const moduleLoadTimeout = config.moduleLoadTimeout || 10000;
-        const globalName = config.globalName;
-        if (globalName) {
-          const alreadyReady = typeof diagRightAfterGoto === "object" &&
-            !("error" in diagRightAfterGoto) &&
-            diagRightAfterGoto.hasGlobal === true &&
-            diagRightAfterGoto.hasTestReady === true;
-          if (!alreadyReady) {
-            // 等待全局变量存在且 testReady 标记已设置
-            try {
-              await newPage.waitForFunction(
-                (name: string) => {
-                  return typeof (window as any)[name] !== "undefined" &&
-                    (window as any).testReady === true;
-                },
-                { timeout: moduleLoadTimeout },
-                globalName,
-              );
-            } catch (_error) {
-              try {
-                await newPage.waitForFunction(
-                  (name: string) =>
-                    typeof (window as any)[name] !== "undefined",
-                  { timeout: 2000 },
-                  globalName,
-                );
-              } catch (_retryError) {
-                const errorDetails = consoleErrors.length > 0
-                  ? `\nBrowser console errors: ${consoleErrors.join("\n")}`
-                  : "";
-                throw new Error(
-                  $tr("runner.moduleLoadTimeout", {
-                    globalName: globalName!,
-                    entry: config.entryPoint!,
-                    details: errorDetails,
-                  }),
-                );
-              }
-            }
-          }
-        } else {
-          // 如果没有 globalName，只等待 testReady 标记
-          try {
-            await newPage.waitForFunction(
-              () => (window as any).testReady === true,
-              { timeout: moduleLoadTimeout },
-            );
-          } catch (_error) {
-            const errorDetails = consoleErrors.length > 0
-              ? `\nBrowser console errors: ${consoleErrors.join("\n")}`
-              : "";
-            throw new Error(
-              $tr("runner.moduleLoadTimeoutTestReady", {
-                entry: config.entryPoint!,
-                details: errorDetails,
-              }),
-            );
-          }
-        }
-      } catch (error) {
-        // 如果加载失败，关闭页面并抛出错误
-        await newPage.close().catch(() => {});
-        throw error;
-      }
     }
   }
 
@@ -570,15 +828,32 @@ async function setupBrowserTest(
       waitFor: browserCtx.waitFor.bind(browserCtx),
     };
 
-  // 保存浏览器上下文以便清理（内部字段，不列入公开 API）
   (testContext as TestContext & { _browserContext?: BrowserContext })
     ._browserContext = browserCtx;
   (testContext as TestContext & { _shouldReuseBrowser?: boolean })
     ._shouldReuseBrowser = shouldReuse;
 
-  // 浏览器测试需要禁用资源清理检查
   testContext.sanitizeOps = false;
   testContext.sanitizeResources = false;
+}
+
+/**
+ * 宿主侧限时关闭 page：Playwright `page.close()` 在 Bun/CI 上偶发永不 resolve，
+ * 会卡住「上一条 pass 后、下一条 setup 前」的 finally，表现为 full-suite 第 1 例后假死。
+ */
+async function closePageWithHostTimeout(
+  page: { close(): Promise<void> },
+  ms = 8_000,
+): Promise<void> {
+  const closePromise = page.close().catch(() => {});
+  try {
+    await Promise.race([
+      closePromise,
+      new Promise<void>((resolve) => setTimeout(resolve, ms)),
+    ]);
+  } finally {
+    void closePromise;
+  }
 }
 
 /**
@@ -592,12 +867,18 @@ async function cleanupBrowserTest(testContext: TestContext): Promise<void> {
       ._browserContext;
 
   if (browserCtx) {
-    // 无论是否复用，都只关闭页面，不关闭浏览器
-    // 浏览器实例保留在缓存中，等待所有测试完成后统一清理
+    // 无论是否复用，都只关闭页面，不关闭浏览器。
+    // 先摘掉 context 引用，避免下一例 setup 与 close 竞态；
+    // close 用短超时：Bun 上 page.close 永不返回时不能挡住下一例。
+    const page = browserCtx.page;
     try {
-      await browserCtx.page.close();
+      (browserCtx as { page?: unknown }).page = undefined;
     } catch {
-      // 忽略关闭错误
+      // ignore
+    }
+    if (page) {
+      // 4s 足够正常 close；超时则放行，页面由 suite 结束时 browser.close/SIGKILL 收
+      await closePageWithHostTimeout(page, 4_000);
     }
 
     (testContext as TestContext & { _browserContext?: BrowserContext })
@@ -737,12 +1018,12 @@ export function describe(
   }
 
   /**
-   * Bun：必须用原生 `describe` 嵌套，才能让原生 beforeAll/afterAll 作用域正确。
+   * Bun/Node：必须用原生 `describe` 嵌套，才能让原生 beforeAll/afterAll 作用域正确。
    * 同步 require，避免旧版 async import 导致的多文件 suite 串套。
    */
-  if (IS_BUN) {
-    const bun = getBunTestApiSync();
-    if (!bun?.describe) {
+  if (IS_BUN || IS_NODE) {
+    const native = getNativeTestApiSync();
+    if (!native?.describe) {
       throw new Error($tr("runner.bunTestMustBeInDescribe", { name }));
     }
 
@@ -773,22 +1054,27 @@ export function describe(
       }
     };
 
-    // 每个测试文件首次进入时注册文件级 afterAll，统一关浏览器
-    // （须在 describe 外、且非 it 内；失败则忽略）
-    if (!bunCleanupDescribeScheduled) {
-      bunCleanupDescribeScheduled = true;
-      try {
-        bun.afterAll(async () => {
-          await cleanupAllBrowsers();
-        }, { timeout: HOOK_TIMEOUT_MS });
-      } catch {
-        // 非 test 上下文或已在 it 内时忽略
-      }
-    }
-
     // 元测试在 it() 内调用 describe 时原生 API 会抛错 → 仅执行回调
     try {
-      bun.describe(name, runSuiteBody);
+      /**
+       * 【Why 每个顶层 describe 都挂 afterAll 清理】
+       * 旧逻辑用进程级 `cleanupDescribeScheduled` 只注册一次 afterAll。
+       * Bun 会缓存 `@dreamer/test` 模块，整次 `bun test tests/` 只在「最后一个文件结束」
+       * 才关浏览器 → 前面文件的 Chromium 泄漏，后续 full-suite 第 1 例 launch 叠超时假死。
+       * 顶层 describe（describeDepth===0）结束时清理本文件缓存的浏览器。
+       */
+      native.describe(name, () => {
+        if (describeDepth === 0) {
+          try {
+            native.afterAll(async () => {
+              await cleanupAllBrowsers();
+            }, { timeout: HOOK_TIMEOUT_MS });
+          } catch {
+            // ignore
+          }
+        }
+        runSuiteBody();
+      });
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       if (/inside a test/i.test(msg)) {
@@ -1113,13 +1399,13 @@ export function test(
       testOptions.timeout = options.timeout;
     }
     (globalThis as any).Deno.test(testOptions);
-  } else if (IS_BUN) {
+  } else if (IS_BUN || IS_NODE) {
     // Bun：须在 describe 内；钩子由原生 beforeAll/afterAll/beforeEach/afterEach 执行，此处不再手动跑
     if (describeDepth <= 0) {
       throw new Error($tr("runner.bunTestMustBeInDescribe", { name }));
     }
-    const bun = getBunTestApiSync();
-    if (!bun?.test) {
+    const native = getNativeTestApiSync();
+    if (!native?.test) {
       throw new Error($tr("runner.bunTestMustBeInDescribe", { name }));
     }
 
@@ -1224,9 +1510,9 @@ export function test(
     };
 
     if (options?.timeout) {
-      bun.test(registerName, testFn, { timeout: options.timeout });
+      native.test(registerName, testFn, { timeout: options.timeout });
     } else {
-      bun.test(registerName, testFn);
+      native.test(registerName, testFn);
     }
   }
   // 其他环境：手动顺序执行
@@ -1406,10 +1692,10 @@ test.skip = function (
         }
       },
     });
-  } else if (IS_BUN) {
-    const bun = getBunTestApiSync();
+  } else if (IS_BUN || IS_NODE) {
+    const native = getNativeTestApiSync();
     const fullName = getFullTestName(name);
-    if (bun?.test?.skip) {
+    if (native?.test?.skip) {
       const skipOpts = options?.timeout
         ? { timeout: options.timeout }
         : undefined;
@@ -1418,8 +1704,8 @@ test.skip = function (
         const testContext = createTestContext(fullName);
         await fn(testContext);
       };
-      if (skipOpts) bun.test.skip(name, skipFn, skipOpts);
-      else bun.test.skip(name, skipFn);
+      if (skipOpts) native.test.skip(name, skipFn, skipOpts);
+      else native.test.skip(name, skipFn);
     }
   }
   // 其他环境：skip 测试会在 runSuite 中处理
@@ -1525,10 +1811,10 @@ test.only = function (
         }
       },
     });
-  } else if (IS_BUN) {
+  } else if (IS_BUN || IS_NODE) {
     // only：与普通 it 相同（原生钩子 + 浏览器 setup），仅用 test.only 注册
-    const bun = getBunTestApiSync();
-    if (!bun?.test?.only) return;
+    const native = getNativeTestApiSync();
+    if (!native?.test?.only) return;
     const fullName = getFullTestName(name);
     const suite = currentSuite;
     const testFn = async () => {
@@ -1581,9 +1867,9 @@ test.only = function (
       }
     };
     if (options?.timeout) {
-      bun.test.only(name, testFn, { timeout: options.timeout });
+      native.test.only(name, testFn, { timeout: options.timeout });
     } else {
-      bun.test.only(name, testFn);
+      native.test.only(name, testFn);
     }
   }
   // 其他环境：only 测试会在 runAllTests 中处理

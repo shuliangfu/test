@@ -1,20 +1,38 @@
 # @dreamer/test
 
-> 一个兼容 Deno 和 Bun 的测试工具包，提供 Mock
+> 一个兼容 Deno、Bun 与 Node.js 的测试工具包，提供 Mock
 > 工具、断言增强、测试工具函数、浏览器测试集成等高级功能
 
 [English](../../README.md) | 中文 (Chinese)
 
 [![JSR](https://jsr.io/badges/@dreamer/test)](https://jsr.io/@dreamer/test)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](../../LICENSE)
-[![Tests](https://img.shields.io/badge/tests-399%20passed-brightgreen)](./TEST_REPORT.md)
+[![Tests](https://img.shields.io/badge/tests-Deno%2FBun%2FNode-brightgreen)](./TEST_REPORT.md)
+[![Node](https://img.shields.io/badge/node-%3E%3D22-brightgreen)](./TEST_REPORT.md)
 
 ---
 
 ## 🎯 功能
 
-测试工具包，基于 Deno 内置测试框架，提供
-Mock、断言增强、测试工具函数、浏览器测试集成等高级功能，让测试更简单、更强大。
+测试工具包，基于宿主 **内置 test** 提供 Jest 风格 API：
+
+| 运行时 | 注册后端 |
+| ------ | -------- |
+| Deno | `Deno.test` |
+| Bun | `bun:test` |
+| Node.js 22+ | `node:test` |
+
+Mock、断言增强、工具函数、浏览器集成等。  
+**不自研进程级 runner**，执行交给宿主 `deno test` / `bun test` /
+`node --test`（tsx）；也 **不提供** 独立 CLI。dweb 产品入口用 **`dweb-cli test`**
+（launcher 拉起宿主 test）。
+
+### 相关文档
+
+| 文档 | 说明 |
+| ---- | ---- |
+| [TEST_REPORT.md](./TEST_REPORT.md) | 测试报告与统计 |
+| [CHANGELOG.md](./CHANGELOG.md) | 变更记录 |
 
 ---
 
@@ -47,12 +65,21 @@ import { createBrowserContext, findChromePath } from "@dreamer/test/browser";
 
 ## 🌍 环境兼容性
 
-| 环境           | 版本要求 | 状态                            |
-| -------------- | -------- | ------------------------------- |
-| **Deno**       | 2.5+     | ✅ 完全支持                     |
-| **Bun**        | 1.0+     | ✅ 完全支持                     |
-| **服务端**     | -        | ✅ 支持（Deno/Bun 运行时）      |
-| **浏览器测试** | -        | ✅ 支持（通过 Playwright 集成） |
+| 环境           | 版本要求 | 状态                                   |
+| -------------- | -------- | -------------------------------------- |
+| **Deno**       | 2.5+     | ✅ 完全支持（`Deno.test`）             |
+| **Bun**        | 1.3+     | ✅ 完全支持（`bun:test`）              |
+| **Node.js**    | 22+      | ✅ 支持（`node:test`；`npm run test:node`） |
+| **服务端**     | -        | ✅ Deno / Bun / Node                   |
+| **浏览器测试** | -        | ✅ Playwright（Deno/Bun 为主）         |
+
+### 本包自测
+
+```bash
+deno test -A tests/
+bun test tests/
+npm run test:node   # Node 22+；monorepo 需 preserve-symlinks
+```
 
 ---
 

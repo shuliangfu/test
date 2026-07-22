@@ -73,6 +73,16 @@ const AFTER_ALL_HOOK_TIMEOUT_MS = HOOK_TIMEOUT_MS;
 let describeDepth = 0;
 
 /**
+ * 标记当前是否正在执行 it()/test() 用例体。
+ *
+ * 【Why】Node 的 node:test 在用例体内调用 describe() 不会抛 "inside a test" 错误
+ * （Bun 会抛），而是注册一个子测试；父用例同步返回后该子测试被 cancel
+ * （cancelledByParent）。故 Node 下 describe() 检测到此标志为 true 时，
+ * 跳过原生注册、直接执行回调（与 Bun 抛错后的兜底路径一致）。
+ */
+let insideTestBody = false;
+
+/**
  * 测试统计信息
  */
 interface TestStats {
@@ -701,8 +711,7 @@ async function attachNewPageOnReusedBrowser(
           try {
             await withHostTimeout(
               newPage.waitForFunction(
-                (name: string) =>
-                  typeof (window as any)[name] !== "undefined",
+                (name: string) => typeof (window as any)[name] !== "undefined",
                 globalName,
                 { timeout: 2000 },
               ),
@@ -1055,6 +1064,11 @@ export function describe(
     };
 
     // 元测试在 it() 内调用 describe 时原生 API 会抛错 → 仅执行回调
+    // Node 不抛错（改为注册被 cancel 的子测试），故主动检测 insideTestBody 跳过原生注册
+    if (IS_NODE && insideTestBody) {
+      runSuiteBody();
+      return;
+    }
     try {
       /**
        * 【Why 每个顶层 describe 都挂 afterAll 清理】
@@ -1415,6 +1429,7 @@ export function test(
     const registerName = name;
 
     const testFn = async () => {
+      insideTestBody = true;
       const testContext = createTestContext(fullName);
       const inherited = mergeInheritedSanitize(suite, options);
       if (inherited.sanitizeOps !== undefined) {
@@ -1502,6 +1517,7 @@ export function test(
         augmentErrorWithFilePath(error, testFilePath);
         throw error;
       } finally {
+        insideTestBody = false;
         // 仅清理本用例浏览器页面；用户 afterEach 由 Bun 原生钩子执行
         if (browserCtx) {
           await cleanupBrowserTest(testContext);
@@ -1818,6 +1834,7 @@ test.only = function (
     const fullName = getFullTestName(name);
     const suite = currentSuite;
     const testFn = async () => {
+      insideTestBody = true;
       const testContext = createTestContext(fullName);
       if (suite.options) {
         if (suite.options.sanitizeOps !== undefined) {
@@ -1863,6 +1880,7 @@ test.only = function (
         testStats.total++;
         throw error;
       } finally {
+        insideTestBody = false;
         if (browserCtx) await cleanupBrowserTest(testContext);
       }
     };

@@ -41,7 +41,7 @@
     "@dreamer/runtime-adapter": "jsr:@dreamer/runtime-adapter@^1.2.0",
     "@dreamer/esbuild": "jsr:@dreamer/esbuild@^1.2.0",
     "@dreamer/logger": "jsr:@dreamer/logger@^1.0.3",
-    "playwright": "npm:playwright@^1.61.1"
+    "playwright": "npm:playwright@1.59.1"
   },
   "minimumDependencyAge": 0,
   "nodeModulesDir": "auto",

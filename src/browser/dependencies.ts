@@ -15,7 +15,8 @@ import type { BundleOptions, BundleResult } from "@dreamer/esbuild";
 let _playwright: typeof import("playwright") | null = null;
 
 /** buildBundle 函数缓存（懒加载） */
-let _buildBundle: typeof import("@dreamer/esbuild")["buildBundle"] | null = null;
+let _buildBundle: typeof import("@dreamer/esbuild")["buildBundle"] | null =
+  null;
 
 /**
  * 获取 Playwright 模块（含 chromium / firefox / webkit）

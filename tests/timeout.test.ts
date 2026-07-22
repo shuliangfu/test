@@ -38,16 +38,14 @@ describe("timeout 选项 (TestOptions.timeout)", () => {
     const args = IS_DENO
       ? ["test", "-A", fixturePath]
       : IS_BUN
-        ? ["test", fixturePath]
-        : ["--import", "tsx", "--test", fixturePath];
+      ? ["test", fixturePath]
+      : ["--import", "tsx", "--test", fixturePath];
     // Node 子进程需清除 NODE_TEST_CONTEXT，否则 node --test 检测到递归而跳过 fixture 执行
-    const env = IS_DENO || IS_BUN
-      ? undefined
-      : (() => {
-        const e = { ...globalThis.process.env };
-        delete e.NODE_TEST_CONTEXT;
-        return e as Record<string, string>;
-      })();
+    const env = IS_DENO || IS_BUN ? undefined : (() => {
+      const e = { ...globalThis.process.env };
+      delete e.NODE_TEST_CONTEXT;
+      return e as Record<string, string>;
+    })();
     const cmd = createCommand(execPath(), {
       args,
       cwd: testPackageRoot,

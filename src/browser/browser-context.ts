@@ -96,12 +96,12 @@ function forceKillBrowserProcess(
       (typeof b.process === "function"
         ? (b.process as () => unknown)()
         : undefined)) as {
-      kill?: (signal?: string) => void;
-      unref?: () => void;
-      stdout?: { destroy?: () => void };
-      stderr?: { destroy?: () => void };
-      stdin?: { destroy?: () => void };
-    } | undefined;
+        kill?: (signal?: string) => void;
+        unref?: () => void;
+        stdout?: { destroy?: () => void };
+        stderr?: { destroy?: () => void };
+        stdin?: { destroy?: () => void };
+      } | undefined;
     if (!proc) return;
     try {
       proc.stdout?.destroy?.();
@@ -594,8 +594,9 @@ async function createBrowserContextInternal(
       );
     } catch (newPageErr) {
       await closeBrowserWithTimeout(browser);
-      const cfgFlags = effectiveConfig as BrowserTestConfig &
-        Record<symbol, boolean | undefined>;
+      const cfgFlags = effectiveConfig as
+        & BrowserTestConfig
+        & Record<symbol, boolean | undefined>;
       if (cfgFlags[CREATE_RETRY_TRIED] !== true) {
         return createBrowserContextInternal(
           Object.assign({}, effectiveConfig, {
@@ -728,8 +729,9 @@ async function createBrowserContextInternal(
      * entryPoint 的 `page.goto(file://…)` 在 Bun 串行用例中偶发 20s 超时；
      * 与 newPage 半死类似，整轮重试一次通常即可恢复。
      */
-    const cfgFlags = effectiveConfig as BrowserTestConfig &
-      Record<symbol, boolean | undefined>;
+    const cfgFlags = effectiveConfig as
+      & BrowserTestConfig
+      & Record<symbol, boolean | undefined>;
     if (cfgFlags[CREATE_RETRY_TRIED] !== true) {
       return createBrowserContextInternal(
         Object.assign({}, effectiveConfig, {

@@ -29,7 +29,7 @@ describe("runner / testEach 与父级 beforeEach", () => {
 describe("runner / browser.bundleOnly", () => {
   /**
    * Node 跳过：@dreamer/esbuild 的 JSR npm 版仍可能传递依赖旧版 runtime-adapter
-   *（无 IS_NODE），在 Node 上抛错。Deno / Bun 正常执行。
+   * （无 IS_NODE），在 Node 上抛错。Deno / Bun 正常执行。
    * 待 esbuild 升到 runtime-adapter ^1.2.0 后可恢复。
    */
   if (IS_NODE) return;

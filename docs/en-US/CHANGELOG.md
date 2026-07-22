@@ -8,14 +8,49 @@ and this project adheres to
 
 ---
 
+## [1.2.0] - 2026-07-22
+
+### Added
+
+- **Node.js cross-runtime backend**: `test-runner.ts` delegates `describe` /
+  `it` / hooks to native `node:test` when `IS_NODE`, sharing the
+  `IS_BUN || IS_NODE` path with Bun. `getNodeTestApiSync()` /
+  `getNativeTestApiSync()` adapt signature and `before`/`after` naming.
+- **`npm run test:node`**: `tsx --test tests/*.test.ts` runner with
+  `tsconfig.json`; `package.json` declares `engines.node >= 22`.
+- **CI Node jobs**: 3 platforms (linux/macos/windows, Node 22) added to
+  `.github/workflows/ci.yml`, bringing CI to 9 jobs (3 runtimes × 3 OS).
+
+### Fixed
+
+- **Node 22 `cancelledByParent`**: when `describe()` is called inside an `it()`
+  body, Node registers a subtest that the synchronously-returning parent
+  cancels. Added an `insideTestBody` flag so `describe()` skips native
+  registration and runs the callback directly (matching Bun's throw-and-catch
+  fallback).
+- **Deno Playwright version drift**: pinned `playwright` from `^1.61.1` to
+  `1.59.1` in `deno.json` to align with `package.json`, CI install, and the
+  `pw:install` task. The range resolved to a version needing the chromium-1228
+  build that CI does not install.
+- **`evaluateWithHostTimeout` lint**: removed an unnecessary `async` keyword
+  (function delegates to `withBrowserHostTimeout`, no `await` needed).
+
+### Changed
+
+- **`@dreamer/runtime-adapter`**: bumped `^1.0.19` → `^1.2.0` (deno.json +
+  package.json) to use the `IS_NODE` flag.
+- **`deno.json`**: added `minimumDependencyAge: 0`.
+
+---
+
 ## [1.1.10] - 2026-07-22
 
 ### Added
 
 - **Node.js backend (`node:test`)**: `getNodeTestApiSync()` /
-  `getNativeTestApiSync()` adapt `describe` / `it` / hooks to native
-  `node:test` (signature and `before`/`after` naming differences handled
-  inside). Shares the `IS_BUN || IS_NODE` path with Bun.
+  `getNativeTestApiSync()` adapt `describe` / `it` / hooks to native `node:test`
+  (signature and `before`/`after` naming differences handled inside). Shares the
+  `IS_BUN || IS_NODE` path with Bun.
 - **engines.node**: `package.json` declares `node >= 22`.
 - **`npm run test:node`**: `tsx` + `node:test` for `tests/*.test.ts` (uses
   `NODE_OPTIONS=--preserve-symlinks` for monorepo `file:` deps).

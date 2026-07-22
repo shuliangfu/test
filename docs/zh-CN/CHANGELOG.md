@@ -7,13 +7,47 @@
 
 ---
 
+## [1.2.0] - 2026-07-22
+
+### 新增
+
+- **Node.js 跨运行时后端**：`test-runner.ts` 在 `IS_NODE` 时将 `describe` / `it`
+  / 钩子委托给 Node 原生 `node:test`，与 Bun 共用 `IS_BUN || IS_NODE`
+  分支。`getNodeTestApiSync()` / `getNativeTestApiSync()` 抹平签名与
+  `before`/`after` 命名差异。
+- **`npm run test:node`**：`tsx --test tests/*.test.ts` 运行器，配套
+  `tsconfig.json`；`package.json` 声明 `engines.node >= 22`。
+- **CI Node 任务**：在 `.github/workflows/ci.yml` 增加 3 个平台
+  （linux/macos/windows，Node 22），CI 共 9 个任务（3 运行时 × 3 系统）。
+
+### 修复
+
+- **Node 22 `cancelledByParent`**：在 `it()` 体内调用 `describe()` 时，Node
+  会注册一个子测试，而父用例同步返回导致该子测试被 cancel。新增 `insideTestBody`
+  标志，此时 `describe()` 跳过原生注册、直接执行回调 （与 Bun
+  抛错兜底路径一致）。
+- **Deno Playwright 版本漂移**：`deno.json` 中 `playwright` 从 `^1.61.1` 锁定为
+  `1.59.1`，与 `package.json`、CI install、`pw:install` 任务对齐。
+  此前的范围会解析到需要 chromium-1228 构建的版本，而 CI 并未安装。
+- **`evaluateWithHostTimeout` lint**：移除多余的 `async` 关键字（函数仅委托
+  `withBrowserHostTimeout`，无需 `await`）。
+
+### 变更
+
+- **`@dreamer/runtime-adapter`**：`^1.0.19` → `^1.2.0`（deno.json 与
+  package.json 同步），以使用 `IS_NODE` 标志。
+- **`deno.json`**：新增 `minimumDependencyAge: 0`。
+
+---
+
 ## [1.1.10] - 2026-07-22
 
 ### 新增
 
-- **Node.js 后端（`node:test`）**：`getNodeTestApiSync()` / `getNativeTestApiSync()`
-  将 `describe` / `it` / hooks 适配到 Node 原生 `node:test`（签名与
-  `before`/`after` 命名差异在内部抹平）。与 Bun 路径共用 `IS_BUN || IS_NODE` 分支。
+- **Node.js 后端（`node:test`）**：`getNodeTestApiSync()` /
+  `getNativeTestApiSync()` 将 `describe` / `it` / hooks 适配到 Node 原生
+  `node:test`（签名与 `before`/`after` 命名差异在内部抹平）。与 Bun 路径共用
+  `IS_BUN || IS_NODE` 分支。
 - **engines.node**：`package.json` 声明 `node >= 22`。
 - **`npm run test:node`**：`tsx` + `node:test` 跑 `tests/*.test.ts`（需
   `NODE_OPTIONS=--preserve-symlinks` 以正确解析 monorepo `file:` 依赖）。

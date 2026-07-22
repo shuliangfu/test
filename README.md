@@ -17,16 +17,16 @@ English | [中文 (Chinese)](./docs/zh-CN/README.md)
 
 A testing utility library that registers into host test APIs:
 
-| Runtime | Host registration |
-| ------- | ----------------- |
-| **Deno** | `Deno.test` |
-| **Bun** | `bun:test` |
-| **Node.js 22+** | `node:test` |
+| Runtime         | Host registration |
+| --------------- | ----------------- |
+| **Deno**        | `Deno.test`       |
+| **Bun**         | `bun:test`        |
+| **Node.js 22+** | `node:test`       |
 
-Provides Mock, assertion enhancements, helpers, and browser integration.
-**No custom process-level runner** — execution stays on the host
-(`deno test` / `bun test` / `node --test` via tsx). **No** standalone CLI;
-product entry for dweb projects is **`dweb-cli test`** (host launcher).
+Provides Mock, assertion enhancements, helpers, and browser integration. **No
+custom process-level runner** — execution stays on the host (`deno test` /
+`bun test` / `node --test` via tsx). **No** standalone CLI; product entry for
+dweb projects is **`dweb-cli test`** (host launcher).
 
 ---
 
@@ -67,13 +67,13 @@ import { createBrowserContext, findChromePath } from "@dreamer/test/browser";
 
 ## 🌍 Compatibility
 
-| Environment       | Version | Status                                         |
-| ----------------- | ------- | ---------------------------------------------- |
-| **Deno**          | 2.5+    | ✅ Fully supported (`Deno.test`)               |
-| **Bun**           | 1.3+    | ✅ Fully supported (`bun:test`)                |
-| **Node.js**       | 22+     | ✅ Supported (`node:test`; see `test:node`)    |
-| **Server**        | -       | ✅ Deno / Bun / Node                           |
-| **Browser tests** | -       | ✅ Playwright (Deno/Bun primary; Node optional)|
+| Environment       | Version | Status                                          |
+| ----------------- | ------- | ----------------------------------------------- |
+| **Deno**          | 2.5+    | ✅ Fully supported (`Deno.test`)                |
+| **Bun**           | 1.3+    | ✅ Fully supported (`bun:test`)                 |
+| **Node.js**       | 22+     | ✅ Supported (`node:test`; see `test:node`)     |
+| **Server**        | -       | ✅ Deno / Bun / Node                            |
+| **Browser tests** | -       | ✅ Playwright (Deno/Bun primary; Node optional) |
 
 ### Running package self-tests
 
@@ -835,10 +835,13 @@ Full test report: [TEST_REPORT.md](./docs/en-US/TEST_REPORT.md)
 
 ## 📋 Changelog
 
-**v1.1.10** (2026-07-21) — **Fixed**: Bun native hooks
-(`beforeAll`/`afterAll`/…), sync `bun:test` describe nesting, 60s hook timeouts,
-`reuseBrowser: false`, safer error augmentation and browser close cleanup. Full
-history: [CHANGELOG.md](./docs/en-US/CHANGELOG.md).
+**v1.2.0** (2026-07-22) — **Added**: Node.js cross-runtime backend (`node:test`
+via the `IS_BUN || IS_NODE` path), `npm run test:node` (tsx), and 3 CI Node jobs
+(9 total: 3 runtimes × 3 OS). **Fixed**: Node 22 `cancelledByParent` for
+`describe()` inside `it()` (new `insideTestBody` flag), and Deno Playwright
+version drift (`^1.61.1` → `1.59.1`). **Changed**: `@dreamer/runtime-adapter`
+`^1.0.19` → `^1.2.0` (uses `IS_NODE`). Full history:
+[CHANGELOG.md](./docs/en-US/CHANGELOG.md).
 
 ---
 

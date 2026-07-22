@@ -6,8 +6,8 @@ This report records test coverage and results for `@dreamer/test`. The library
 provides Mock tools, assertion helpers, utilities, and browser integration, and
 targets **Deno / Bun / Node.js**.
 
-**Test Date**: 2026-07-22  
-**Version**: 1.1.10  
+**Test Date**: 2026-07-22\
+**Version**: 1.2.0\
 **Hosts**: `Deno.test` + `bun:test` + `node:test` (via tsx)
 
 ## 🎯 Test Objectives
@@ -26,15 +26,15 @@ targets **Deno / Bun / Node.js**.
 
 ### Summary (re-run 2026-07-22)
 
-| Runtime | Command | Result |
-| ------- | ------- | ------ |
-| **Deno** | `deno test -A tests/` | **404 passed**, 0 failed, 2 ignored (~55s) |
-| **Bun** | `bun test tests/` | Main path + browser; see flaky browser note |
-| **Node** | `npm run test:node` | **277 passed**, 0 failed, 1 skipped (~1.5s) |
+| Runtime  | Command               | Result                                      |
+| -------- | --------------------- | ------------------------------------------- |
+| **Deno** | `deno test -A tests/` | **404 passed**, 0 failed, 2 ignored (~55s)  |
+| **Bun**  | `bun test tests/`     | Main path + browser; see flaky browser note |
+| **Node** | `npm run test:node`   | **277 passed**, 0 failed, 1 skipped (~1.5s) |
 
-| Metric | Value |
-| ------ | ----- |
-| Test files | 21 root + browser subdir |
+| Metric        | Value                                      |
+| ------------- | ------------------------------------------ |
+| Test files    | 21 root + browser subdir                   |
 | Node coverage | Non-browser main suite (`tests/*.test.ts`) |
 | Code coverage | Core APIs full; browser primarily Deno/Bun |
 

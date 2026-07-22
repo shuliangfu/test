@@ -16,23 +16,23 @@
 
 测试工具包，基于宿主 **内置 test** 提供 Jest 风格 API：
 
-| 运行时 | 注册后端 |
-| ------ | -------- |
-| Deno | `Deno.test` |
-| Bun | `bun:test` |
+| 运行时      | 注册后端    |
+| ----------- | ----------- |
+| Deno        | `Deno.test` |
+| Bun         | `bun:test`  |
 | Node.js 22+ | `node:test` |
 
-Mock、断言增强、工具函数、浏览器集成等。  
+Mock、断言增强、工具函数、浏览器集成等。\
 **不自研进程级 runner**，执行交给宿主 `deno test` / `bun test` /
-`node --test`（tsx）；也 **不提供** 独立 CLI。dweb 产品入口用 **`dweb-cli test`**
-（launcher 拉起宿主 test）。
+`node --test`（tsx）；也 **不提供** 独立 CLI。dweb 产品入口用
+**`dweb-cli test`** （launcher 拉起宿主 test）。
 
 ### 相关文档
 
-| 文档 | 说明 |
-| ---- | ---- |
+| 文档                               | 说明           |
+| ---------------------------------- | -------------- |
 | [TEST_REPORT.md](./TEST_REPORT.md) | 测试报告与统计 |
-| [CHANGELOG.md](./CHANGELOG.md) | 变更记录 |
+| [CHANGELOG.md](./CHANGELOG.md)     | 变更记录       |
 
 ---
 
@@ -65,13 +65,13 @@ import { createBrowserContext, findChromePath } from "@dreamer/test/browser";
 
 ## 🌍 环境兼容性
 
-| 环境           | 版本要求 | 状态                                   |
-| -------------- | -------- | -------------------------------------- |
-| **Deno**       | 2.5+     | ✅ 完全支持（`Deno.test`）             |
-| **Bun**        | 1.3+     | ✅ 完全支持（`bun:test`）              |
+| 环境           | 版本要求 | 状态                                        |
+| -------------- | -------- | ------------------------------------------- |
+| **Deno**       | 2.5+     | ✅ 完全支持（`Deno.test`）                  |
+| **Bun**        | 1.3+     | ✅ 完全支持（`bun:test`）                   |
 | **Node.js**    | 22+      | ✅ 支持（`node:test`；`npm run test:node`） |
-| **服务端**     | -        | ✅ Deno / Bun / Node                   |
-| **浏览器测试** | -        | ✅ Playwright（Deno/Bun 为主）         |
+| **服务端**     | -        | ✅ Deno / Bun / Node                        |
+| **浏览器测试** | -        | ✅ Playwright（Deno/Bun 为主）              |
 
 ### 本包自测
 
@@ -810,8 +810,13 @@ skipIf），测试覆盖率达到 100%。详细测试报告请查看
 
 ## 📋 变更日志
 
-**v1.1.10**（2026-07-21）— **修复**：Bun 原生钩子与同步 `describe` 嵌套、钩子
-60s 超时、`reuseBrowser: false`、错误信息与浏览器关闭清理更安全。完整历史见
+**v1.2.0**（2026-07-22）— **新增**：Node.js 跨运行时后端（`IS_BUN ||
+IS_NODE`
+分支下走 `node:test`）、`npm run test:node`（tsx）、3 个 CI Node 任务（共 9
+个：3 运行时 × 3 系统）。**修复**：Node 22 下 `describe()` 在 `it()` 内的
+`cancelledByParent`（新增 `insideTestBody` 标志）、Deno Playwright
+版本漂移（`^1.61.1` → `1.59.1`）。**变更**： `@dreamer/runtime-adapter`
+`^1.0.19` → `^1.2.0`（使用 `IS_NODE`）。完整 历史见
 [CHANGELOG.md](./CHANGELOG.md)。
 
 ---

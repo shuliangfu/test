@@ -19,7 +19,7 @@
     "test:node:all": "npm run test:node && npm run test:node:browser"
   },
   "dependencies": {
-    "@dreamer/esbuild": "npm:@jsr/dreamer__esbuild@^1.2.0",
+    "@dreamer/esbuild": "npm:@jsr/dreamer__esbuild@^1.4.0",
     "@dreamer/i18n": "npm:@jsr/dreamer__i18n@1.0.1",
     "@dreamer/logger": "npm:@jsr/dreamer__logger@^1.0.3",
     "@dreamer/runtime-adapter": "npm:@jsr/dreamer__runtime-adapter@^1.2.2",

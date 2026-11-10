@@ -1,6 +1,6 @@
 # CI: 9-job matrix — Deno v2.9 + Bun + Node 22 × Linux/macOS/Windows
-# Browser tests run on all cells except Bun + Windows (bun#15679) and Node
-# (npm run test:node only; browser skipped in CI, same as before).
+# Browser tests run on Deno and Bun (including Windows Bun; watch bun#15679).
+# Node CI still runs npm run test:node only (browser skipped, same as before).
 # Linux: ubuntu-24.04 (not ubuntu-latest=26.04); Playwright 1.59.1 lacks chromium for 26.04 — same as ui-view/dweb.
 name: CI
 
@@ -93,21 +93,15 @@ jobs:
         run: bun install
 
       - name: Install Playwright Chromium (Linux + system deps)
-        if: matrix.os != 'windows-latest' && runner.os == 'Linux'
+        if: runner.os == 'Linux'
         run: npx -y playwright@1.59.1 install --with-deps chromium
 
       - name: Install Playwright Chromium
-        if: matrix.os != 'windows-latest' && runner.os != 'Linux'
+        if: runner.os != 'Linux'
         run: npx -y playwright@1.59.1 install chromium
 
       - name: Test (Bun — unit + browser)
-        if: matrix.os != 'windows-latest'
         run: bun test tests/
-
-      - name: Test (Bun — unit only; browser skipped on Windows)
-        if: matrix.os == 'windows-latest'
-        shell: bash
-        run: bun test tests/*.test.ts
 
   test-node:
     strategy:

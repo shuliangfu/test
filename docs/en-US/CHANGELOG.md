@@ -8,6 +8,30 @@ and this project adheres to
 
 ---
 
+## [1.2.4] - 2026-11-10
+
+### Added
+
+- **`reuseBrowserAcrossFiles`**: reuse one Playwright browser across test files
+  in the same process. Deno and Node default to on; Bun defaults to off.
+  Override with the config flag or `DREAMER_TEST_REUSE_BROWSER_ACROSS_FILES=1|0`.
+  Has no effect when `reuseBrowser` is `false`. Each test still opens a new
+  page; afterAll closes the page and Playwright context, not the browser. The
+  process-level cache key includes the launch fingerprint (`executablePath`,
+  `browserType`, `browserSource`, `headless`, `args`, `preferSystemChrome`) so
+  a file that asks for a missing Chrome path does not inherit an already
+  started browser.
+
+### Verified
+
+- Deno: 408 passed, 0 failed, 2 ignored (`deno test -A tests/`)
+- Bun: 369 passed, 0 failed, 2 skipped (`bun test tests/`)
+- Node: 277 passed, 0 failed, 1 skipped (`npm run test:node`); browser 91
+  passed, 0 failed, 1 skipped (`npm run test:node:browser`)
+- Reuse on/off cases passed on Deno, Bun, and Node
+
+---
+
 ## [1.2.3] - 2026-07-22
 
 ### Fixed

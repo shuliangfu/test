@@ -7,6 +7,28 @@
 
 ---
 
+## [1.2.4] - 2026-11-10
+
+### 新增
+
+- **`reuseBrowserAcrossFiles`**：同一进程内跨文件复用一只 Playwright 浏览器。
+  Deno／Node 默认开启，Bun 默认关闭；可用配置或环境变量
+  `DREAMER_TEST_REUSE_BROWSER_ACROSS_FILES=1|0` 覆盖。`reuseBrowser: false`
+  时此项无效。每条用例仍 `newPage`，测完关闭 page 与 Playwright
+  context，不关 browser。进程级缓存键包含启动指纹（`executablePath`／
+  `browserType`／`browserSource`／`headless`／`args`／`preferSystemChrome`），
+  避免「故意用不存在的 Chrome 路径」误复用已启动的浏览器。
+
+### 验证
+
+- Deno：408 通过，0 失败，2 ignored（`deno test -A tests/`）
+- Bun：369 通过，0 失败，2 skipped（`bun test tests/`）
+- Node：277 通过，0 失败，1 skipped（`npm run test:node`）；浏览器 91 通过，0
+  失败，1 skipped（`npm run test:node:browser`）
+- 复用开／关用例在 Deno、Bun、Node 三端均通过
+
+---
+
 ## [1.2.3] - 2026-07-22
 
 ### 修复

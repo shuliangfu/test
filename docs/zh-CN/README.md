@@ -748,6 +748,7 @@ describe("浏览器测试套件", {
 - `bodyContent?: string`: 额外的 HTML body 内容（可选）
 - `moduleLoadTimeout?: number`: 等待模块加载的超时时间（毫秒，默认：`10000`）
 - `reuseBrowser?: boolean`: 是否在套件级别复用浏览器实例（默认：`true`）
+- `reuseBrowserAcrossFiles?: boolean`: 是否在同一进程内跨文件复用浏览器（默认：Deno/Node 为 `true`，Bun 为 `false`）。可用 `DREAMER_TEST_REUSE_BROWSER_ACROSS_FILES=1|0` 覆盖。`reuseBrowser: false` 时无效。
 
 **浏览器上下文（BrowserContext）**：
 

@@ -378,3 +378,73 @@ describe("测试运行器浏览器集成", () => {
   sanitizeOps: false,
   sanitizeResources: false,
 });
+
+const acrossFilesBrowserOpts = {
+  enabled: true,
+  headless: true,
+  reuseBrowser: true,
+  reuseBrowserAcrossFiles: true,
+  dumpio: true,
+  browserSource: "test" as const,
+};
+
+let acrossFilesBrowser: unknown;
+
+describe("跨文件复用浏览器 A", () => {
+  it("记录进程级浏览器实例", async (t) => {
+    expect(t?.browser?.browser).toBeDefined();
+    acrossFilesBrowser = t?.browser?.browser;
+  }, {
+    timeout: PLAYWRIGHT_BROWSER_IT_TIMEOUT_MS,
+    browser: acrossFilesBrowserOpts,
+  });
+}, {
+  sanitizeOps: false,
+  sanitizeResources: false,
+});
+
+describe("跨文件复用浏览器 B", () => {
+  it("应该复用上一套件的浏览器实例", async (t) => {
+    expect(t?.browser?.browser).toBeDefined();
+    expect(t?.browser?.browser).toBe(acrossFilesBrowser);
+  }, {
+    timeout: PLAYWRIGHT_BROWSER_IT_TIMEOUT_MS,
+    browser: acrossFilesBrowserOpts,
+  });
+}, {
+  sanitizeOps: false,
+  sanitizeResources: false,
+});
+
+const acrossFilesOffBrowserOpts = {
+  ...acrossFilesBrowserOpts,
+  reuseBrowserAcrossFiles: false,
+};
+
+let acrossFilesOffBrowser: unknown;
+
+describe("跨文件不复用浏览器 A", () => {
+  it("记录套件级浏览器实例", async (t) => {
+    expect(t?.browser?.browser).toBeDefined();
+    acrossFilesOffBrowser = t?.browser?.browser;
+  }, {
+    timeout: PLAYWRIGHT_BROWSER_IT_TIMEOUT_MS,
+    browser: acrossFilesOffBrowserOpts,
+  });
+}, {
+  sanitizeOps: false,
+  sanitizeResources: false,
+});
+
+describe("跨文件不复用浏览器 B", () => {
+  it("不应该复用上一套件的浏览器实例", async (t) => {
+    expect(t?.browser?.browser).toBeDefined();
+    expect(t?.browser?.browser).not.toBe(acrossFilesOffBrowser);
+  }, {
+    timeout: PLAYWRIGHT_BROWSER_IT_TIMEOUT_MS,
+    browser: acrossFilesOffBrowserOpts,
+  });
+}, {
+  sanitizeOps: false,
+  sanitizeResources: false,
+});

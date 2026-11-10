@@ -50,6 +50,12 @@ let currentSuite = rootSuite;
 const suiteBrowserCache = new Map<string, BrowserContext>();
 
 /**
+ * 跨文件复用时的进程级缓存键。
+ * 与套件路径分开，避免不同 describe 误关同一只浏览器，也避免仅用根名串键。
+ */
+const PROCESS_BROWSER_CACHE_KEY = "__dreamer_test_process_browser__";
+
+/**
  * 跟踪 beforeAll 钩子的执行状态
  * key: 套件的完整路径（用于唯一标识套件）
  * value: 是否已执行
@@ -761,6 +767,63 @@ async function attachNewPageOnReusedBrowser(
 }
 
 /**
+ * 是否在同一进程内跨文件复用浏览器。
+ * `reuseBrowser: false` 时强制关闭。
+ * `DREAMER_TEST_REUSE_BROWSER_ACROSS_FILES=1|0` 覆盖配置。
+ * 未设置时 Deno/Node 默认开启，Bun 默认关闭。
+ */
+function shouldReuseBrowserAcrossFiles(config: BrowserTestConfig): boolean {
+  if (config.reuseBrowser === false) return false;
+  const env = getEnv("DREAMER_TEST_REUSE_BROWSER_ACROSS_FILES")?.trim()
+    .toLowerCase();
+  if (env === "1" || env === "true" || env === "yes") return true;
+  if (env === "0" || env === "false" || env === "no") return false;
+  if (config.reuseBrowserAcrossFiles === true) return true;
+  if (config.reuseBrowserAcrossFiles === false) return false;
+  return !IS_BUN;
+}
+
+/** 启动参数不同的浏览器不能互相复用（例如故意传入不存在的 executablePath）。 */
+function browserLaunchFingerprint(config: BrowserTestConfig): string {
+  return JSON.stringify([
+    config.executablePath ?? "",
+    config.browserType ?? "chromium",
+    config.browserSource ?? "",
+    config.headless !== false,
+    config.args ?? [],
+    config.preferSystemChrome,
+  ]);
+}
+
+function processBrowserCacheKey(config: BrowserTestConfig): string {
+  return `${PROCESS_BROWSER_CACHE_KEY}:${browserLaunchFingerprint(config)}`;
+}
+
+function hasProcessSharedBrowser(): boolean {
+  for (const key of suiteBrowserCache.keys()) {
+    if (
+      key === PROCESS_BROWSER_CACHE_KEY ||
+      key.startsWith(`${PROCESS_BROWSER_CACHE_KEY}:`)
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function resolveBrowserCacheKey(
+  suitePath: string | undefined,
+  config: BrowserTestConfig,
+): { shouldReuse: boolean; cacheKey: string | undefined } {
+  const shouldReuse = config.reuseBrowser !== false && Boolean(suitePath);
+  if (!shouldReuse) return { shouldReuse: false, cacheKey: suitePath };
+  if (shouldReuseBrowserAcrossFiles(config)) {
+    return { shouldReuse: true, cacheKey: processBrowserCacheKey(config) };
+  }
+  return { shouldReuse: true, cacheKey: suitePath };
+}
+
+/**
  * 在测试执行前设置浏览器上下文
  */
 async function setupBrowserTest(
@@ -784,11 +847,11 @@ async function setupBrowserTest(
     return;
   }
 
-  // 缓存键必须使用完整 getFullSuiteName(suite)：勿仅用 split(" > ")[0]，否则跨文件串键。
+  // 套件级复用：缓存键必须使用完整 getFullSuiteName(suite)，勿仅用根 describe 名。
+  // 跨文件复用：用进程级键（Deno/Node 默认，或 reuseBrowserAcrossFiles: true）。
   // 【Invariant】reuseBrowser === false 时不得从 cache 取实例。
   let browserCtx: BrowserContext | undefined;
-  const shouldReuse = config.reuseBrowser !== false && Boolean(suitePath);
-  const cacheKey = suitePath;
+  const { shouldReuse, cacheKey } = resolveBrowserCacheKey(suitePath, config);
 
   if (shouldReuse && cacheKey) {
     browserCtx = suiteBrowserCache.get(cacheKey);
@@ -876,8 +939,8 @@ async function cleanupBrowserTest(testContext: TestContext): Promise<void> {
       ._browserContext;
 
   if (browserCtx) {
-    // 无论是否复用，都只关闭页面，不关闭浏览器。
-    // 先摘掉 context 引用，避免下一例 setup 与 close 竞态；
+    // 无论是否复用，都只关闭页面（及对应 Playwright context），不关闭浏览器。
+    // 先摘掉 page 引用，避免下一例 setup 与 close 竞态；
     // close 用短超时：Bun 上 page.close 永不返回时不能挡住下一例。
     const page = browserCtx.page;
     try {
@@ -886,8 +949,19 @@ async function cleanupBrowserTest(testContext: TestContext): Promise<void> {
       // ignore
     }
     if (page) {
-      // 4s 足够正常 close；超时则放行，页面由 suite 结束时 browser.close/SIGKILL 收
-      await closePageWithHostTimeout(page, 4_000);
+      // browser.newPage() 会新建隔离的 Playwright context；
+      // 只关 page 不关 context 时，跨文件长跑会把上下文堆在同一只浏览器里。
+      let closer: { close(): Promise<void> } = page;
+      try {
+        const pwCtx = typeof (page as { context?: () => unknown }).context ===
+            "function"
+          ? (page as { context: () => { close(): Promise<void> } }).context()
+          : undefined;
+        if (pwCtx && typeof pwCtx.close === "function") closer = pwCtx;
+      } catch {
+        // 回退为只关 page
+      }
+      await closePageWithHostTimeout(closer, 4_000);
     }
 
     (testContext as TestContext & { _browserContext?: BrowserContext })
@@ -962,6 +1036,12 @@ try {
   };
   addSignalListener("SIGINT", handleSignalCleanup);
   addSignalListener("SIGTERM", handleSignalCleanup);
+  const proc = (globalThis as {
+    process?: { on?: (event: string, fn: () => void) => void };
+  }).process;
+  proc?.on?.("beforeExit", () => {
+    void cleanupAllBrowsers();
+  });
 } catch {
   // 忽略信号监听错误（可能在某些环境下不支持）
 }
@@ -1081,6 +1161,8 @@ export function describe(
         if (describeDepth === 0) {
           try {
             native.afterAll(async () => {
+              // 跨文件复用时保留进程级浏览器，等进程收尾再关。
+              if (hasProcessSharedBrowser()) return;
               await cleanupAllBrowsers();
             }, { timeout: HOOK_TIMEOUT_MS });
           } catch {

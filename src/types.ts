@@ -82,6 +82,12 @@ export interface BrowserTestConfig {
   /** 是否在套件级别复用浏览器实例（默认：true，可显著提升性能） */
   reuseBrowser?: boolean;
   /**
+   * 是否在同一进程内跨文件复用浏览器（默认：Deno/Node 为 true，Bun 为 false）。
+   * `reuseBrowser: false` 时此项无效。
+   * 可用环境变量 `DREAMER_TEST_REUSE_BROWSER_ACROSS_FILES=1|0` 覆盖，便于某一端试跑或紧急关闭。
+   */
+  reuseBrowserAcrossFiles?: boolean;
+  /**
    * 是否将 JSR/npm 标为 external（仅影响打包格式，浏览器绝不生成 require）。
    * - true（默认）：输出 ESM，用 <script type="module"> 加载，external 为 import，不生成 require。
    * - false：输出 IIFE，把 JSR 等打进 bundle，用普通 script 也可；不生成 require。

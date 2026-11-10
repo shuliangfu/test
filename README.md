@@ -770,6 +770,10 @@ describe("Browser test suite", {
 - `moduleLoadTimeout?: number`: Module load timeout (ms, default: `10000`)
 - `reuseBrowser?: boolean`: Reuse browser instance at suite level (default:
   `true`)
+- `reuseBrowserAcrossFiles?: boolean`: Reuse one browser across files in the
+  same process (default: `true` on Deno/Node, `false` on Bun). Override with
+  `DREAMER_TEST_REUSE_BROWSER_ACROSS_FILES=1|0`. Ignored when
+  `reuseBrowser` is `false`.
 
 **Browser context (BrowserContext)**:
 
